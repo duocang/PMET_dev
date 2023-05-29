@@ -50,3 +50,11 @@ src/pmetParallel/bin/pmetParallel
 src/pmet/test/motif_output.txt
 src/pmet/test/progress.log
 src/pmetParallel/bin/out/
+results/PMETindex/fimo/
+results/PMETindex/memefiles/
+progress
+data/anno.gff3temp
+results/PMETindex/IC.txt
+results/PMETindex/promoter_lengths.txt
+results/PMETindex/promoters.bg
+src/indexing/test/binomial_thresholds.txt
