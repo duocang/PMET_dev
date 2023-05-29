@@ -44,3 +44,9 @@ performance/pmetParallel
 *.fasta
 scripts/pmetindex
 scripts/pmetParallel
+src/pmet/bin/pmet
+src/indexing/bin/pmetindex
+src/pmetParallel/bin/pmetParallel
+src/pmet/test/motif_output.txt
+src/pmet/test/progress.log
+src/pmetParallel/bin/out/
