@@ -133,17 +133,23 @@ start=$SECONDS
 echo -e "0.01\tPreparing sequences..." > $progFile
 echo "Preparing sequences...";
 
+
+
+
+# sort annotaion by coordinates ---------------------------------------------------------------
+$pmetroot/gff3sort/gff3sort.pl $gff3file > ${gff3file}temp
+
+# extract gene coordinates and gene list ------------------------------------------------------
 universefile=$outputdir/universe.txt
 bedfile=$outputdir/genelines.bed
-
 if [[ ! -f "$universefile"  ||  ! -f "$bedfile" ]]; then
 	### Make genelines.bed and universe.txt if validation script hasn't
 
-	grep -P '\tgene\t' $gff3file > $outputdir/genelines.gff3
+	grep -P '\tgene\t' ${gff3file}temp > $outputdir/genelines.gff3
 	#parse up the .bed for promoter extraction, 'gene_id'
 	python3 $pmetroot/parse_genelines.py $gff3id $outputdir/genelines.gff3 $bedfile
 	#the python script takes the genelines.gff3 file and makes a genelines.bed out of it
-	# rm $outputdir/genelines.gff3
+	rm $outputdir/genelines.gff3
 	#list of all genes found
 	cut -f 4 $bedfile > $universefile
 fi
@@ -154,7 +160,7 @@ fi
 echo -e "0.02\tCreating genome file..." > $progFile
 echo "Creating genome file...";
 
-
+# extract genome ----------------------------------------------------------------------------
 # strip the potential FASTA line breaks. creates genome_stripped.fa
 # python3 $pmetroot/strip_newlines.py $genomefile $outputdir/genome_stripped.fa
 awk '/^>/ { if (NR!=1) print ""; printf "%s\n",$0; next;} \
@@ -202,156 +208,108 @@ python3 $pmetroot/assess_integrity.py $outputdir/promoters.bed
 if [ $utr == 'Yes' ]; then
     echo "Adding UTRs...";
     echo -e "0.03\tAdding UTRs..."  > $progFile #updates promoters.bed, takes about 45sec (about 20 sec for 10 000 promoters)
-	python3 $pmetroot/parse_utrs.py $outputdir/promoters.bed $gff3file $universefile
+	python3 $pmetroot/parse_utrs.py $outputdir/promoters.bed ${gff3file}temp $universefile
 fi
 
-# duration=$(( SECONDS - start ))
-# echo $duration" secs"
+duration=$(( SECONDS - start ))
+echo $duration" secs"
 
-# start=$SECONDS
-# ### Create promoter_lenfths file from promoters.bed
+start=$SECONDS
+### Create promoter_lenfths file from promoters.bed
 
-# # create promoter_lengths.txt
-# python3 $pmetroot/parse_promoter_lengths.py $outputdir/promoters.bed $outputdir/promoter_lengths.txt
+# create promoter_lengths.txt ----------------------------------------------------------------
+python3 $pmetroot/parse_promoter_lengths.py $outputdir/promoters.bed $outputdir/promoter_lengths.txt
 
-# ## Make promoters.fa from promoters.bed and genome_stripped.fa
+# extract promoters' sequence (.fa) --------------------------------------------------------
+## Make promoters.fa from promoters.bed and genome_stripped.fa
+echo -e "0.04\tCreating promoters file..." >$progFile
+echo "Creating promoters file";
 
-# echo -e "0.04\tCreating promoters file..." >$progFile
-# echo "Creating promoters file";
+# get promoters
+bedtools getfasta -fi $outputdir/genome_stripped.fa -bed $outputdir/promoters.bed -s -fo $outputdir/promoters_rough.fa
+rm $outputdir/genome_stripped.fa
+rm $outputdir/genome_stripped.fa.fai
 
-
-# # get promoters
-# bedtools getfasta -fi $outputdir/genome_stripped.fa -bed $outputdir/promoters.bed -s -fo $outputdir/promoters_rough.fa
-# rm $outputdir/genome_stripped.fa
-# rm $outputdir/genome_stripped.fa.fai
-
-
-# # creates promoters.fa
-# # replace the id of each seq with gene names
-# # python3 $pmetroot/parse_promoters.py $outputdir/promoters_rough.fa $outputdir/promoters.bed $outputdir/promoters.fa
-# # rm $outputdir/promoters.bed
-# # rm $outputdir/promoters_rough.fa
-# awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
-#     $outputdir/promoters.bed \
-#     $outputdir/promoters_rough.fa \
-#     > $outputdir/promoters.fa
+# creates promoters.fa
+# replace the id of each seq with gene names
+# python3 $pmetroot/parse_promoters.py $outputdir/promoters_rough.fa $outputdir/promoters.bed $outputdir/promoters.fa
+# rm $outputdir/promoters.bed
+# rm $outputdir/promoters_rough.fa
+awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
+    $outputdir/promoters.bed \
+    $outputdir/promoters_rough.fa \
+    > $outputdir/promoters.fa
 
 
-# ### Make promoters.bg from promoters.fa
+### Make promoters.bg from promoters.fa ------------------------------------------------------------
+# now we can actually FIMO our way to victory
+fasta-get-markov $outputdir/promoters.fa > $outputdir/promoters.bg
+# FIMO barfs ALL the output. that's not good. time for individual FIMOs
+# on individual MEME-friendly motif files too
 
+duration=$(( SECONDS - start ))
+echo $duration" secs"
 
-# # now we can actually FIMO our way to victory
-# fasta-get-markov $outputdir/promoters.fa > $outputdir/promoters.bg
-# # FIMO barfs ALL the output. that's not good. time for individual FIMOs
-# # on individual MEME-friendly motif files too
+start=$SECONDS
 
-# duration=$(( SECONDS - start ))
-# echo $duration" secs"
+echo "Processing motifs...";
+echo -e "0.05\tProcessing motifs..." >$progFile
+# mkdir $outputdir/memefiles
 
-# start=$SECONDS
-
-# echo "Processing motifs...";
-# echo -e "0.05\tProcessing motifs..." >$progFile
-# # mkdir $outputdir/memefiles
-
-# ### Make motif files from user's meme file
-# [ ! -d $outputdir/memefiles ] && mkdir $outputdir/memefiles
+### Make motif files from user's meme file
+[ ! -d $outputdir/memefiles ] && mkdir $outputdir/memefiles
 
 
 
-# python3 $pmetroot/parse_memefile.py $memefile $outputdir/memefiles/
+python3 $pmetroot/parse_memefile.py $memefile $outputdir/memefiles/
 
-# ### creates IC.txt tsv file from, motif files
-# python3 $pmetroot/calculateICfrommeme_IC_to_csv.py $outputdir/memefiles/ $outputdir/IC.txt
+### creates IC.txt tsv file from, motif files
+python3 $pmetroot/calculateICfrommeme_IC_to_csv.py $outputdir/memefiles/ $outputdir/IC.txt
 
 
-# ### Create a fimo hits file form each motif file using promoters.bg and promoters.fa
+### Create a fimo hits file form each motif file using promoters.bg and promoters.fa
 
-# [ ! -d $outputdir/fimo ] && mkdir $outputdir/fimo
-# [ ! -d $outputdir/fimohits ] && mkdir $outputdir/fimohits
+[ ! -d $outputdir/fimo ] && mkdir $outputdir/fimo
+[ ! -d $outputdir/fimohits ] && mkdir $outputdir/fimohits
 
-# shopt -s nullglob # prevent loop produncing '*.txt'
-# # 20 sec min per file, progress goes from 5% to 70%
+shopt -s nullglob # prevent loop produncing '*.txt'
+# 20 sec min per file, progress goes from 5% to 70%
 
-# numfiles=$(ls -l $outputdir/memefiles/*.txt | wc -l)
-# echo $numfiles" found"
-# n=0
+numfiles=$(ls -l $outputdir/memefiles/*.txt | wc -l)
+echo $numfiles" found"
+n=0
 
-# for memefile in $outputdir/memefiles/*.txt; do
-#     let n=$n+1
-#     fimofile=`basename $memefile`
-#     echo $fimofile
-#     echo $n
+for memefile in $outputdir/memefiles/*.txt; do
+    let n=$n+1
+    fimofile=`basename $memefile`
+    echo $fimofile
     
-#     (
-#         mkdir -p $outputdir/fimo/$n && \
-#         fimo --no-qvalue \
-#             --text --thresh $fimothresh \
-#             --verbosity 1 \
-#             --bgfile $outputdir/promoters.bg\
-#             $memefile $outputdir/promoters.fa \
-#             > $outputdir/fimo/$n/$fimofile && \
-#         $pmetroot/pmetindex \
-#             -f $outputdir/fimo/$n \
-#             -k $maxk \
-#             -n $topn \
-#             -o $outputdir \
-#             -p $outputdir/promoter_lengths.txt \
-#             -g $progFile > $outputdir/pmetindx.log && \
-#         rm -rf $outputdir/fimo/$n
-#     ) & 
-#     [ `expr $n % $threads` -eq 0 ] && wait
-# done
+    fimo --no-qvalue \
+        --text --thresh $fimothresh \
+        --verbosity 1 \
+        --bgfile $outputdir/promoters.bg\
+        $memefile $outputdir/promoters.fa \
+        > $outputdir/fimo/$fimofile & 
+    [ `expr $n % $threads` -eq 0 ] && wait
+done
+
+echo "Delete unnecessary files"
+rm -r $outputdir/memefiles
+rm $outputdir/promoters.bg
+rm $outputdir/promoters.fa
+rm ${gff3file}temp
+
+# For final pmet stage, promoter lengths file must have an
+# entry for every gene in gene_input_file. It may not so here is a 
+# convenient place to remove them and also remove from universe file
+cut -f 1  $outputdir/promoter_lengths.txt > $universefile
 
 
+exit 0;
 
-# # _fifofile="$$.fifo"
-# # mkfifo $_fifofile     # 创建一个FIFO类型的文件
-# # exec 6<>$_fifofile    # 将文件描述符6写入 FIFO 管道， 这里6也可以是其它数字
-# # rm $_fifofile         # 删也可以，
-# # threads=4 # 定义并行数量
+# next stage needs the following inputs
 
-# # #根据并行度设置信号个数
-# # #事实上是在fd6中放置了$degree个回车符
-# # for ((i=0;i<${threads};i++));do
-# #     echo
-# # done >&6
-
-# # for memefile in $outputdir/memefiles/*.txt; do
-# #     # 从管道中读取（消费掉）一个字符信号
-# #     # 当FD6中没有回车符时，停止，实现并行度控制
-# #     read -u6
-# #     {
-# #         let n=$n+1
-# #         prog="0"$(bc <<< "scale=2;0.05+0.65*$n/$numfiles")
-# #         echo $prog
-# #         echo "  Processing motif $n of $numfiles"
-# #         # sleep 0.1
-# #         # bfid=`basename $memefile`
-# #         # fimofile=$bfid
-        
-# #         # fimo --text --thresh $fimothresh --verbosity 1 --bgfile $outputdir/promoters.bg $memefile $outputdir/promoters.fa > $outputdir/fimo/$fimofile
-# #     } &
-# # done
-# # wait # 等待所有任务结束
-# # exec 6>&- # 关闭管道
-
-# echo "Delete unnecessary files"
-# rm -r $outputdir/memefiles
-# rm $outputdir/promoters.bg
-# rm $outputdir/promoters.fa
-
-
-# # For final pmet stage, promoter lengths file must have an entry for every gene in gene_input_file. It may not so here is a 
-# # convenient place to remove them and also remove from universe file
-# cut -f 1  $outputdir/promoter_lengths.txt > $universefile
-
-
-# exit 0;
-
-# # next stage needs the following inputs
-
-# #   promoter_lengths.txt        made by parse_promoter_lengths.py from .bed file
-# #   bimnomial_thresholds.txt    made by PMETindex
-# #   IC.txt                      made by calculateICfrommeme.py from meme file
-# #   gene input file             supplied by user
+#   promoter_lengths.txt        made by parse_promoter_lengths.py from .bed file
+#   bimnomial_thresholds.txt    made by PMETindex
+#   IC.txt                      made by calculateICfrommeme.py from meme file
+#   gene input file             supplied by user

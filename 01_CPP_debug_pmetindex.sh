@@ -41,13 +41,13 @@ fi
 
 
 
+# run pmet index
+scripts/pmetindex \
+    -f results/PMETindex/fimo \
+    -k 5 -n 5000 \
+    -p results/PMETindex/promoter_lengths.txt \
+    -o results/PMETindex/
 
-# scripts/pmetindex \
-#     -f results/PMETindex/fimo \
-#     -k 5 -n 5000 \
-#     -p results/PMETindex/promoter_lengths.txt \
-#     -o results/PMETindex/
-
-# # mkdir -p performance
-# # mv pmetindex.prof performance
-# # cp scripts/pmetindex performance
+# mkdir -p performance
+# mv pmetindex.prof performance
+# cp scripts/pmetindex performance
