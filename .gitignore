@@ -58,3 +58,5 @@ results/PMETindex/IC.txt
 results/PMETindex/promoter_lengths.txt
 results/PMETindex/promoters.bg
 src/indexing/test/binomial_thresholds.txt
+results/PMETindex/fimohits/
+results/PMETindex/
