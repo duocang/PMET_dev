@@ -26,7 +26,6 @@ else
     scripts/needed_by_PMETindex.sh \
     -r scripts \
     -o results/PMETindex \
-    -g progress \
     -i gene_id= \
     -k 5 \
     -n 5000 \
@@ -48,6 +47,6 @@ scripts/pmetindex \
     -p results/PMETindex/promoter_lengths.txt \
     -o results/PMETindex/
 
-# mkdir -p performance
-# mv pmetindex.prof performance
-# cp scripts/pmetindex performance
+mkdir -p performance
+mv pmetindex.prof performance
+cp scripts/pmetindex performance

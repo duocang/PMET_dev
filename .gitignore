@@ -60,3 +60,6 @@ results/PMETindex/promoters.bg
 src/indexing/test/binomial_thresholds.txt
 results/PMETindex/fimohits/
 results/PMETindex/
+results/PMET/
+scripts/pmet
+results/PMET_parallel/
