@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+results/PMETindex_/fimo/
+results/PMETindex_/fimohits/
+*.gff3
+*.bed
+*.zip
+*.fa
+*.fai
+*.pdf
+*.prof
+performance/pmetindex
+performance/pmetParallel
+*.fasta
+scripts/pmetindex
+scripts/pmetParallel
