@@ -33,6 +33,7 @@ else
     -p 1000 \
     -v NoOverlap \
     -u Yes \
+    -t 16 \
     data/genome.fasta \
     data/anno.gff3 \
     data/motif.meme
