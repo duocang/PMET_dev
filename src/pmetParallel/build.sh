@@ -5,7 +5,7 @@ mkdir -p bin
 
 cd bin
 # 执行CMake命令生成Makefile
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 # 执行Make命令进行编译
 make
