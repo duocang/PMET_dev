@@ -1,0 +1,21 @@
+Cluster	Motif 1	Motif 2	Number of genes in cluster with both motifs	Total number of genes with both motifs	Number of genes in cluster	Raw p-value	Adjusted p-value (BH)	Adjusted p-value (Bonf)	Adjusted p-value (Global Bonf)	Genes
+B-naive	AP-2.0001	AP-2.0002	0	1	28	1	1	1	1	
+B-naive	AP-2.0001	AP-2.0002	0	1	28	1	1	1	1	
+B-naive	AP-2.0001	AP-2.0003	0	1	28	1	1	1	1	
+B-naive	AP-2.0001	AP-2.0003	0	1	28	1	1	1	1	
+B-naive	AP-2.0002	AP-2.0003	0	29	28	1	1	1	1	
+CD4-Naive	AP-2.0001	AP-2.0002	0	1	13	1	1	1	1	
+CD4-Naive	AP-2.0001	AP-2.0002	0	1	13	1	1	1	1	
+CD4-Naive	AP-2.0001	AP-2.0003	0	1	13	1	1	1	1	
+CD4-Naive	AP-2.0001	AP-2.0003	0	1	13	1	1	1	1	
+CD4-Naive	AP-2.0002	AP-2.0003	0	29	13	1	1	1	1	
+CD8-Naive	AP-2.0001	AP-2.0002	0	1	21	1	1	1	1	
+CD8-Naive	AP-2.0001	AP-2.0002	0	1	21	1	1	1	1	
+CD8-Naive	AP-2.0001	AP-2.0003	0	1	21	1	1	1	1	
+CD8-Naive	AP-2.0001	AP-2.0003	0	1	21	1	1	1	1	
+CD8-Naive	AP-2.0002	AP-2.0003	0	29	21	1	1	1	1	
+NK	AP-2.0001	AP-2.0002	0	1	29	1	1	1	1	
+NK	AP-2.0001	AP-2.0002	0	1	29	1	1	1	1	
+NK	AP-2.0001	AP-2.0003	0	1	29	1	1	1	1	
+NK	AP-2.0001	AP-2.0003	0	1	29	1	1	1	1	
+NK	AP-2.0002	AP-2.0003	0	29	29	1	1	1	1	
