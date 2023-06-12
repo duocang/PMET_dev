@@ -69,9 +69,9 @@ while getopts ":r:o:k:n:g:f" opt; do
     k) echo "Top k motif hits within each promoter: $OPTARG" >&2
     maxk=$OPTARG;;
     f) echo "Fimo threshold: $OPTARG" >&2
-     fimothresh=$OPTARG;;
+    fimothresh=$OPTARG;;
     g) echo "Progress file: $OPTARG" >&2
-     progFile=$OPTARG;;
+    progFile=$OPTARG;;
     \?) echo "Invalid option: -$OPTARG" >&2
     exit 1;;
     :)  echo "Option -$OPTARG requires an argument." >&2
@@ -117,7 +117,7 @@ if [[ ! -f "$universefile" || ! -f "$outputdir/promoter_lengths.txt" ]]; then
 	python3 $pmetroot/parse_promoter_lengths_from_fasta.py $outputdir/no_duplicates.fa $outputdir/promoter_lengths.txt
 	rm -f $outputdir/no_duplicates.fa
 	
-  	cut -f 1  $outputdir/promoter_lengths.txt > $universefile
+  cut -f 1  $outputdir/promoter_lengths.txt > $universefile
 fi
 
 
@@ -164,7 +164,7 @@ for memefile in $outputdir/memefiles/*.txt; do
     bfid=`basename $memefile`
     fimofile=$bfid
     
-     /usr/local/meme/bin/fimo --text --thresh $fimothresh --verbosity 1 --bgfile $outputdir/genome.bg $memefile $genomefile > $outputdir/fimo/$fimofile
+    /usr/local/meme/bin/fimo --text --thresh $fimothresh --verbosity 1 --bgfile $outputdir/genome.bg $memefile $genomefile > $outputdir/fimo/$fimofile
 
 done
 
@@ -211,7 +211,3 @@ exit 0;
 #   bimnomial_thresholds.txt    made by PMETindex
 #   IC.txt                      made by calculateICfrommeme.py from meme file
 #   gene input file             supplied by user
-
-
-
-

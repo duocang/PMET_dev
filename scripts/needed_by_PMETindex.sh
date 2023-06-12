@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-
 # disable warnings
 set -o errexit
 set -o pipefail
@@ -9,21 +8,19 @@ set -o pipefail
 # Takes as inputs from web page : fasta file , gff3 file, meme file, gene clusters file
 # gfff3 identifier, N, k, promoter length, overlap included?, utr included?, [fimo threshold]
 
-#This version requires outputdir, the 3 input files will be put there
+# This version requires outputdir, the 3 input files will be put there
 
 # ICdict.pickle file, binomial_thresholds.txt file
 # a directory called fimohits contaning files called motifname.txt fo reach mtoif in meme file input
 
 # This is all the input needed by pmet tool, along with genes list file (clusters) that user will provide via web UI
 
-
-
 # 22.1.18 Charlotte Rich
 # last edit: 7.2.18 - removed the make 1 big fimohits files
-#Edited by PEB June 2020. Will be called by run_pmet_min.php to create inputs for call to pmet binary
-#Take progress file from 1% to 95%
+# Edited by PEB June 2020. Will be called by run_pmet_min.php to create inputs for call to pmet binary
+# Take progress file from 1% to 95%
 
-#PEB DEc 2020. Called by run_pmet.php with params
+# PEB DEc 2020. Called by run_pmet.php with params
 # -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile 
 
 # fimo threshold is default
@@ -55,7 +52,6 @@ function error_exit() {
     exit 1
 }
 
-
 # set up defaults
 topn=5000
 maxk=5
@@ -65,7 +61,6 @@ overlap="AllowOverlap"
 utr="No"
 gff3id='gene_id'
 pmetroot="scripts"
-progFile="progress/progress"
 threads=8
 
 # set up empty variables
@@ -100,8 +95,6 @@ while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
         promlength=$OPTARG;;
         f) echo "Fimo threshold: $OPTARG" >&2
         fimothresh=$OPTARG;;
-        g) echo "Progress file: $OPTARG" >&2
-        progFile=$OPTARG;;
         v) echo "Remove promoter overlaps with gene sequences: $OPTARG" >&2
         overlap=$OPTARG;;
         u) echo "Include 5' UTR sequence?: $OPTARG" >&2
@@ -120,21 +113,9 @@ genomefile=$1
 gff3file=$2
 memefile=$3
 gene_input_file=$4
-
 [ ! -d $outputdir ] && mkdir $outputdir
 
-# cd $outputdir
-# will have a directory input_files wthat will contain genome fle, gff3 file and memefile
-
-# start off by filtering the .gff3 to gene lines only
-start=$SECONDS
-
-# progress taken from 1% to 95%
-echo -e "0.01\tPreparing sequences..." > $progFile
 echo "Preparing sequences...";
-
-
-
 
 # sort annotaion by coordinates ---------------------------------------------------------------
 $pmetroot/gff3sort/gff3sort.pl $gff3file > ${gff3file}temp
@@ -144,7 +125,6 @@ universefile=$outputdir/universe.txt
 bedfile=$outputdir/genelines.bed
 if [[ ! -f "$universefile"  ||  ! -f "$bedfile" ]]; then
 	### Make genelines.bed and universe.txt if validation script hasn't
-
 	grep -P '\tgene\t' ${gff3file}temp > $outputdir/genelines.gff3
 	#parse up the .bed for promoter extraction, 'gene_id'
 	python3 $pmetroot/parse_genelines.py $gff3id $outputdir/genelines.gff3 $bedfile
@@ -154,10 +134,7 @@ if [[ ! -f "$universefile"  ||  ! -f "$bedfile" ]]; then
 	cut -f 4 $bedfile > $universefile
 fi
 
-
 ### Make bedgenome.genome and genome_stripped.fa
-
-echo -e "0.02\tCreating genome file..." > $progFile
 echo "Creating genome file...";
 
 # extract genome ----------------------------------------------------------------------------
@@ -173,24 +150,14 @@ samtools faidx $outputdir/genome_stripped.fa
 cut -f 1-2 $outputdir/genome_stripped.fa.fai > $outputdir/bedgenome.genome
 
 
-duration=$(( SECONDS - start ))
-echo $duration" secs"
-start=$SECONDS
-
-
 ### Use genelines.bed and bedgenome.genome to make promoters.bed
-
 echo "Preparing promoter region information...";
-echo -e "0.03\tPreparing promoter region information..." > $progFile
-
-
 
 bedtools flank -l $promlength -r 0 -s -i $bedfile -g $outputdir/bedgenome.genome > $outputdir/promoters.bed
 rm $outputdir/bedgenome.genome
 
 # remove overlapping promoter chunks
 if [ $overlap == 'NoOverlap' ]; then
-    echo -e "0.03\tRemoving overlaps..." > $progFile
 	echo "Removing overlaps";
 	sleep 0.1
 	bedtools subtract -a $outputdir/promoters.bed -b $bedfile > $outputdir/promoters2.bed
@@ -207,26 +174,23 @@ python3 $pmetroot/assess_integrity.py $outputdir/promoters.bed
 # possibly add 5' UTR
 if [ $utr == 'Yes' ]; then
     echo "Adding UTRs...";
-    echo -e "0.03\tAdding UTRs..."  > $progFile #updates promoters.bed, takes about 45sec (about 20 sec for 10 000 promoters)
 	python3 $pmetroot/parse_utrs.py $outputdir/promoters.bed ${gff3file}temp $universefile
 fi
 
-duration=$(( SECONDS - start ))
-echo $duration" secs"
-
-start=$SECONDS
 ### Create promoter_lenfths file from promoters.bed
 
-# create promoter_lengths.txt ----------------------------------------------------------------
+# create promoter_lengths.txt ------------------------------------------------------------------
 python3 $pmetroot/parse_promoter_lengths.py $outputdir/promoters.bed $outputdir/promoter_lengths.txt
 
-# extract promoters' sequence (.fa) --------------------------------------------------------
+# extract promoters' sequence (.fa) ------------------------------------------------------------
 ## Make promoters.fa from promoters.bed and genome_stripped.fa
-echo -e "0.04\tCreating promoters file..." >$progFile
 echo "Creating promoters file";
 
-# get promoters
-bedtools getfasta -fi $outputdir/genome_stripped.fa -bed $outputdir/promoters.bed -s -fo $outputdir/promoters_rough.fa
+# get promoters --------------------------------------------------------------------------------
+bedtools getfasta \
+        -fi $outputdir/genome_stripped.fa \
+        -bed $outputdir/promoters.bed \
+        -s -fo $outputdir/promoters_rough.fa
 rm $outputdir/genome_stripped.fa
 rm $outputdir/genome_stripped.fa.fai
 
@@ -241,39 +205,30 @@ awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
     > $outputdir/promoters.fa
 
 
-### Make promoters.bg from promoters.fa ------------------------------------------------------------
+### Make promoters.bg from promoters.fa -------------------------------------------------------
 # now we can actually FIMO our way to victory
 fasta-get-markov $outputdir/promoters.fa > $outputdir/promoters.bg
 # FIMO barfs ALL the output. that's not good. time for individual FIMOs
 # on individual MEME-friendly motif files too
 
-duration=$(( SECONDS - start ))
-echo $duration" secs"
-
-start=$SECONDS
-
 echo "Processing motifs...";
-echo -e "0.05\tProcessing motifs..." >$progFile
 # mkdir $outputdir/memefiles
 
-### Make motif files from user's meme file
+# Make motif files from meme file ------------------------------------------------------------
 [ ! -d $outputdir/memefiles ] && mkdir $outputdir/memefiles
-
-
 
 python3 $pmetroot/parse_memefile.py $memefile $outputdir/memefiles/
 
-### creates IC.txt tsv file from, motif files
+# creates IC.txt from motif files ------------------------------------------------------------
 python3 $pmetroot/calculateICfrommeme_IC_to_csv.py $outputdir/memefiles/ $outputdir/IC.txt
 
 
-### Create a fimo hits file form each motif file using promoters.bg and promoters.fa
+# Create a fimo hits file form each motif using promoters.bg and promoters.fa -----------------
 
 [ ! -d $outputdir/fimo ] && mkdir $outputdir/fimo
 [ ! -d $outputdir/fimohits ] && mkdir $outputdir/fimohits
 
 shopt -s nullglob # prevent loop produncing '*.txt'
-# 20 sec min per file, progress goes from 5% to 70%
 
 numfiles=$(ls -l $outputdir/memefiles/*.txt | wc -l)
 echo $numfiles" found"
@@ -293,11 +248,11 @@ for memefile in $outputdir/memefiles/*.txt; do
     [ `expr $n % $threads` -eq 0 ] && wait
 done
 
-echo "Delete unnecessary files"
-rm -r $outputdir/memefiles
-rm $outputdir/promoters.bg
-rm $outputdir/promoters.fa
-rm ${gff3file}temp
+# echo "Delete unnecessary files"
+# rm -r $outputdir/memefiles
+# rm $outputdir/promoters.bg
+# rm $outputdir/promoters.fa
+# rm ${gff3file}temp
 
 # For final pmet stage, promoter lengths file must have an
 # entry for every gene in gene_input_file. It may not so here is a 

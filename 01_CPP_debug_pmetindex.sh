@@ -1,11 +1,7 @@
-
-mkdir -p data
-mkdir -p results/PMETindex
-
-
 # download data
+mkdir -p data/PMETindex_promoters
 cd data
-if [ -f "anno.gff3" ]; then
+if [ -f "PMETindex_promoters/anno.gff3" ]; then
     echo "anno.gff3 exists."
 else
     echo "anno.gff3 does not exist. Fetching data..."
@@ -16,6 +12,9 @@ cd ..
 
 # check if fimo ready for PMETindex
 directory="results/PMETindex/fimo"
+
+mkdir -p $directory
+
 txt_files=$(find "$directory" -name "*.txt")
 
 if [ -n "$txt_files" ]; then
@@ -25,28 +24,29 @@ else
     
     scripts/needed_by_PMETindex.sh \
     -r scripts \
-    -o results/PMETindex \
+    -o results/PMETindex_promoters \
     -i gene_id= \
     -k 5 \
     -n 5000 \
     -p 1000 \
     -v NoOverlap \
     -u Yes \
-    -t 16 \
-    data/genome.fasta \
-    data/anno.gff3 \
-    data/motif.meme
+    -t 4 \
+    data/PMETindex_promoters/genome.fasta \
+    data/PMETindex_promoters/anno.gff3 \
+    data/PMETindex_promoters/motif.meme
 fi
 
-
-
 # run pmet index
-scripts/pmetindex \
-    -f results/PMETindex/fimo \
-    -k 5 -n 5000 \
-    -p results/PMETindex/promoter_lengths.txt \
-    -o results/PMETindex/
+mkdir -p results/PMETindex_promoters/fimohits
 
-mkdir -p performance
-mv pmetindex.prof performance
-cp scripts/pmetindex performance
+scripts/pmetindex \
+    -f results/PMETindex_promoters/fimo \
+    -k 5 -n 5000 \
+    -p results/PMETindex_promoters/promoter_lengths.txt \
+    -o results/PMETindex_promoters/
+
+# mkdir -p performance
+# mv pmetindex.prof performance
+# cp scripts/pmetindex performance
+rm pmetindex.prof
