@@ -1,7 +1,3 @@
-This is a Shiny app developed for PMET.
-
-
-
 ## File tree
 
 ```shell
