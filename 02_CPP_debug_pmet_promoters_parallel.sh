@@ -1,5 +1,5 @@
 output=results/PMET_parallel
-indexoutput=results/PMETindex
+indexoutput=results/PMETindex_promoters
 
 gene_input_file=data/gene.txt
 
@@ -16,7 +16,7 @@ mkdir -p $output
 # remove genes not present in pre-computed pmet index
 grep -Ff $indexoutput/universe.txt $gene_input_file > $gene_input_file"temp"
 
-scripts/pmetParallel \
+scripts/pmetParallel\
     -d . \
     -g $gene_input_file"temp" \
     -i 4 \
@@ -33,6 +33,6 @@ rm $output/temp*.txt
 
 rm $gene_input_file"temp"
 
-mkdir -p performance
-mv pmetParallel.prof performance
-cp scripts/pmetParallel performance
+# mkdir -p performance
+# mv pmetParallel.prof performance
+# cp scripts/pmetParallel performance

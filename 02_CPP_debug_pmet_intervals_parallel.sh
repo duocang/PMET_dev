@@ -1,4 +1,4 @@
-output=results/PMET_intervals_parallel
+output=results/PMET_intervals
 indexoutput=results/PMETindex_intervals
 
 gene_input_file=data/PMETindex_intervals/intervals.txt
@@ -23,7 +23,7 @@ scripts/pmetParallel_linux \
     -c $indexoutput/IC.txt \
     -f $indexoutput/fimohits \
     -o $output \
-    -t 1
+    -t 2
 
 cat $output/*.txt > $output/motif_output.txt
 rm $output/temp*.txt
