@@ -81,7 +81,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:f:g:v:u:" options; do
+while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
     case $options in
         r) echo "Full path of PMET_index:  $OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -97,12 +97,12 @@ while getopts ":r:i:o:n:k:p:f:g:v:u:" options; do
         promlength=$OPTARG;;
         f) echo "Fimo threshold: $OPTARG" >&2
         fimothresh=$OPTARG;;
-        g) echo "Progress file: $OPTARG" >&2
-        progFile=$OPTARG;;
         v) echo "Remove promoter overlaps with gene sequences: $OPTARG" >&2
         overlap=$OPTARG;;
         u) echo "Include 5' UTR sequence?: $OPTARG" >&2
         utr=$OPTARG;;
+        t) echo "Number of threads: $OPTARG" >&2
+        threads=$OPTARG;;
         \?) echo "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  echo "Option -$OPTARG requires an argument." >&2
@@ -121,26 +121,27 @@ mkdir -p $indexingOutputDir
 
 start=$SECONDS
 
-# start off by filtering the .gff3 to gene lines only
-echo "Preparing sequences...";
 # -------------------------------------------------------------------------------------------
 # 1. sort annotaion by gene coordinates
-$pmetroot/gff3sort/gff3sort.pl $gff3file > ${gff3file}temp
+echo "1. Sorting annotation by gene coordinates"
+$pmetroot/gff3sort/gff3sort.pl $gff3file > $indexingOutputDir/sorted.gff3
 
 
 # -------------------------------------------------------------------------------------------
 # 2. extract gene line from annoitation
-# grep -P '\tgene\t' ${gff3file}temp > $indexingOutputDir/genelines.gff3
+echo "2. Extracting gene line from annoitation"
+# grep -P '\tgene\t' $indexingOutputDir/sorted.gff3 > $indexingOutputDir/genelines.gff3
 if [[ "$(uname)" == "Linux" ]]; then
-    grep -P '\tgene\t' ${gff3file}temp > $indexingOutputDir/genelines.gff3
+    grep -P '\tgene\t' $indexingOutputDir/sorted.gff3 > $indexingOutputDir/genelines.gff3
 elif [[ "$(uname)" == "Darwin" ]]; then
-    grep '\tgene\t' ${gff3file}temp > $indexingOutputDir/genelines.gff3
+    grep '\tgene\t' $indexingOutputDir/sorted.gff3 > $indexingOutputDir/genelines.gff3
 else
     echo "Unsupported operating system."
 fi
 
 # -------------------------------------------------------------------------------------------
 # 3. extract chromosome , start, end, gene ('gene_id' for input) ...
+echo "Extracting chromosome, start, end, gene ..."
 python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
 
 # -------------------------------------------------------------------------------------------
@@ -173,11 +174,6 @@ awk '/^>/ { if (NR!=1) print ""; printf "%s\n",$0; next;} \
 samtools faidx $indexingOutputDir/genome_stripped.fa
 cut -f 1-2 $indexingOutputDir/genome_stripped.fa.fai > $indexingOutputDir/bedgenome.genome
 
-
-duration=$(( SECONDS - start ))
-echo $duration" secs"
-start=$SECONDS
-
 # -------------------------------------------------------------------------------------------
 # 8. create promoters' coordinates from annotation
 # 在bedtools中，flank是一个命令行工具，用于在BED格式的基因组坐标文件中对每个区域进行扩展或缩短。
@@ -191,7 +187,7 @@ bedtools flank \
 # -------------------------------------------------------------------------------------------
 # 9. remove overlapping promoter chunks
 if [ $overlap == 'NoOverlap' ]; then
-	echo "Removing overlaps";
+	echo "9. Removing overlaps";
 	sleep 0.1
 	bedtools subtract \
         -a $indexingOutputDir/promoters.bed \
@@ -207,15 +203,11 @@ python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 # -------------------------------------------------------------------------------------------
 # 11. add 5' UTR
 if [ $utr == 'Yes' ]; then
-    echo "Adding UTRs...";
+    echo "11. Adding UTRs...";
 	python3 $pmetroot/parse_utrs.py \
         $indexingOutputDir/promoters.bed \
-        ${gff3file}temp $universefile
+        $indexingOutputDir/sorted.gff3 $universefile
 fi
-
-duration=$(( SECONDS - start ))
-echo $duration" secs"
-start=$SECONDS
 
 # -------------------------------------------------------------------------------------------
 # 12. promoter lenfths from promoters.bed
@@ -240,30 +232,35 @@ done < $indexingOutputDir/promoter_lengths_all.txt
 
 # -------------------------------------------------------------------------------------------
 # 14. remove NEGATIVE genes
-cut -d " " \
-    -f1  $indexingOutputDir/promoter_length_deleted.txt \
-    > $indexingOutputDir/genes_negative.txt
+if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
+    echo "14. Removing NEGATIVE genes"
+    cut -d " " \
+        -f1  $indexingOutputDir/promoter_length_deleted.txt \
+        > $indexingOutputDir/genes_negative.txt
+fi
 
 # -------------------------------------------------------------------------------------------
 # 15. filter promoter annotation with negative length
-grep -v -w -f \
-    $indexingOutputDir/genes_negative.txt \
-    $indexingOutputDir/promoters.bed \
-    > $indexingOutputDir/filtered_promoters.bed
+echo "15. Filtering promoter with negative length"
+if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
+    grep -v -w -f \
+        $indexingOutputDir/genes_negative.txt \
+        $indexingOutputDir/promoters.bed \
+        > $indexingOutputDir/filtered_promoters.bed
 
-mv $indexingOutputDir/promoters.bed $indexingOutputDir/promoters_before_filter.bed
-mv $indexingOutputDir/filtered_promoters.bed $indexingOutputDir/promoters.bed
-
+    mv $indexingOutputDir/promoters.bed $indexingOutputDir/promoters_before_filter.bed
+    mv $indexingOutputDir/filtered_promoters.bed $indexingOutputDir/promoters.bed
+fi
 
 # -------------------------------------------------------------------------------------------
 # 16. update gene list (no NEGATIVE genes)
+echo "16. Updating gene list (about NEGATIVE genes)";
 cut -d " " -f1  $indexingOutputDir/promoter_lengths.txt > $universefile
 
 
-echo "Creating promoters file";
-
 # -------------------------------------------------------------------------------------------
 # 17. create promoters fasta
+echo "17. Creating promoters file";
 bedtools getfasta -fi \
     $indexingOutputDir/genome_stripped.fa \
     -bed $indexingOutputDir/promoters.bed \
@@ -271,6 +268,7 @@ bedtools getfasta -fi \
 
 # -------------------------------------------------------------------------------------------
 # 18. replace the id of each seq with gene names
+echo "18. Replacing the id of each sequences' with gene names"
 awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
     $indexingOutputDir/promoters.bed \
     $indexingOutputDir/promoters_rough.fa \
@@ -284,11 +282,6 @@ awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
 # 19. promoters.bg from promoters.fa
 fasta-get-markov $indexingOutputDir/promoters.fa > $indexingOutputDir/promoters.bg
 
-duration=$(( SECONDS - start ))
-echo $duration" secs"
-start=$SECONDS
-echo "Processing motifs...";
-
 # -------------------------------------------------------------------------------------------
 # 20. individual motif files from user's meme file
 [ ! -d $indexingOutputDir/memefiles ] && mkdir $indexingOutputDir/memefiles
@@ -296,6 +289,7 @@ python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
 
 # -------------------------------------------------------------------------------------------
 # 21. IC.txt
+echo "21. Generating IC.txt"
 python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
     $indexingOutputDir/memefiles/ \
     $indexingOutputDir/IC.txt

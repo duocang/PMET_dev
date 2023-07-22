@@ -1,7 +1,7 @@
 # download data
 mkdir -p data/PMETindex_promoters
 cd data
-if [ -f "anno.gff3" ]; then
+if [ -f "PMETindex_promoters/anno.gff3" ]; then
     echo "anno.gff3 exists."
 else
     echo "anno.gff3 does not exist. Fetching data..."
@@ -27,18 +27,18 @@ else
     echo "No txt files found in $directory. Running fimo.sh..."
 
     scripts/cpp_debug_needed/needed_by_PMETindex.sh \
-    -r scripts \
-    -o results/PMETindex_promoters \
-    -i gene_id= \
-    -k 5 \
-    -n 5000 \
-    -p 1000 \
-    -v NoOverlap \
-    -u Yes \
-    -t 4 \
-    data/PMETindex_promoters/genome.fasta \
-    data/PMETindex_promoters/anno.gff3 \
-    data/PMETindex_promoters/motif.meme
+        -r scripts \
+        -o results/PMETindex_promoters \
+        -i gene_id= \
+        -k 5 \
+        -n 5000 \
+        -p 1000 \
+        -v NoOverlap \
+        -u Yes \
+        -t 4 \
+        data/PMETindex_promoters/genome.fasta \
+        data/PMETindex_promoters/anno.gff3 \
+        data/PMETindex_promoters/motif.meme
 fi
 
 # run pmet index
