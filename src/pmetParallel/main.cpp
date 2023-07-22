@@ -17,7 +17,7 @@
 // pmet
 
 #include <dirent.h>
-#include <gperftools/profiler.h>
+// #include <gperftools/profiler.h>
 #include <math.h>
 #include <string.h>
 #include <sys/types.h>
@@ -70,7 +70,7 @@ int outputParallel(std::vector<int> motifsIndx, std::vector<motif> *allMotifs,
 void exportResultParallel(std::string cluster, std::vector<Output>::iterator beginIt,
                           std::vector<Output>::iterator endIt, std::string outFile, long globalBonferroniFactor);
 int main(int argc, const char *argv[]) {
-  ProfilerStart("pmetParallel.prof");
+  // ProfilerStart("pmetParallel.prof");
   /*
   inputs,
   1) IC threshold, used in discarding 2 motifs on same gene which partially overlap
@@ -304,7 +304,7 @@ int main(int argc, const char *argv[]) {
 
   outputFile.close();
 
-  ProfilerStop();
+  // ProfilerStop();
 
   std::cout << "Done." << std::endl;
   return 0;

@@ -1,0 +1,9 @@
+          Input parameters          
+------------------------------------
+fimo files		results/PMETindex_parallel_output/fimo/1790/*.txt
+promoters file		results/PMETindex_parallel_output/promoter_lengths.txt
+k			5
+n			5000
+output directory	results/PMETindex_parallel_output/
+Universe size is 17443
+Searching for fimo files...

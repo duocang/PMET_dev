@@ -5,7 +5,7 @@
 // -o pmetindex
 
 #include <dirent.h>
-#include <gperftools/profiler.h>
+// #include <gperftools/profiler.h>
 
 #include <fstream>
 #include <iostream>
@@ -22,7 +22,7 @@ bool findFiles(const std::string &searchDir, const std::string &pattern, std::ve
 void writeProgress(const std::string &fname, const std::string &message, float inc, float total);
 
 int main(int argc, const char *argv[]) {
-  ProfilerStart("pmetindex.prof");
+  // ProfilerStart("pmetindex.prof");
   // replicates the python script parse_matrix_n.py, excpet that it loops over all fimo files
 
   // inputs are
@@ -154,7 +154,7 @@ int main(int argc, const char *argv[]) {
   btFile.close();
 
   std::cout << std::endl << "Done" << std::endl;
-  ProfilerStop();
+  // ProfilerStop();
   return 0;
 }
 

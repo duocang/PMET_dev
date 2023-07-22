@@ -6,6 +6,7 @@
 #define cMotifHit_hpp
 
 #include <string>
+#include <cstring>
 
 class cMotifHit {
   // represents a line from a fimo file

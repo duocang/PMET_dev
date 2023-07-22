@@ -1,11 +1,15 @@
 # download data
 mkdir -p data/PMETindex_promoters
 cd data
-if [ -f "PMETindex_promoters/anno.gff3" ]; then
+if [ -f "anno.gff3" ]; then
     echo "anno.gff3 exists."
 else
     echo "anno.gff3 does not exist. Fetching data..."
     ./fetch_data.sh
+    mv anno.gff3 PMETindex_promoters/
+    mv genome.fasta PMETindex_promoters/
+    rm anno.gff3
+    rm genome.fasta
 fi
 cd ..
 
@@ -21,8 +25,8 @@ if [ -n "$txt_files" ]; then
     echo "txt files exist in $directory."
 else
     echo "No txt files found in $directory. Running fimo.sh..."
-    
-    scripts/needed_by_PMETindex.sh \
+
+    scripts/cpp_debug_needed/needed_by_PMETindex.sh \
     -r scripts \
     -o results/PMETindex_promoters \
     -i gene_id= \
@@ -46,7 +50,9 @@ scripts/pmetindex \
     -p results/PMETindex_promoters/promoter_lengths.txt \
     -o results/PMETindex_promoters/
 
-# mkdir -p performance
-# mv pmetindex.prof performance
-# cp scripts/pmetindex performance
-rm pmetindex.prof
+# # mkdir -p performance
+# # mv pmetindex.prof performance
+# # cp scripts/pmetindex performance
+# rm pmetindex.prof
+
+exit 0;

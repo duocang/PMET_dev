@@ -1,19 +1,14 @@
-
 # check if fimo ready for PMETindex
 directory="results/PMETindex_intervals/fimo"
 mkdir -p $directory
 
 txt_files=$(find "$directory" -name "*.txt")
-
-rm -rf results/PMETindex_intervals/binomial_thresholds.txt
-rm -rf  results/fimohits
-
 if [ -n "$txt_files" ]; then
     echo "txt files exist in $directory."
 else
     echo "No txt files found in $directory. Running fimo.sh..."
-    
-    scripts/needed_by_debug_PMETindex_intervals.sh  \
+
+    scripts/cpp_debug_needed/needed_by_debug_PMETindex_intervals.sh  \
     -r scripts \
     -o results/PMETindex_intervals \
     -n 5000 \
@@ -21,7 +16,7 @@ else
     -f 0.05 \
     -t 8 \
     data/PMETindex_intervals/intervals.fa \
-    data/PMETindex_intervals/motif.meme
+    data/PMETindex_intervals/motif_more.meme
 fi
 
 
@@ -33,10 +28,10 @@ scripts/pmetindex \
     -p results/PMETindex_intervals/promoter_lengths.txt \
     -o results/PMETindex_intervals/
 
-# # mkdir -p performance
-# # mv pmetindex.prof performance
-# # cp scripts/pmetindex performance
+# # # mkdir -p performance
+# # # mv pmetindex.prof performance
+# # # cp scripts/pmetindex performance
 
-rm pmetindex.prof
-
+# rm pmetindex.prof
+echo "done"
 exit 0;

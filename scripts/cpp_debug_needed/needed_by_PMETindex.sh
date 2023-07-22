@@ -238,7 +238,7 @@ for memefile in $outputdir/memefiles/*.txt; do
     let n=$n+1
     fimofile=`basename $memefile`
     echo $fimofile
-    
+
     fimo --no-qvalue \
         --text --thresh $fimothresh \
         --verbosity 1 \
