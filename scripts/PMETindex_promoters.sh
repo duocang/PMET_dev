@@ -148,7 +148,7 @@ print_green "Preparing data for FIMO and PMET index..."
 
 # -------------------------------------------------------------------------------------------
 # 1. sort annotaion by gene coordinates
-echo "1. Sorting annotation by gene coordinates"
+print_fluorescent_yellow "    1. Sorting annotation by gene coordinates"
 $pmetroot/gff3sort/gff3sort.pl $gff3file > $indexingOutputDir/sorted.gff3
 
 
@@ -167,7 +167,14 @@ fi
 # -------------------------------------------------------------------------------------------
 # 3. extract chromosome , start, end, gene ('gene_id' for input) ...
 print_fluorescent_yellow "    3. Extracting chromosome, start, end, gene ..."
-python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
+
+# 检查状态码 check presence
+if [ $? -eq 0 ]; then
+    python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
+else
+    gff3id='ID='
+    python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
+fi
 
 # -------------------------------------------------------------------------------------------
 # 4. filter invalid genes: start should be smaller than end
