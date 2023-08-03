@@ -168,6 +168,8 @@ fi
 # 3. extract chromosome , start, end, gene ('gene_id' for input) ...
 print_fluorescent_yellow "    3. Extracting chromosome, start, end, gene ..."
 
+# 使用grep查找字符串 check if gene_id is present
+grep -q "$gff3id" $indexingOutputDir/genelines.gff3
 # 检查状态码 check presence
 if [ $? -eq 0 ]; then
     python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
