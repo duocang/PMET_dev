@@ -278,8 +278,8 @@ int main(int argc, const char *argv[]) {
       // std::cout << endIndx << std::endl;
       std::vector<Output> v2 =
           std::vector<Output>(std::begin(cl->second) + beginIndx, std::begin(cl->second) + endIndx + 1);
-      std::cout << outputDirName + "temp_result_" + cl->first + "_" + std::to_string(i) + ".txt"
-                << "预计的大小：" << v2.size() << std::endl;
+      // std::cout << outputDirName + "temp_result_" + cl->first + "_" + std::to_string(i) + ".txt"
+      //           << "预计的大小：" << v2.size() << std::endl;
 
       threads[i] = std::thread(
           exportResultParallel, cl->first, std::begin(cl->second) + beginIndx, std::begin(cl->second) + endIndx + 1,
@@ -288,7 +288,7 @@ int main(int argc, const char *argv[]) {
     // run all threads
     for (auto &entry : threads) entry.join();
 
-    std::cout << std::endl << std::endl;
+    // std::cout << std::endl << std::endl;
   }
   // merge temp files
   // open results file, pmet results
