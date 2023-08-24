@@ -67,5 +67,6 @@ results/PMETindex_intervals/fimo/
 results/PMETindex_intervals/fimohits/
 results/PMETindex_intervals/memefiles/
 results
-data
 src/pmet/test_data
+src/indexing/bin
+src/indexing/build
