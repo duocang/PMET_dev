@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +22,12 @@ char *paste2(const char *spe, const char *string1, const char *string2)
     exit(EXIT_FAILURE);
   }
 
+  // Copy the first string
   strcpy(result, string1);
-
-  if (spe)
-  {
-    strcat(result, spe);
-  }
-
-  strcat(result, string2);
+  // Copy the separator
+  strcpy(result + len1, spe);
+  // Copy the second string
+  strcpy(result + len1 + lenSep, string2);
 
   return result;
 }
@@ -61,58 +59,29 @@ char *paste(int numStrings, const char *sep, ...)
     perror("Memory allocation failed");
     exit(EXIT_FAILURE);
   }
-  result[0] = '\0';
+  char *currentPos = result; // Pointer to track our position in the result string
 
   // Second pass: concatenate strings
   va_start(args, sep);
   for (int i = 0; i < numStrings; i++)
   {
     const char *str = va_arg(args, const char *);
-    strcat(result, str);
+    size_t lenStr = strlen(str);
+
+    memcpy(currentPos, str, lenStr);
+    currentPos += lenStr;
+
     if (i < numStrings - 1 && lenSep > 0)
     {
-      strcat(result, sep);
+      memcpy(currentPos, sep, lenSep);
+      currentPos += lenSep;
     }
   }
   va_end(args);
 
+  *currentPos = '\0'; // Null-terminate the result string
+
   return result;
-}
-
-char *getFilenameNoExt(const char *path)
-{
-  const char *base = strrchr(path, '/');
-  if (!base)
-    base = path; // 如果没有'/'，则整个字符串是文件名
-  else
-    base++;
-
-  char *dot = strrchr(base, '.');
-  size_t len = dot ? (size_t)(dot - base) : strlen(base);
-
-  char *filename = (char *)malloc(len + 1);
-  if (!filename)
-  {
-    // 如果需要，处理内存分配失败的情况
-    fprintf(stderr, "Failed to allocate memory for filename.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  strncpy(filename, base, len);
-  filename[len] = '\0';
-
-  return filename;
-}
-
-void removeTrailingSlash(char *path) {
-    if (!path) return;  // 检查path是否为NULL
-
-    size_t len = strlen(path);
-    if (len == 0) return;  // 检查字符串是否为空
-
-    if (path[len - 1] == '/') {
-        path[len - 1] = '\0';  // 将最后的'/'替换为字符串终止符
-    }
 }
 
 char* removeTrailingSlashAndReturn(const char *path) {
@@ -130,3 +99,4 @@ char* removeTrailingSlashAndReturn(const char *path) {
 
     return newPath;
 }
+

@@ -1,56 +1,72 @@
 #ifndef PROMOTER_LENGTH_H
 #define PROMOTER_LENGTH_H
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_PROMOTER_NAME_LENGTH 100  // Define a macro for maximum promoter name length
+#define MAX_PROMOTER_NAME_LENGTH 100 // Maximum allowable length for a promoter name
 
-
-typedef struct Promoter {
-    char* promoterName;
-    int length;
-    struct Promoter* next;
+/**
+ * Structure representing a single promoter.
+ */
+typedef struct Promoter
+{
+    char *promoterName;    ///< Name of the promoter.
+    int length;            ///< Length of the promoter sequence.
+    struct Promoter *next; ///< Pointer to the next promoter in the list.
 } Promoter;
 
-typedef struct {
-    Promoter* head;
+/**
+ * Structure representing a list of promoters.
+ */
+typedef struct
+{
+    Promoter *head; ///< Pointer to the head (first element) of the promoter list.
 } PromoterList;
 
+// Function prototypes
 
-void initPromoterList(PromoterList* list);
-long findPromoterLength(PromoterList* list, const char* promoterName);
-void freePromoterList(PromoterList* list);
-void readPromoterLengthFile(PromoterList* list, const char* filename);
+/**
+ * Initialize a promoter list to an empty state.
+ *
+ * @param list Pointer to the PromoterList to be initialized.
+ */
+void initPromoterList(PromoterList *list);
+
+/**
+ * Searches for a promoter by its name in the provided list and returns its length.
+ *
+ * @param list Pointer to the PromoterList to be searched.
+ * @param promoterName Name of the promoter to be searched for.
+ * @return Length of the promoter if found, otherwise -1.
+ */
+size_t findPromoterLength(PromoterList *list, const char *promoterName);
+
+/**
+ * Release all memory associated with a given promoter list, including each individual promoter.
+ *
+ * @param list Pointer to the PromoterList to be freed.
+ */
+void freePromoterList(PromoterList *list);
 
 
+/**
+ * Inserts a new Promoter with the given name and length at the beginning of the PromoterList.
+ * The function will exit with an error message if there's any memory allocation failure.
+ *
+ * @param list Pointer to the PromoterList where the new promoter should be inserted.
+ * @param promoterName Name of the new promoter.
+ * @param length Length of the new promoter.
+ */
+void insertPromoter(PromoterList *list, const char *promoterName, int length);
 
-
-
-
-// #include "FileRead.h"
-
-// #define TABLE_SIZE 30007 // Use a prime number for better distribution
-
-// typedef struct
-// {
-//   char *promoterName;
-//   int length;
-// } HashEntry;
-
-// typedef struct
-// {
-//   HashEntry *table[TABLE_SIZE];
-// } HashTable;
-
-// void initHashTable(HashTable *ht);
-// unsigned int hash(const char *str);
-// void readDataFromFile(HashTable* ht, const char* filename);
-// void insert(HashTable *ht, const char *promoterName, int length);
-// int find(HashTable *ht, const char *promoterName);
-// void freeHashTable(HashTable *ht);
+/**
+ * Reads promoter data from a file and populates a provided promoter list.
+ *
+ * @param list Pointer to the PromoterList to be populated.
+ * @param filename Name/path of the file containing promoter data.
+ */
+void readPromoterLengthFile(PromoterList *list, const char *filename);
 
 #endif /* PROMOTER_LENGTH_H */
-

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>   // for free function
+#include <stdlib.h> // for free function
 #include <assert.h> // for assert function
 
 // /// Maximum size for the sequence string. Adjust as needed.
@@ -13,16 +13,16 @@
 /// Structure representing a hit in the FIMO file.
 typedef struct
 {
-    char *motif_id;                   // Motif identifier.
-    char *motif_alt_id;               // Alternate motif identifier.
-    char *sequence_name;              // Name of the sequence.
-    long startPos;                    // Starting position of the motif hit.
-    long stopPos;                     // Ending position of the motif hit.
-    char strand;                      // Strand, either '+' or '-'.
-    double score;                     // Score of the motif hit.
-    double pVal;                      // P-value of the motif hit.
-    char *sequence;                   // Matched sequence string.
-    double binScore;                  // Bin score of the motif hit.
+  char *motif_id;      // Motif identifier.
+  char *motif_alt_id;  // Alternate motif identifier.
+  char *sequence_name; // Name of the sequence.
+  long startPos;       // Starting position of the motif hit.
+  long stopPos;        // Ending position of the motif hit.
+  char strand;         // Strand, either '+' or '-'.
+  double score;        // Score of the motif hit.
+  double pVal;         // P-value of the motif hit.
+  char *sequence;      // Matched sequence string.
+  double binScore;     // Bin score of the motif hit.
 } MotifHit;
 
 /**
@@ -78,6 +78,6 @@ void printMotifHit(FILE *ostr, const MotifHit *hit);
  * @param hit MotifHit to free.
  * @details Should be called once a MotifHit is no longer needed.
  */
-void freeMotifHit(MotifHit* hit);
+void freeMotifHit(MotifHit *hit);
 
 #endif /* MOTIF_HIT_H */

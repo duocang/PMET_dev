@@ -20,9 +20,9 @@ int main()
   initMotifHitVector(&vec);
 
   // 添加到vector
-  pushMotifHitVector1(&vec, &hit1);
-  pushMotifHitVector1(&vec, &hit2);
-  pushMotifHitVector1(&vec, &hit3);
+  pushMotifHitVector(&vec, &hit1);
+  pushMotifHitVector(&vec, &hit2);
+  pushMotifHitVector(&vec, &hit3);
 
   // 确保数据正确地添加到了vector
   assert(strcmp(vec.hits[0].motif_id, "AHL12") == 0);
@@ -56,7 +56,7 @@ int main()
   freeMotifHit(&hit1);
   freeMotifHit(&hit2);
   freeMotifHit(&hit3);
-  clearMotifHitVector(&vec);
+  freeMotifHitVector(&vec);
 
   return 0;
 }

@@ -13,8 +13,8 @@ void initMotifHit(MotifHit *hit,
                   const char *sequence,
                   double binScore)
 {
-  hit->motif_id      = strdup(motif_id);         // Create a duplicate of the provided string.
-  hit->motif_alt_id  = strdup(motif_alt_id); // Again, create a duplicate.
+  hit->motif_id = strdup(motif_id);         // Create a duplicate of the provided string.
+  hit->motif_alt_id = strdup(motif_alt_id); // Again, create a duplicate.
   hit->sequence_name = strdup(sequence_name);
 
   hit->startPos = startPos;
@@ -29,11 +29,12 @@ void initMotifHit(MotifHit *hit,
 }
 
 // Free the memory used by a MotifHit.
-void freeMotifHit(MotifHit* hit) {
-    free(hit->motif_id);
-    free(hit->motif_alt_id);
-    free(hit->sequence_name);
-    free(hit->sequence);
+void freeMotifHit(MotifHit *hit)
+{
+  free(hit->motif_id);
+  free(hit->motif_alt_id);
+  free(hit->sequence_name);
+  free(hit->sequence);
 }
 
 // Compare two MotifHit structures based on their pVal.

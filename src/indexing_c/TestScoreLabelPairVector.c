@@ -5,7 +5,7 @@
 #include "ScoreLabelPairVector.h"
 
 int main() {
-    ScoreLabelPairVector* vec = createVector();
+    ScoreLabelPairVector* vec = createScoreLabelPairVector();
 
     // Add items to the vector
     pushBack(vec, 3.4, "C");
@@ -40,3 +40,5 @@ int main() {
     // free(vec);
     return 0;
 }
+
+// clang TestScoreLabelPairVector.c ScoreLabelPairVector.c -o test

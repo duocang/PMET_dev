@@ -93,6 +93,10 @@
         "variant": "cpp",
         "__string": "cpp",
         "chrono": "cpp",
+        "mhmm-state.h": "c",
+        "prior-dist.h": "c",
+        "stdbool.h": "c",
+        "red-black-tree.h": "c",
         "format": "c",
         "stdio.h": "c",
         "motifhit.h": "c",
@@ -106,6 +110,7 @@
         "complex": "c",
         "__nullptr": "c",
         "cinttypes": "c",
-        "scorelabelpairvector.h": "c"
+        "scorelabelpairvector.h": "c",
+        "stdlib.h": "c"
     }
 }

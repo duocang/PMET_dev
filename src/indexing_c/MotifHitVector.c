@@ -18,7 +18,6 @@ void printMotifHitVector(const MotifHitVector *vec)
   }
 }
 
-// 初始化向量
 void initMotifHitVector(MotifHitVector *vec)
 {
   vec->hits = (MotifHit *)malloc(sizeof(MotifHit));
@@ -31,25 +30,42 @@ void initMotifHitVector(MotifHitVector *vec)
   vec->capacity = 1;
 }
 
-// 向量添加元素
-void pushMotifHitVector(MotifHitVector *vec, MotifHit hit)
+void pushMotifHitVector(MotifHitVector* vec, const MotifHit* hit)
 {
-  // 检查是否需要扩展容量
-  if (vec->size == vec->capacity)
-  {
-    vec->capacity *= 2;
-    vec->hits = (MotifHit *)realloc(vec->hits, vec->capacity * sizeof(MotifHit));
-
-    // 还需要检查 realloc 是否成功。如果没有足够的内存，realloc 将返回 NULL。
-    if (!vec->hits)
+    // Check if capacity expansion is required
+    if (vec->size == vec->capacity)
     {
-      // 处理内存不足的情况，例如打印错误信息并退出
-      fprintf(stderr, "Failed to reallocate memory for MotifVector.\n");
-      exit(EXIT_FAILURE);
+        vec->capacity *= 2;
+        vec->hits = (MotifHit*)realloc(vec->hits, vec->capacity * sizeof(MotifHit));
+
+        // Still need to check if realloc is successful. If there is not enough memory, realloc will return NULL.
+        if (!vec->hits)
+        {
+            // Handle out-of-memory situations, such as printing an error message and exiting
+            fprintf(stderr, "Failed to reallocate memory for MotifVector.\n");
+            exit(EXIT_FAILURE);
+        }
     }
-  }
-  // 添加新的元素
-  vec->hits[vec->size++] = hit;
+
+    /*  Copy the content of the new element to an array.
+     *  Field-by-field copying (using `strdup`) is a deep
+     *  copy method that ensures independent copies of string fields.
+    */
+    vec->hits[vec->size].motif_id = strdup(hit->motif_id);
+    vec->hits[vec->size].motif_alt_id = strdup(hit->motif_alt_id);
+    vec->hits[vec->size].sequence_name = strdup(hit->sequence_name);
+    vec->hits[vec->size].startPos = hit->startPos;
+    vec->hits[vec->size].stopPos = hit->stopPos;
+    vec->hits[vec->size].strand = hit->strand;
+    vec->hits[vec->size].score = hit->score;
+    vec->hits[vec->size].pVal = hit->pVal;
+    vec->hits[vec->size].sequence = strdup(hit->sequence);
+    vec->hits[vec->size].binScore = hit->binScore;
+
+    // Shallow copy. This means that the string field only copies the pointer, not the actual data.
+    // vec->hits[vec->size] = *hit;
+
+    vec->size++;
 }
 
 int compareMotifHitsByPVal(const void *a, const void *b)
@@ -127,23 +143,15 @@ void removeHitAtIndex(MotifHitVector *vec, size_t indx)
   }
 }
 
-// 清空向量
-void clearMotifHitVector(MotifHitVector *vec)
+void freeMotifHitVector(MotifHitVector *vec)
 {
-  free(vec->hits);
-  vec->size = 0;
-  vec->capacity = 1; // reset to default initial capacity
-  vec->hits = (MotifHit *)malloc(sizeof(MotifHit) * vec->capacity);
-  // 还应检查 malloc 是否成功
-  if (!vec->hits)
+  for (size_t i = 0; i < vec->size; i++)
   {
-    fprintf(stderr, "Failed to allocate memory for MotifVector.\n");
-    exit(EXIT_FAILURE);
+    free(vec->hits[i].motif_id);
+    free(vec->hits[i].motif_alt_id);
+    free(vec->hits[i].sequence_name);
+    free(vec->hits[i].sequence);
   }
-}
-
-void freeMotifVector(MotifHitVector *vec)
-{
   free(vec->hits);
   vec->hits = NULL;
   vec->size = 0;
