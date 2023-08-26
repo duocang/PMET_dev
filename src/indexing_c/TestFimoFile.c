@@ -127,10 +127,10 @@ int main()
 
   // 使用参数初始化FimoFile结构体
   initFimoFile(myFimoFile,
-               10,                    // numLines
-               "CCA1",               // motifName
+               0,                    // numLines
+               "MYB46_2_short",               // motifName
                0,                     // motifLength
-               "test_data/CCA1.txt", // fileName
+               "test_data/MYB46_2_short.txt", // fileName
                "./test_result",       // outDir
                false,                 // hasMotifAlt
                false                  // binScore
@@ -150,7 +150,7 @@ int main()
   readPromoterLengthFile(list, "test_data/promoter_lengths.txt");
   printf("Length of AT1G01010: %ld\n", findPromoterLength(list, "AT1G01010"));
 
-  // printNodeStore(myFimoFile->nodeStore);
+  printNodeStore(myFimoFile->nodeStore);
 
   processFimoFile(myFimoFile, 5, 5000, list);
 
@@ -159,7 +159,7 @@ int main()
   printf("\nAftering filtering..\n");
   printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
 
-  // printNodeStore(myFimoFile->nodeStore);
+  printNodeStore(myFimoFile->nodeStore);
 
   freePromoterList(list);
   freeFimoFile(myFimoFile);

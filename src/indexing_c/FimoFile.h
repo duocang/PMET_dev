@@ -125,7 +125,7 @@ bool motifsOverlap(MotifHit *m1, MotifHit *m2);
  * @param ... Additional parameters used in the test.
  * @return Pair result of the test.
  */
-Pair geometricBinTest(MotifHitVector *hitsVec, long promoterLength, long motifLength);
+Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength);
 
 /**
  * Calculate the cumulative distribution function for a binomial distribution.
@@ -134,7 +134,7 @@ Pair geometricBinTest(MotifHitVector *hitsVec, long promoterLength, long motifLe
  * @param gm Geometric mean.
  * @return Double value of the cumulative distribution function.
  */
-double binomialCDF(long numPVals, long numLocations, double gm);
+double binomialCDF(size_t numPVals, size_t numLocations, double gm);
 
 /**
  * Frees all memory allocated for a FimoFile' content only.

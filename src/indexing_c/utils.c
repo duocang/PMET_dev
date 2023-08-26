@@ -1,4 +1,4 @@
-#include "util.h"
+#include "utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,7 +63,7 @@ char *paste(int numStrings, const char *sep, ...)
 
   // Second pass: concatenate strings
   va_start(args, sep);
-  for (int i = 0; i < numStrings; i++)
+  for (int j = 0; j < numStrings; j++)
   {
     const char *str = va_arg(args, const char *);
     size_t lenStr = strlen(str);
@@ -71,7 +71,7 @@ char *paste(int numStrings, const char *sep, ...)
     memcpy(currentPos, str, lenStr);
     currentPos += lenStr;
 
-    if (i < numStrings - 1 && lenSep > 0)
+    if (j < numStrings - 1 && lenSep > 0)
     {
       memcpy(currentPos, sep, lenSep);
       currentPos += lenSep;
@@ -84,19 +84,63 @@ char *paste(int numStrings, const char *sep, ...)
   return result;
 }
 
-char* removeTrailingSlashAndReturn(const char *path) {
-    if (!path) return NULL;
+char *getFilenameNoExt(const char *path)
+{
+  const char *base = strrchr(path, '/');
+  if (!base)
+    base = path; // If there's no '/', then the entire string is the filename
+  else
+    base++;
 
-    size_t len = strlen(path);
-    if (len == 0) return strdup(""); // 返回一个空字符串的复制品
+  char *dot = strrchr(base, '.');
+  size_t len = dot ? (size_t)(dot - base) : strlen(base);
 
-    char *newPath = strdup(path); // 复制原始字符串
-    if (!newPath) return NULL; // 如果内存分配失败
+  char *filename = (char *)malloc(len + 1);
+  if (!filename)
+  {
+    // 如果需要，处理内存分配失败的情况
+    fprintf(stderr, "Failed to allocate memory for filename.\n");
+    exit(EXIT_FAILURE);
+  }
 
-    if (newPath[len - 1] == '/') {
-        newPath[len - 1] = '\0';  // 删除最后的 '/'
-    }
+  strncpy(filename, base, len);
+  filename[len] = '\0';
 
-    return newPath;
+  return filename;
 }
 
+void removeTrailingSlash(char *path)
+{
+  if (!path)
+    return; // 检查path是否为NULL
+
+  size_t len = strlen(path);
+  if (len == 0)
+    return; // 检查字符串是否为空
+
+  if (path[len - 1] == '/')
+  {
+    path[len - 1] = '\0'; // 将最后的'/'替换为字符串终止符
+  }
+}
+
+char *removeTrailingSlashAndReturn(const char *path)
+{
+  if (!path)
+    return NULL;
+
+  size_t len = strlen(path);
+  if (len == 0)
+    return strdup(""); // 返回一个空字符串的复制品
+
+  char *newPath = strdup(path); // 复制原始字符串
+  if (!newPath)
+    return NULL; // 如果内存分配失败
+
+  if (newPath[len - 1] == '/')
+  {
+    newPath[len - 1] = '\0'; // 删除最后的 '/'
+  }
+
+  return newPath;
+}

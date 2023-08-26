@@ -199,7 +199,7 @@ bool readFimoFile(FimoFile *fimoFile)
   }
 
   char *fileContent;
-  long numLines = readFileAndCountLines(fimoFile->fileName, &fileContent);
+  long numLines = readFileAndCountLines(fimoFile->fileName, &fileContent) - 1;
 
   if (numLines <= 0)
   {
@@ -214,7 +214,7 @@ bool readFimoFile(FimoFile *fimoFile)
   line = strtok_r(NULL, "\n", &saveptr); // skip header
   // char *line = strtok(fileContent, "\n"); // strtok` is a function that will modify its inputs
   // line = strtok(NULL, "\n"); // skip header
-  int lineNum = 1;
+  int lineNum = 0;
 
   while (line)
   {
@@ -226,8 +226,7 @@ bool readFimoFile(FimoFile *fimoFile)
 
     if (fimoFile->binScore)
     {
-      if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s %d",
-                 motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence, &binScore) != 10)
+      if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s %d", motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence, &binScore) != 10)
       {
         free(fileContent);
         fprintf(stderr, "Error: Failed to parse line %d.\n", lineNum);
@@ -237,8 +236,7 @@ bool readFimoFile(FimoFile *fimoFile)
     }
     else
     {
-      if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s",
-                 motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence) != 9)
+      if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s", motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence) != 9)
       {
         free(fileContent);
         fprintf(stderr, "Error: Failed to parse line %d.\n", lineNum);
@@ -246,6 +244,8 @@ bool readFimoFile(FimoFile *fimoFile)
       }
       initMotifHit(&hit, motif, motifAlt, geneID, start, stop, strand, score, pval, sequence, -1);
     }
+
+    printf("motif: %s\n", motif);
     // fprintf(stderr, "基因：%s\n\n", geneID);
     fimoFile->motifLength = (stop - start) + 1;
 
@@ -285,7 +285,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   }
 
   Node *currentNode = fimoFile->nodeStore->head;
-  long numDone = 0;
+  size_t numDone = 0;
 
   while (currentNode)
   {
@@ -296,7 +296,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       freeScoreLabelPairVector(binThresholds);
       exit(1);
     }
-    long geneNum = countNodesInStore(fimoFile->nodeStore);
+    size_t geneNum = countNodesInStore(fimoFile->nodeStore);
     MotifHitVector *vec = currentNode->value;
     if (!vec)
     {
@@ -334,9 +334,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       retainTopKMotifHits(currentNode->value, k);
     }
 
-    // if (strcmp(geneID, "AT1G20680") == 0) {
-    //   printMotifHitVector(currentNode->value);
-    // }
+    if (strcmp(geneID, "AT1G01470") == 0) {
+      printMotifHitVector(currentNode->value);
+    }
 
     // Find the promoter size for the current gene in promSizes map
     size_t promterLength = findPromoterLength(promSizes, geneID);
@@ -428,7 +428,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   freeScoreLabelPairVector(binThresholds); // Release the memory of a dynamic array.
 }
 
-Pair geometricBinTest(MotifHitVector *hitsVec, long promoterLength, long motifLength)
+Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength)
 {
   // Null check for hitsVec
   if (!hitsVec)
@@ -444,7 +444,7 @@ Pair geometricBinTest(MotifHitVector *hitsVec, long promoterLength, long motifLe
     exit(1); // Consider if you want to exit or handle the error differently
   }
 
-  long possibleLocations = 2 * (promoterLength - motifLength + 1);
+  size_t possibleLocations = 2 * (promoterLength - motifLength + 1);
 
   double *pVals = (double *)malloc(hitsVec->size * sizeof(double));
 
@@ -461,10 +461,10 @@ Pair geometricBinTest(MotifHitVector *hitsVec, long promoterLength, long motifLe
   }
 
   double lowestScore = DBL_MAX;
-  long lowestIdx = hitsVec->size - 1;
+  size_t lowestIdx = hitsVec->size - 1;
   double product = 1.0;
 
-  for (long k = 0; k < hitsVec->size; k++)
+  for (size_t k = 0; k < hitsVec->size; k++)
   {
     product *= pVals[k];
     double geom = pow(product, 1.0 / (k + 1.0));
@@ -491,14 +491,12 @@ bool motifsOverlap(MotifHit *m1, MotifHit *m2)
   // Check if motifs are NULL
   if (!m1 || !m2)
   {
-    fprintf(stderr, "Error: Invalid motif pointers provided to motifsOverlap.\n");
     return false; // Consider if you want to exit or return false in this scenario
   }
 
   // Check data integrity for both motifs
   if (m1->startPos > m1->stopPos || m2->startPos > m2->stopPos)
   {
-    fprintf(stderr, "Error: Inconsistent motif hit boundaries in motifsOverlap.\n");
     return false; // Consider if you want to exit or return false in this scenario
   }
 
@@ -506,7 +504,7 @@ bool motifsOverlap(MotifHit *m1, MotifHit *m2)
   return !(m1->stopPos < m2->startPos || m1->startPos > m2->stopPos);
 }
 
-double binomialCDF(long numPVals, long numLocations, double gm)
+double binomialCDF(size_t numPVals, size_t numLocations, double gm)
 {
   // gm is geometric mean
   if (gm <= 0.0 || gm >= 1.0 || numPVals < 0 || numPVals > numLocations)
@@ -522,7 +520,7 @@ double binomialCDF(long numPVals, long numLocations, double gm)
   double logP = log(gm);
   double logOneMinusP = log(1 - gm);
 
-  for (long k = 0; k < numPVals; k++)
+  for (size_t k = 0; k < numPVals; k++)
   {
     if (k > 0)
       b += log((double)(numLocations - k + 1)) - log((double)k);
@@ -590,6 +588,7 @@ void createMockFimoFile(const char *fileName)
 
   // 这是一个简单的模拟内容。请根据您的真实格式进行修改。
   // fprintf(file, "HEADER LINE\n");
+  fprintf(file, "motif_id	motif_alt_id	sequence_name	start	stop	strand	score	p-value	q-value	matched_sequence\n");
   fprintf(file, "MOTIF1 MOTIF1-ALT GENE1 1 3 + 0.5 0.001 SEQ1 1\n");
   fprintf(file, "MOTIF2 MOTIF2-ALT GENE2 2 4 + 0.6 0.002 SEQ2 0\n");
   fclose(file);

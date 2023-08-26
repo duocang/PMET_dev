@@ -111,6 +111,8 @@
         "__nullptr": "c",
         "cinttypes": "c",
         "scorelabelpairvector.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "fimofile.h": "c",
+        "math.h": "c"
     }
 }

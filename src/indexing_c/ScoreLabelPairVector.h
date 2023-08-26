@@ -1,3 +1,6 @@
+#ifndef SCORE_LABEL_PAIR_VECTOR_H
+#define SCORE_LABEL_PAIR_VECTOR_H
+
 /**
  * @file score_label_pair.h
  * Provides data structures and operations for maintaining a dynamic vector of
@@ -115,3 +118,5 @@ void freeScoreLabelPairVector(ScoreLabelPairVector *vec);
  * @param filename The name of the file to write to.
  */
 void writeScoreLabelPairVectorToTxt(ScoreLabelPairVector *vector, const char *filename);
+
+#endif /* SCORE_LABEL_PAIR_VECTOR_H */

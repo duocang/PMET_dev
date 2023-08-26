@@ -72,6 +72,3 @@ void removeHitAtIndex(MotifHitVector* vec, size_t indx);
 void freeMotifHitVector(MotifHitVector* vec);
 
 #endif /* MOTIF_VECTOR_H */
-
-
-
