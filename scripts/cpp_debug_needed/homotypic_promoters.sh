@@ -329,18 +329,18 @@ echo $numfiles" motifs found"
 
 echo "Delete unnecessary files"
 
-rm $indexingOutputDir/genelines.gff3
-rm $indexingOutputDir/bedgenome.genome
-rm $bedfile
-rm $indexingOutputDir/genome_stripped.fa
-rm $indexingOutputDir/genome_stripped.fa.fai
-rm $indexingOutputDir/promoters.bed
-rm $indexingOutputDir/promoters_rough.fa
-if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
-    rm $indexingOutputDir/genes_negative.txt
-    rm $indexingOutputDir/promoter_length_deleted.txt
-fi
-rm -r $indexingOutputDir/memefiles
-rm $indexingOutputDir/promoters.bg
-rm $indexingOutputDir/promoters.fa
-rm $indexingOutputDir/sorted.gff3
+# rm $indexingOutputDir/genelines.gff3
+# rm $indexingOutputDir/bedgenome.genome
+# rm $bedfile
+# rm $indexingOutputDir/genome_stripped.fa
+# rm $indexingOutputDir/genome_stripped.fa.fai
+# rm $indexingOutputDir/promoters.bed
+# rm $indexingOutputDir/promoters_rough.fa
+# if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
+#     rm $indexingOutputDir/genes_negative.txt
+#     rm $indexingOutputDir/promoter_length_deleted.txt
+# fi
+# rm -r $indexingOutputDir/memefiles
+# rm $indexingOutputDir/promoters.bg
+# rm $indexingOutputDir/promoters.fa
+# rm $indexingOutputDir/sorted.gff3

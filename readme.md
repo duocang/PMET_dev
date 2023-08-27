@@ -1,14 +1,15 @@
+This is PMET.
+
 ## File tree
 
 ```shell
 .
-├── 01_CPP_debug_pmetindex_intervals.sh
-├── 01_CPP_debug_pmetindex_promoters.sh
-├── 02_CPP_debug_pmet_intervals_parallel.sh
-├── 02_CPP_debug_pmet_promoters.sh
-├── 02_CPP_debug_pmet_promoters_parallel.sh
+├── 01_homotypic_intervals.sh
+├── 01_homotypic_promoters.sh
+├── 02_heterotypic_intervals.sh
+├── 02_heterotypic_promoters.sh
+├── 02_heterotypic_promoters_single_CPU.sh
 ├── data
-├── performance
 ├── readme.md
 ├── results
 ├── scripts
@@ -18,45 +19,47 @@
 
 ![](https://raw.githubusercontent.com/duocang/images/master/PicGo/202307202339573.png)
 
-## PMET index and PMET
+## Compile PMET homotypic and PMET heterotypic
 
 Both are writen in C++, source code can be found in `src/indexing` and `src/pmetParallel`.
 
 If necessary, it is possible to compile pmet index and pmet in different OS.
 
-**PMET index**
+**Compile in one bash**
 
 ```bash
-# src/indexing
-./build.sh
+chmod a+x 00_binary_compile.sh
 ```
 
-or
+After running the bash, all needed binary tools will be put in the `scripts` folder.
+
+
+
+## RUN PMET
 
 ```bash
-# src/indexing
-g++  -g -Wall -std=c++11 cFimoFile.cpp cMotifHit.cpp fastFileReader.cpp main.cpp -o ../../scripts/pmetindex
+chmod a+x 01_homotypic_promoters.sh
+chmod a+x 02_heterotypic_promoters.sh
 ```
-
-**PMET**
+### Search and filter homotypic motifs matching in all promoters
 
 ```bash
-# src/pmetParallel
-./build.sh
+bash 01_homotypic_intervals.sh
+# This can take a long time.
 ```
 
-or
-
+### Search heterotypic motifs matching in all promoters
 ```bash
-# src/pmetParallel
-g++ -g -Wall -std=c++11 Output.cpp motif.cpp motifComparison.cpp main.cpp -o ../../scripts/pmetParallel_linux -pthread
+bash 02_heterotypic_promoters.sh
 ```
+
 
 ## Install GNU Parallel
 
 GNU Parallel helps PMET index (FIMO and PMET index) to run in parallel mode.
 
 ```bash
+sudo apt-get update
 sudo apt-get install parallel
 ```
 
@@ -65,6 +68,13 @@ Put GNU Parallel silent:
 ```bash
  # Run once
  parallel --citation
+```
+
+## Install zentiy
+
+```bash
+sudo apt-get update
+sudo apt-get install zenity
 ```
 
 ## Install The MEME Suite (FIMO and fasta-get-markov)
