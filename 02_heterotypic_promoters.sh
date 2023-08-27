@@ -39,7 +39,7 @@ print_white(){
 print_green "Searching for heterotypic motif hits..."
 
 output=results/heterotypic_promoters
-indexoutput=results/promoters_homotypic
+indexoutput=results/homotypic_promoters
 
 gene_input_file=data/gene.txt
 

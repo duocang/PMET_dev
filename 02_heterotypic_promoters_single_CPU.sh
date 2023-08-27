@@ -45,16 +45,16 @@ gene_input_file=data/gene.txt
 mkdir -p $output
 
 # remove genes not present in pre-computed pmet index
-grep -Ff results/promoters_homotypic/universe.txt $gene_input_file > $gene_input_file"temp"
+grep -Ff results/homotypic_promoters/universe.txt $gene_input_file > $gene_input_file"temp"
 
 scripts/pmet \
     -d . \
     -g $gene_input_file"temp" \
     -i 4 \
-    -p results/promoters_homotypic/promoter_lengths.txt \
-    -b results/promoters_homotypic/binomial_thresholds.txt \
-    -c results/promoters_homotypic/IC.txt \
-    -f results/promoters_homotypic/fimohits \
+    -p results/homotypic_promoters/promoter_lengths.txt \
+    -b results/homotypic_promoters/binomial_thresholds.txt \
+    -c results/homotypic_promoters/IC.txt \
+    -f results/homotypic_promoters/fimohits \
     -o $output
 
 rm $gene_input_file"temp"

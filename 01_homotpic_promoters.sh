@@ -39,15 +39,15 @@ print_white(){
 
 ########################## Running FIMO #######################################
 # download data
-mkdir -p data/promoters_homotypic
+mkdir -p data/homotypic_promoters
 cd data
-if [ -f "promoters_homotypic/anno.gff3" ]; then
+if [ -f "homotypic_promoters/anno.gff3" ]; then
     echo "anno.gff3 exists."
 else
     echo "anno.gff3 does not exist. Fetching data..."
     ./fetch_data.sh
-    mv anno.gff3 promoters_homotypic/
-    mv genome.fasta promoters_homotypic/
+    mv anno.gff3 homotypic_promoters/
+    mv genome.fasta homotypic_promoters/
     rm anno.gff3
     rm genome.fasta
 fi
@@ -57,7 +57,7 @@ cd ..
 # check if fimo ready for PMETindex
 print_orange "check if fimo ready for PMETindex"
 
-directory="results/promoters_homotypic/fimo"
+directory="results/homotypic_promoters/fimo"
 mkdir -p $directory
 
 txt_files=$(find "$directory" -name "*.txt")
@@ -69,7 +69,7 @@ else
 
     scripts/cpp_debug_needed/homotypic_promoters.sh \
         -r scripts \
-        -o results/promoters_homotypic \
+        -o results/homotypic_promoters \
         -i gene_id= \
         -k 5 \
         -n 5000 \
@@ -77,20 +77,20 @@ else
         -v NoOverlap \
         -u Yes \
         -t 4 \
-        data/promoters_homotypic/genome.fasta \
-        data/promoters_homotypic/anno.gff3 \
-        data/promoters_homotypic/motif.meme
+        data/homotypic_promoters/genome.fasta \
+        data/homotypic_promoters/anno.gff3 \
+        data/homotypic_promoters/motif.meme
 fi
 
 ########################## Running pmet indexing ##################################
 print_green "Running pmet indexing..."
 # run pmet index
-mkdir -p results/promoters_homotypic/fimohits
+mkdir -p results/homotypic_promoters/fimohits
 
 scripts/pmetindex \
-    -f results/promoters_homotypic/fimo \
+    -f results/homotypic_promoters/fimo \
     -k 5 -n 5000 \
-    -p results/promoters_homotypic/promoter_lengths.txt \
-    -o results/promoters_homotypic/
+    -p results/homotypic_promoters/promoter_lengths.txt \
+    -o results/homotypic_promoters/
 
 print_green "done"
