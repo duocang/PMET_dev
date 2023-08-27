@@ -290,7 +290,7 @@ static FIMO_OPTIONS_T process_fimo_command_line(
       options.topk = atoi(option_value);
     }
     else if (strcmp(option_name, "topn") == 0){
-      options.topk = atoi(option_value);
+      options.topn = atoi(option_value);
     }
     else if (strcmp(option_name, "verbosity") == 0){
       verbosity = atoi(option_value);
@@ -1116,6 +1116,7 @@ int main(int argc, char *argv[]) {
 
   PromoterList *list = malloc(sizeof(PromoterList));
   readPromoterLengthFile(list, options.promoter_length);
+  // processFimoFile(myFimoFile, 5, 5000, list);
   processFimoFile(myFimoFile, options.topk, options.topn, list);
 
   // printNodeStore(&store);

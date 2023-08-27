@@ -259,7 +259,7 @@ if [ $utr == 'Yes' ]; then
         $indexingOutputDir/promoters.bed \
         $gff3file $universefile
 else
-    print_fluorescent_yellow "   11. (skipped) Adding UTRs...";
+    print_fluorescent_yellow "    11. (skipped) Adding UTRs...";
 fi
 
 # -------------------------------------------------------------------------------------------

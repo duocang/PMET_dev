@@ -29,11 +29,13 @@ If necessary, it is possible to compile pmet index and pmet in different OS.
 
 ```bash
 chmod a+x 00_binary_compile.sh
+
+bash 00_binary_compile.sh
 ```
 
+
+
 After running the bash, all needed binary tools will be put in the `scripts` folder.
-
-
 
 ## RUN PMET
 
@@ -41,6 +43,7 @@ After running the bash, all needed binary tools will be put in the `scripts` fol
 chmod a+x 01_homotypic_promoters.sh
 chmod a+x 02_heterotypic_promoters.sh
 ```
+
 ### Search and filter homotypic motifs matching in all promoters
 
 ```bash
@@ -49,10 +52,10 @@ bash 01_homotypic_intervals.sh
 ```
 
 ### Search heterotypic motifs matching in all promoters
+
 ```bash
 bash 02_heterotypic_promoters.sh
 ```
-
 
 ## Install GNU Parallel
 
