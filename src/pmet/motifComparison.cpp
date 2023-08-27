@@ -18,39 +18,53 @@ void motifComparison::reset() {
   pval = 1.0;
 }
 
+/**
+ * Finds genes that have instances of both motif1 and motif2 with minimal overlap between them.
+ * The function resets the internal state of the motifComparison object before starting the computation.
+ * It first finds genes that are common to both motif1 and motif2.
+ * Then, it filters out the instances of these genes that have significant overlap between motif1 and motif2,
+ * using the given ICthreshold and the promoter sizes provided in the 'promSizes' map.
+ *
+ * @param motif1 The first motif to compare.
+ * @param motif2 The second motif to compare.
+ * @param ICthreshold The threshold for the Information Content (IC) score to consider overlapping instances.
+ * @param promSizes A map containing gene names as keys and their corresponding promoter lengths as values.
+ *                  It is used to determine whether a gene's promoter is valid (> 0).
+ */
 void motifComparison::findIntersectingGenes(motif& motif1, motif& motif2, double ICthreshold,
                                             std::unordered_map<std::string, int>& promSizes) {
+  // Reset the internal state of the motifComparison object
   reset();
   // genesInUniverseWithBothMotifs is bm_genes in python code
-  // find keys common to both lists
 
+  // Find genes that are common to both motif1 and motif2
   std::vector<std::string> m1Genes, m2Genes, tmpSharedGenes;
-
   motif1.getListofGenes(m1Genes);
   motif2.getListofGenes(m2Genes);
   tmpSharedGenes.reserve(m1Genes.size());
   std::set_intersection(m1Genes.begin(), m1Genes.end(), m2Genes.begin(), m2Genes.end(),
                         std::inserter(tmpSharedGenes, tmpSharedGenes.begin()));
 
-  // filter for overlaps
+  // Filter for overlaps and keep genes with minimal overlap between motif1 and motif2
   for (std::vector<std::string>::iterator gene = tmpSharedGenes.begin(); gene != tmpSharedGenes.end(); gene++) {
-    if (promSizes[*gene]) { // if gene's promoter is valid (> 0)
-      // remove some instances of this gene based on overlap
-      // do all pairwise comparisons between instances in 2 motifs
+    if (promSizes[*gene]) {  // Check if gene's promoter is valid (> 0)
+      // Remove some instances of this gene based on overlap
+      // Perform all pairwise comparisons between instances in motif1 and motif2
 
-      // number of instance (one line or record of motif/fimo file) with this gene
+      /// Get the number of instances (one line or record of motif/fimo file) with this gene
       // for example, AT1G01230 has 2 records in AHL12_2.txt and 1 record in AHL12.txt
       long numM1Locations = motif1.getNumInstances(*gene);
       long numM2Locations = motif2.getNumInstances(*gene);
-
+      // Initialize vectors to keep track of whether to keep or remove instances for motif1 and motif2
       std::vector<bool> motif1LocationsToKeep(numM1Locations, true);
       std::vector<bool> motif2LocationsToKeep(numM2Locations, true);
 
+      // Check for overlap between motif instances and update the corresponding vectors
       for (long mLoc1 = 0; mLoc1 < numM1Locations; mLoc1++) {
         motifInstance& m1Instance = motif1.getInstance(*gene, mLoc1);
         for (long mLoc2 = 0; mLoc2 < numM2Locations; mLoc2++) {
           motifInstance& m2Instance = motif2.getInstance(*gene, mLoc2);
-          // reject if two motifs overlapped
+          // Reject if two motifs overlapped
           if (motifInstancesOverlap(motif1, motif2, m1Instance, m2Instance, ICthreshold)) {
             motif1LocationsToKeep[mLoc1] = false;
             motif2LocationsToKeep[mLoc2] = false;
@@ -58,24 +72,20 @@ void motifComparison::findIntersectingGenes(motif& motif1, motif& motif2, double
         }
       }
 
-      // done all pairwise comparisons. Do we need to delete esome instances?
+      // Done all pairwise comparisons. Check if we need to delete some instances
 
-      // after some motifs (from motif1 and motif2) remove due to overlap (not necessary)
-      // check if all removed (if there is `true`, there is motif)
-      if ((std::find(motif1LocationsToKeep.begin(), motif1LocationsToKeep.end(), true) !=
-           motif1LocationsToKeep.end()) &&
-          (std::find(motif2LocationsToKeep.begin(), motif2LocationsToKeep.end(), true) !=
-           motif2LocationsToKeep.end())) {
-        // check if no motif removed
-        if ((std::find(motif1LocationsToKeep.begin(), motif1LocationsToKeep.end(), false) ==
-             motif1LocationsToKeep.end()) &&
-            (std::find(motif2LocationsToKeep.begin(), motif2LocationsToKeep.end(), false) ==
-             motif2LocationsToKeep.end())) {
-          // in fact keeping all
+      // After removing some motifs (from motif1 and motif2) due to overlap, check if there are any motifs left
+      if ((std::find(motif1LocationsToKeep.begin(), motif1LocationsToKeep.end(), true) != motif1LocationsToKeep.end()) &&
+          (std::find(motif2LocationsToKeep.begin(), motif2LocationsToKeep.end(), true) != motif2LocationsToKeep.end())) {
+        // Check if no motifs were removed, which means all instances are kept
+        if ((std::find(motif1LocationsToKeep.begin(), motif1LocationsToKeep.end(), false) == motif1LocationsToKeep.end()) &&
+            (std::find(motif2LocationsToKeep.begin(), motif2LocationsToKeep.end(), false) == motif2LocationsToKeep.end())) {
+          /// In fact, keeping all instances without removing any
           genesInUniverseWithBothMotifs.push_back(*gene);
 
         } else {
-          // some locations removed, but some kept, re-calc binomial test. Must be less than threshold for both motifs
+          // Some locations were removed, but some were kept, re-calculate binomial test.
+          // Instances must have scores below the threshold for both motifs to be kept
           if (geometricBinomialTest(motif1LocationsToKeep, *gene, promSizes[*gene], motif1) &&
               geometricBinomialTest(motif2LocationsToKeep, *gene, promSizes[*gene], motif2))
             genesInUniverseWithBothMotifs.push_back(*gene);  // best score is at or below threshold
@@ -86,45 +96,70 @@ void motifComparison::findIntersectingGenes(motif& motif1, motif& motif2, double
   }  // next gene
 }
 
+/**
+ * Determines if two different motif instances from different FIMO files overlap with each other.
+ * This function checks various conditions to determine the overlap between motifs and returns true or false
+ * based on specific criteria.
+ *
+ * @param motif1 The first motif object containing the first motif instance.
+ * @param motif2 The second motif object containing the second motif instance.
+ * @param m1Instance The first motif instance to be compared.
+ * @param m2Instance The second motif instance to be compared.
+ * @param ICthreshold The threshold value for Information Content (IC) score, used for filtering out overlapping motifs.
+ * @return True if the two motif instances overlap significantly based on the overlap, IC threshold, otherwise false.
+ */
 bool motifComparison::motifInstancesOverlap(motif& motif1, motif& motif2, motifInstance& m1Instance,
                                             motifInstance& m2Instance, double ICthreshold) {
   // any that return true will be filtered out
   // this is defineOverlapsBetweenTwoMotifs in python code
 
+   // Get the start and end positions of the motif instances
   int m1Start = m1Instance.getStartPos();
   int m2Start = m2Instance.getStartPos();
   int m1End = m1Instance.getEndPos();
   int m2End = m2Instance.getEndPos();
 
+  // Check various conditions to determine overlap between motif instances
+
+  // Case 1: No overlap, both motifs are completely before or after each other
   if ((m1Start < m2Start && m1End < m2Start) || (m2End < m1Start && m2End < m1End))
-    return false;  // no overlap so keep
+    return false;
+  // Case 2: One motif instance is completely contained within the other, reject as overlapping
   if ((m1Start >= m2Start && m1End <= m2End) || (m2Start >= m1Start && m2End <= m1End))
-    return true;  // one motif entirely with the other so reject
+    return true;
+
+  // Case 3: Overlap occurs in the last part of motif1 and the beginning of motif2
+  // Compute the overlap length and check if the minimum IC score of the overlap is greater than the threshold
   if (m2Start > m1Start) {
-    // overlap is in the last part of motif1 and beginning of motif2
     int overlapLen = m1End - m2Start + 1;
-
     return (std::min(motif1.getReverseICScore(overlapLen), motif2.getForwardICScore(overlapLen)) > ICthreshold);
-
-    // fwdIC is defined as the sum of the IC of the overlap in the
-    // beginning of the second motif
-    // revIC is defined as the sum of IC in the overlapping end of motif 1
-
-    // if the overlap is too large and we need to ditch both of these hits
   } else {
-    // overlap is in the first part of motif1 and end of motif2
+    // Case 4: Overlap occurs in the first part of motif1 and the end of motif2
+    // Compute the overlap length and check if the minimum IC score of the overlap is greater than the threshold
     int overlapLen = m2End - m1Start + 1;
     return (std::min(motif1.getForwardICScore(overlapLen), motif2.getReverseICScore(overlapLen)) > ICthreshold);
   }
 }
 
+/**
+ * Performs a geometric binomial test for a given motif in a specific promoter.
+ * The function collects p-values for all positions where the motif is found (if motifLocationsToKeep is true),
+ * calculates the geometric mean of these p-values, and then computes the binomial test p-value.
+ * The smallest p-value for this motif in the promoter is returned as the result of the test.
+ *
+ * @param motifLocationsToKeep A vector of boolean values indicating which motif locations to include in the test.
+ * @param gene The gene identifier for which the motif is being tested.
+ * @param promoterLength The length of the promoter sequence.
+ * @param mt The motif object containing the motif to be tested.
+ * @return True if the smallest binomial test p-value is less than or equal to the motif threshold, otherwise false.
+ */
 bool motifComparison::geometricBinomialTest(const std::vector<bool>& motifLocationsToKeep, const std::string& gene,
                                             int promoterLength, motif& mt) {
   // Test for one motif in one promoter
   // motifLocations contain p-values. Use if motifLocationsToKeep is true
   // returtn smallest value for this motif in this promoter
 
-  // collect pvalues of all possitions
+  // Collect p-values of all positions where the motif is found
   long numpVals = std::count(motifLocationsToKeep.begin(), motifLocationsToKeep.end(), true);
   std::vector<double> pVals;
   pVals.reserve(numpVals);
@@ -135,55 +170,74 @@ bool motifComparison::geometricBinomialTest(const std::vector<bool>& motifLocati
       pVals.push_back(mInst.getPValue());
     }
   }
-  // motif instances have already been sorted and so pVsls will be in ascending order
-  // calculate geomtric mean of all included p-vals
+  // Motif instances have already been sorted, so pVals will be in ascending order
+  // Calculate the geometric mean of all included p-values
   double lowestScore     = std::numeric_limits<double>::max();
   long possibleLocations = 2 * (promoterLength - mt.getLength() + 1);
 
   for (std::vector<double>::iterator i = pVals.begin(); i < pVals.end(); i++) {
-    // calculate geomtric mean of all p-vals up to this one
+    // Calculate the geometric mean of all p-values up to this one
     double gm     = geometricMean(pVals.begin(), i + 1);
     double binomP = 1 - binomialCDF((i + 1 - pVals.begin()), possibleLocations, gm);
     lowestScore   = (binomP < lowestScore) ? binomP : lowestScore;
   }
-
+  // Compare the smallest binomial test p-value with the motif threshold
   return lowestScore <= mt.getThreshold();
 }
 
+/**
+ * Calculates the geometric mean of a range of values specified by the iterators 'first' and 'last'.
+ * The function iterates over the range and computes the sum of the natural logarithms of the values.
+ * It then returns the exponential of the sum divided by the number of elements in the range.
+ *
+ * @param first Iterator to the beginning of the range.
+ * @param last Iterator to the end of the range (not inclusive).
+ * @return The geometric mean of the values in the specified range.
+ */
 double motifComparison::geometricMean(std::vector<double>::iterator first, std::vector<double>::iterator last) {
   double sum = 0.0;
   long len = last - first;
 
-  for (std::vector<double>::iterator i = first; i < last; i++) sum += log(*i);
+  // Calculate the sum of the natural logarithms of the values in the range
+  for (std::vector<double>::iterator i = first; i < last; i++)
+    sum += log(*i);
 
+  // Calculate the exponential of the sum divided by the number of elements in the range
   return exp(sum / len);
 }
 
+/**
+ * Calculates the cumulative distribution function (CDF) of a binomial distribution.
+ *
+ * @param numPVals The total number of counts for calculating the CDF.
+ * @param numLocations The total number of possible locations in the binomial distribution.
+ * @param gm The geometric mean of the probability.
+ * @return The CDF value of the binomial distribution.
+ */
 double motifComparison::binomialCDF(long numPVals, long numLocations, double gm) {
-  // Calculates the cumulative distribution function (CDF) of a binomial distribution.
-  // Parameters:
-  //   numPVals: The total number of counts for calculating the CDF.
-  //   numLocations: The total number of possible locations in the binomial distribution.
-  //   gm: The geometric mean of the probability.
-  // Returns:
-  //   The CDF value of the binomial distribution.
-
   double cdf = 0.0;
   double b = 0.0;
-
+  // Calculate the logarithms of gm and (1 - gm) for efficiency
   double logP = log(gm);
   double logOneMinusP = log(1 - gm);
 
   for (int k = 0; k < numPVals; k++) {
     if (k > 0)
       b += log(numLocations - k + 1) - log(k);
-
+    // Calculate the CDF value using the binomial distribution formula
     cdf += exp(b + k * logP + (numLocations - k) * logOneMinusP);
   }
     return cdf;
 }
 
-
+/**
+ * Perform the pairwise hypergeometric test to assess the co-localization of motifs in a cluster of genes.
+ *
+ * @param universeSize Total number of all genes in the dataset.
+ * @param ICthreshold IC threshold used in discarding two motifs on the same gene that partially overlap.
+ * @param clusterName Cluster name from the input file.
+ * @param genesInCluster Genes in the cluster with the name clusterName (already sorted for efficiency).
+ */
 void motifComparison::colocTest(long universeSize, double ICthreshold, const std::string& clusterName,
                                 std::vector<std::string>& genesInCluster) {
   // universeSize - total of all genes
@@ -191,8 +245,7 @@ void motifComparison::colocTest(long universeSize, double ICthreshold, const std
   // clusterName - cluster name fromn input file
   // geneInCluster = genes in cluster clusterName. Already sorted to make this more efficient
 
-  // first find intersecting genes that are in this cluster
-
+  // Find intersecting genes that are in this cluster
   long numGenesWithBothMotifs = genesInUniverseWithBothMotifs.size();
 
   clusterSize = genesInCluster.size();
@@ -220,7 +273,7 @@ void motifComparison::colocTest(long universeSize, double ICthreshold, const std
   // it would appear that the largest index of it they ever access is U+1
 
   // nedd to sum  the log of all numbers up to universize +1
-
+  // Compute the log-scale p-value of the pairwise hypergeometric test using logf table
   std::vector<double> logf(universeSize + 2, 0.0);
   // could just do this once
   logf[1] = log(1);
@@ -232,14 +285,14 @@ void motifComparison::colocTest(long universeSize, double ICthreshold, const std
   std::vector<double> a(aSize);
 
   double amax = -std::numeric_limits<double>::max();
-
+  // Calculate the log-scale hypergeometric probabilities and find the maximum value
   for (int i = 0; i < aSize; i++) {
     long hold = genesInClusterWithBothMotifs.size() + i;
     a[i] = (-logf[hold] - logf[clusterSize - hold] - logf[numGenesWithBothMotifs - hold] -
             logf[universeSize + hold - clusterSize - numGenesWithBothMotifs]);
     amax = (a[i] > amax) ? a[i] : amax;
   }
-
+  // Compute the sum of exponentials for normalization
   double aSum = 0.0;
   for (int i = 0; i < aSize; i++) aSum += exp(a[i] - amax);
 

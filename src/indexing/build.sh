@@ -13,4 +13,5 @@ make
 # rm -rf CMake*
 # rm -rf cmake_install.cmake
 
+cd ..
 mkdir -p test_result/fimohits

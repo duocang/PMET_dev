@@ -12,6 +12,7 @@ add_executable(pmet
   Output.cpp
   motif.cpp
   motifComparison.cpp
+  utils.cpp
   Output.hpp
   motif.hpp
   motifComparison.hpp

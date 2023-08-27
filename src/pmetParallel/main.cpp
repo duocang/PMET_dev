@@ -34,7 +34,7 @@
 #include "Output.hpp"
 #include "motif.hpp"
 #include "motifComparison.hpp"
-#include "utils.cpp"
+#include "utils.hpp"
 
 bool loadFiles(const std::string &path, const std::string &genesFile, const std::string &promotersFile,
                const std::string &binThreshFile, const std::string &ICFile, const std::string &fimoDir,
@@ -98,11 +98,27 @@ int main(int argc, const char *argv[]) {
   // parse parameters
   for (int i = 1; i < argc; i += 2) {
     if (!strcmp(argv[i], "-h")) {
-      std::cout << "pmet [-d input_directory = '.'] [-g genes_file = 'input.txt'] [-i ICthreshold = 4] [-p "
-                   "promoter_lengths_file = 'promoter_lengths.txt'] ";
-      std::cout << "[-b binomial_values_file = 'binomial_thresholds.txt'] [-c information_content_file = 'IC.txt'] [-f "
-                   "fimo_dir = 'fimohits'] [-o output_file = 'motif_found.txt']"
-                << std::endl;
+      std::cout << "pmet [-d input_directory = '.']\n"
+              "     [-g genes_file = 'input.txt']\n"
+              "     [-i ICthreshold = 4]\n"
+              "     [-p promoter_lengths_file = 'promoter_lengths.txt']\n"
+              "     [-b binomial_values_file = 'binomial_thresholds.txt']\n"
+              "     [-c information_content_file = 'IC.txt']\n"
+              "     [-f fimo_dir = 'fimohits']\n"
+              "     [-s progress_file = 'progress.log']\n"
+              "     [-o output_file = 'motif_found.txt']\n";
+
+      std::cout << "Usage: pmet [OPTIONS]" << std::endl;
+      std::cout << "Options:" << std::endl;
+      std::cout << "  -d <input_directory>           Set input directory.          Default is '.'."                       << std::endl;
+      std::cout << "  -g <genes_file>                Set genes file.               Default is 'input.txt'."               << std::endl;
+      std::cout << "  -i <ICthreshold>               Set IC threshold.             Default is 4."                         << std::endl;
+      std::cout << "  -p <promoter_lengths_file>     Set promoter lengths file.    Default is 'promoter_lengths.txt'."    << std::endl;
+      std::cout << "  -b <binomial_values_file>      Set binomial values file.     Default is 'binomial_thresholds.txt'." << std::endl;
+      std::cout << "  -c <information_content_file>  Set information content file. Default is 'IC.txt'."                  << std::endl;
+      std::cout << "  -s <progress_file>             Set progress log.             Default is 'progress.log'."            << std::endl;
+      std::cout << "  -o <output_file>               Set output file.              Default is 'motif_found.txt'."         << std::endl;
+
       return 0;
     } else if (!strcmp(argv[i], "-i"))
       ICthreshold = atof(argv[i + 1]);

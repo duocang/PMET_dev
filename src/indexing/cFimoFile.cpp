@@ -28,8 +28,7 @@ bool cFimoFile::readFile(bool hasBinScore) {
     double binScore;
 
     // qval column is empty???
-    while (fileContent >> motif >> motifAlt >> geneID >> start >> stop >> strand >> score >> pval >> sequence >>
-           binScore) {
+    while (fileContent >> motif >> motifAlt >> geneID >> start >> stop >> strand >> score >> pval >> sequence >> binScore) {
       // each line is a single motif instance
       if (!motifName.length()) {
         motifName = motif;  // same on every line
@@ -62,21 +61,31 @@ bool cFimoFile::readFile(bool hasBinScore) {
   return true;
 }
 
+/**
+ * Process the motif hits in the FIMO file.
+ *
+ *   @param k The number of top hits to keep for each gene.
+ *   @param N The number of top genes to save results for.
+ *   @param promSizes A map that stores the promoter sizes for each gene.
+ *   @returns A pair containing the motif name and the threshold score for the Nth gene.
+ */
 std::pair<std::string, double> cFimoFile::process(long k, long N, std::unordered_map<std::string, long> &promSizes) {
+  // Reserve space in the binThresholds vector to avoid reallocations.
   binThresholds.reserve(fimoHits.size());
   long numDone = 0;
 
+  // Process each gene in the fimoHits map.
   for (auto &hit : fimoHits) {
     std::cout << "\tProcessing gene " << ++numDone << " of " << fimoHits.size() << "\r";
 
-    // sort hits within gene on p val
+    // Sort hits within the gene based on their p-values.
     std::sort(hit.second.begin(), hit.second.end(), sortHits);
 
     const std::string &geneID = hit.first;
 
-    // remove overlaps
+    // Remove overlapping hits to keep the top k hits for the gene.
     for (std::vector<cMotifHit>::iterator m1 = hit.second.begin(); m1 < (hit.second.end()); m1++) {
-      // take top k of remaining
+      // Take the top k hits and delete all later ones.
       if (m1 == (hit.second.begin() + (k - 1))) {  // pointing a kth hit, delete all later ones
         hit.second.resize(k);
         break;
@@ -84,6 +93,7 @@ std::pair<std::string, double> cFimoFile::process(long k, long N, std::unordered
 
       std::vector<cMotifHit>::iterator m2 = m1 + 1;
 
+      // Iterate through the remaining hits and remove overlapping ones.
       while (m2 != hit.second.end()) {
         if (motifsOverlap(*m1, *m2))
           hit.second.erase(m2);  // m2 now points to one beyond erased element, or end() if last erased
@@ -91,44 +101,45 @@ std::pair<std::string, double> cFimoFile::process(long k, long N, std::unordered
           m2++;
       }
     }
-    // now have a list of top k hits for a gene, sorted by p-val with no overlaps
-    // binomial test
-    // first get promoter size
+    // Now have a list of top k hits for the gene, sorted by p-value with no overlaps.
+    // Perform the binomial test for this gene.
 
-    // promsizes must contain a value for every input gene
+    // Find the promoter size for the current gene in promSizes map.
     std::unordered_map<std::string, long>::const_iterator promLen = promSizes.find(geneID);
     // hit.first is gene name
-
     if (promLen == promSizes.end()) {
       std::cout << "Error : Gene ID " << geneID << " not found in promoter lengths file!" << std::endl;
       exit(1);
     }
 
+    // Calculate the binomial p-value and the corresponding bin value for this gene.
     std::pair<long, double> binom_p = geometricBinTest(hit.second, promLen->second);
 
-    // save best bin value for this gene
+    // Save the best bin value for this gene in the binThresholds vector.
     binThresholds.push_back(std::pair<double, std::string>(binom_p.second, geneID));
     // its index val indicates number of motifs to save to fimohits file
 
+    // Resize the hits for this gene if necessary based on the bin value.
     if (hit.second.size() > (binom_p.first + 1))
       hit.second.resize(binom_p.first + 1);
     // done for this gene
-  }
+  } // end of if
 
-  std::cout << std::endl << "\tWriting outputs: " + outDir + motifName + ".txt" << std::endl;
-  // sort bin thresholds by ascending score
+  // Finished processing all genes, print the output file name.
+  std::cout << "\tWriting outputs: " + outDir + motifName + ".txt" << std::endl << std::endl;
 
+  // Sort the binThresholds vector by ascending score using a lambda function.
   std::sort(binThresholds.begin(), binThresholds.end(),
             [](const std::pair<double, std::string> &a, const std::pair<double, std::string> &b) {
               return a.first < b.first;
             });
 
-  // save Nth best to thresholds file, noting all gene sin topN
+  // Save the Nth best bin value and gene ID to the thresholds file.
   if (binThresholds.size() > N)
     binThresholds.resize(N);
-  // take remaining hits
-  // any that apply to a gene in topN, write to file
 
+
+  // Write the remaining hits for genes in binThresholds to the output file.
   std::stringstream hitsfile;
   hitsfile << outDir << motifName << ".txt";
 
@@ -136,14 +147,15 @@ std::pair<std::string, double> cFimoFile::process(long k, long N, std::unordered
   for (auto &hit : fimoHits) {
     const std::string geneID = hit.first;
     std::vector<cMotifHit> &hitsForGene = hit.second;
-    // is gene in binThresholds?
+
+    // Check if the gene is in binThresholds.
     auto binVal = std::find_if(binThresholds.begin(), binThresholds.end(),
                                [&geneID](const std::pair<double, std::string> a) { return a.second == geneID; });
 
     //  if (std::find_if(binThresholds.begin(), binThresholds.end(), [&geneID](const std::pair<double, std::string> a)
     //  {return a.second==geneID;}) != binThresholds.end()) {
     if (binVal != binThresholds.end()) {
-      // write all hits for this gene
+      // Write all hits for this gene to the output file.
       for (std::vector<cMotifHit>::iterator it = hitsForGene.begin(); it != hitsForGene.end(); it++)
         oFile << motifName << "\t" << geneID << "\t" << *it << std::endl;
       // oFile << motifName << "\t" << geneID << "\t" << *it << "\t" << binVal->first << std::endl;

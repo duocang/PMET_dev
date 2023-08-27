@@ -140,7 +140,7 @@ int main(int argc, const char *argv[]) {
 
   for (long f = 0; f < numFimoFiles; f++) {
     std::stringstream message;
-    message << "Processing file " << (f + 1) << " of " << numFimoFiles << std::endl;
+    message << (f + 1) << " of " << numFimoFiles << ", processing FIMO result file" << ": " << fimoFiles[f] << std::endl;
     std::cout << message.str();
     writeProgress(progressFile, message.str(), inc, totalProgress);
 

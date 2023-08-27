@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p test_result
+
 mkdir -p bin
 
 cd bin
@@ -13,4 +15,3 @@ make
 # rm -rf CMake*
 # rm -rf cmake_install.cmake
 
-mkdir -p test_result
