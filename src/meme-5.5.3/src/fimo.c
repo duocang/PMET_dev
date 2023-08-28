@@ -1104,11 +1104,13 @@ int main(int argc, char *argv[]) {
                 "/",
                 "binomial_thresholds.txt"));
   writeScoreLabelPairVectorToTxt( bestThresholdScores,
-                                  paste(3,
+                                  paste(5,
                                         "",
                                         removeTrailingSlashAndReturn(options.output_dirname),
                                         "/",
-                                        "binomial_thresholds.txt"));
+                                        "binomial_thresholds_",
+                                        stores[i].head->value->hits[0].motif_id,
+                                        ".txt"));
 
   // Clean up.
   freeScoreLabelPairVector(bestThresholdScores);
