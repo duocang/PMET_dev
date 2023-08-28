@@ -12,7 +12,8 @@ size_t motifHitVectorSize(const MotifHitVector *vec)
 // Prints all hits in the MotifVector to the console.
 void printMotifHitVector(const MotifHitVector *vec)
 {
-  for (size_t i = 0; i < vec->size; ++i)
+  size_t i;
+  for (i = 0; i < vec->size; ++i)
   {
     printMotifHit(stdout, &(vec->hits[i]));
   }
@@ -95,7 +96,8 @@ void retainTopKMotifHits(MotifHitVector *vec, size_t k)
 
   // Resize the vector to only keep top k elements.
   size_t new_size = k;
-  for (size_t i = new_size; i < vec->size; ++i)
+  size_t i;
+  for (i = new_size; i < vec->size; ++i)
   {
     // Optional: If your MotifHit has dynamic memory allocations like strings, free them here.
     // Example: free(vec->hits[i].someString);
@@ -114,7 +116,8 @@ void removeHitAtIndex(MotifHitVector *vec, size_t indx)
     return; // Invalid vector or index
   }
 
-  for (size_t i = indx; i < vec->size - 1; ++i)
+  size_t i;
+  for (i = indx; i < vec->size - 1; ++i)
   {
     vec->hits[i] = vec->hits[i + 1]; // Move elements to the left
   }
@@ -145,7 +148,8 @@ void removeHitAtIndex(MotifHitVector *vec, size_t indx)
 
 void freeMotifHitVector(MotifHitVector *vec)
 {
-  for (size_t i = 0; i < vec->size; i++)
+  size_t i;
+  for (i = 0; i < vec->size; i++)
   {
     free(vec->hits[i].motif_id);
     free(vec->hits[i].motif_alt_id);

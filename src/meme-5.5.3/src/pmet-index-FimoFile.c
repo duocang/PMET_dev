@@ -174,7 +174,8 @@ bool copyFimoFile(const FimoFile *source, FimoFile *dest)
   Node *currentSrcNode = source->nodeStore->head;
   while (currentSrcNode)
   {
-    for (size_t i = 0; i < currentSrcNode->value->size; i++)
+    size_t i;
+    for (i = 0; i < currentSrcNode->value->size; i++)
     {
       // Insert each MotifHit into the destination's NodeStore
       insertIntoNodeStore(dest->nodeStore, &(currentSrcNode->value->hits[i]));
@@ -464,7 +465,8 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
     exit(1);
   }
 
-  for (size_t i = 0; i < hitsVec->size; i++)
+  size_t i;
+  for (i = 0; i < hitsVec->size; i++)
   {
     pVals[i] = hitsVec->hits[i].pVal;
   }
@@ -472,8 +474,8 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
   double lowestScore = DBL_MAX;
   size_t lowestIdx = hitsVec->size - 1;
   double product = 1.0;
-
-  for (size_t k = 0; k < hitsVec->size; k++)
+  size_t k;
+  for (k = 0; k < hitsVec->size; k++)
   {
     product *= pVals[k];
     double geom = pow(product, 1.0 / (k + 1.0));
@@ -529,7 +531,8 @@ double binomialCDF(size_t numPVals, size_t numLocations, double gm)
   double logP = log(gm);
   double logOneMinusP = log(1 - gm);
 
-  for (size_t k = 0; k < numPVals; k++)
+  size_t k;
+  for (k = 0; k < numPVals; k++)
   {
     if (k > 0)
       b += log((double)(numLocations - k + 1)) - log((double)k);

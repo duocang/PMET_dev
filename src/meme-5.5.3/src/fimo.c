@@ -1006,7 +1006,8 @@ int main(int argc, char *argv[]) {
   int num_motif_names = arraylst_size(motifs);
 
   NodeStore stores[num_motif_names];
-  for (int i = 0; i < num_motif_names; ++i) {
+  int i;
+  for (i = 0; i < num_motif_names; ++i) {
     stores[i].head = NULL; // 或其他适当的初始化
   }
 
