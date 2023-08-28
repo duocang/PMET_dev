@@ -821,7 +821,7 @@ static void fimo_score_each_motif(
   DATA_BLOCK_READER_T *psp_reader,
   int *num_scanned_sequences,
   long *num_scanned_positions,
-  NodeStore *store
+  NodeStore *stores
 ) {
 
   // Create p-value sampling reservoir
@@ -922,7 +922,7 @@ static void fimo_score_each_motif(
         pos_pssm,
         rev_pssm,
         pattern,
-        store
+        &stores[motif_index]
       );
       if (first_motif) {
         ++(*num_scanned_sequences);
@@ -1003,140 +1003,115 @@ int main(int argc, char *argv[]) {
   int num_scanned_sequences = 0;
   long num_scanned_positions = 0;
 
-  MotifHit hit;
-  NodeStore store;
-  initNodeStore(&store);
+  int num_motif_names = arraylst_size(motifs);
 
-  // Scan all sequences using each motif
+  NodeStore stores[num_motif_names];
+  for (int i = 0; i < num_motif_names; ++i) {
+    stores[i].head = NULL; // 或其他适当的初始化
+  }
+
+  /****************************************************************************
+   * Iterate through each motif, searching homotypic matches on all promoters
+   ****************************************************************************/
   fimo_score_each_motif(
-    options,
-    bg_freqs,
-    motifs,
-    cisml,
-    prior_dist,
-    fasta_reader,
-    psp_reader,
-    &num_scanned_sequences,
-    &num_scanned_positions,
-    &store
-  );
-
-  // if (options.text_only != true) {
-  //   print_fimo_results(
-  //     cisml,
-  //     options,
-  //     bg_freqs,
-  //     motifs,
-  //     num_scanned_sequences,
-  //     num_scanned_positions
-  //   );
-  // }
+      options,
+      bg_freqs,
+      motifs,
+      cisml,
+      prior_dist,
+      fasta_reader,
+      psp_reader,
+      &num_scanned_sequences,
+      &num_scanned_positions,
+      stores);
 
 
+  /****************************************************************************
+   * Iterate through each motif, processing homotypic matches on all promoters
+   ****************************************************************************/
+  ScoreLabelPairVector *bestThresholdScores = createScoreLabelPairVector();
+  if (!bestThresholdScores)
+  {
+    fprintf(stderr, "Error: Failed to create binThresholds vector.\n");
+    exit(1);
+  }
 
-  // MotifHit hit;
-  // NodeStore store;
-  // initNodeStore(&store);
+  for (i = 0; i < num_motif_names; ++i)
+  {
+    if (i % 2 == 1)
+    {
+      /****************************************************************************
+       * initialize a fimo
+       ****************************************************************************/
+      int motifLen = stores[i].head->value->hits[0].stopPos - stores[i].head->value->hits[0].startPos;
 
-  // int motifLen;
+      printf("\nWe are processing %s\n", stores[i].head->value->hits[0].motif_id);
 
-  // CISML_MATCH_IT_T *it = allocate_cisml_match_iterator(cisml);
-  // MATCHED_ELEMENT_T *match = NULL;
-  // while ((match = cisml_match_iterator_next(it)) !=NULL) {
-  //   double pvalue = get_matched_element_pvalue(match);
-  //   double qvalue = get_matched_element_qvalue(match);
-  //   if (options.threshold_type == PV_THRESH) {
-  //     if (pvalue > options.output_threshold) continue;
-  //   }
-  //   else {
-  //     if (qvalue > options.output_threshold) continue;
-  //   }
-  //   SCANNED_SEQUENCE_T *scanned_seq = get_matched_element_scanned_seq(match);
-  //   // print_site_as_tsv(tsv_file, true, match, scanned_seq);
+      FimoFile *myFimoFile = malloc(sizeof(FimoFile));
+      initFimoFile(myFimoFile,
+                   0,                                       // numLines
+                   stores[i].head->value->hits[0].motif_id, // motifName
+                   motifLen,                                // motifLength
+                   "test_data/MYB46_2_short.txt",           // fileName
+                   options.output_dirname,                  // outDir
+                   false,                                   // hasMotifAlt
+                   false                                    // binScore
+      );
+      printf("    output_dirname : %s\n", myFimoFile->outDir);
+      printf("    seq_filename   : %s\n", options.seq_filename);
+      printf("    motifName      : %s\n", stores[i].head->value->hits[0].motif_id);
+      printf("    motif_lengt    : %d\n", motifLen);
+      printf("    bg_filename    : %s\n", options.bg_filename);
+      printf("    promoter_length: %s\n", options.promoter_length);
+      printf("    topk           : %d\n", options.topk);
+      printf("    topn           : %d\n", options.topn);
 
-  //   PATTERN_T *pattern = get_scanned_sequence_parent(scanned_seq);
-  //   char *motif_id  = get_pattern_accession(pattern);
-  //   char *motif_id2 = get_pattern_name(pattern);
-  //   char *seq_name  = get_scanned_sequence_name(scanned_seq);
-  //   char *seq       = (char *) get_matched_element_sequence(match);
-  //   int  start      = get_matched_element_start(match);
-  //   int  stop       = get_matched_element_stop(match);
-  //   char strand     = get_matched_element_strand(match);
-  //   double score    = get_matched_element_score(match);
+      myFimoFile->nodeStore = &stores[i];
 
-  //   motifLen = abs (start - stop);
-  //   // printf(
-  //   //   "%s\t%s\t%s\t%d\t%d\t%c\t%g\t%g\t%.3g\n",
-  //   //   motif_id,
-  //   //   motif_id2,
-  //   //   seq_name,
-  //   //   start,
-  //   //   stop,
-  //   //   strand,
-  //   //   score,
-  //   //   pvalue,
-  //   //   qvalue
-  //   // );
+      long genesNum = countNodesInStore(myFimoFile->nodeStore);
+      size_t hitsNum = countAllMotifHitsInStore(myFimoFile->nodeStore);
+      printf("  Before filtering...\n");
+      printf("    %ld genes and %ld homotypic hits found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
 
-  //   initMotifHit(&hit, motif_id, motif_id2, seq_name, start, stop, strand, score, pvalue, seq, 0.0);
-  //   // pushMotifHitVector(vec, hit);
-  //   insertIntoNodeStore(&store, &hit);
-  // }
+      PromoterList *list = malloc(sizeof(PromoterList));
+      readPromoterLengthFile(list, options.promoter_length);
 
-  // printNodeStore(&store);
+      /****************************************************************************
+       * process all homotypic motif matches in all promoters and save the filtered
+       ****************************************************************************/
+      double bestThresholdScore = processFimoFile(myFimoFile, options.topk, options.topn, list);
 
-  int motifLen = store.head->value->hits[0].stopPos - store.head->value->hits[0].startPos;
-  // int motifLen = 7;
+      pushBack(bestThresholdScores, bestThresholdScore, stores[i].head->value->hits[0].motif_id);
 
-  FimoFile *myFimoFile = malloc(sizeof(FimoFile));
-  initFimoFile(myFimoFile,
-                0,                                        // numLines
-                getFilenameNoExt(options.meme_filename),  // motifName
-                motifLen,                                 // motifLength
-                "test_data/MYB46_2_short.txt",            // fileName
-                options.output_dirname,                   // outDir
-                false,                                    // hasMotifAlt
-                false                                     // binScore
-  );
-  printf("output_dirname : %s\n", myFimoFile->outDir);
-  printf("seq_filename   : %s\n", options.seq_filename);
-  printf("motifName      : %s\n", myFimoFile->motifName);
-  printf("bg_filename    : %s\n", options.bg_filename);
-  printf("promoter_length: %s\n", options.promoter_length);
-  printf("topk           : %d\n", options.topk);
-  printf("topn           : %d\n", options.topn);
+      // printNodeStore(&store);
 
-  myFimoFile->nodeStore = &store;
+      genesNum = countNodesInStore(myFimoFile->nodeStore);
+      hitsNum = countAllMotifHitsInStore(myFimoFile->nodeStore);
+      printf("  Aftering filtering..\n");
+      printf("    %ld genes and %ld hits homotypic found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
+    }
+  }
+  // printVector(bestThresholdScores);
 
-  long genesNum = countNodesInStore(myFimoFile->nodeStore);
-  size_t hitsNum  = countAllMotifHitsInStore(myFimoFile->nodeStore);
-  printf("\nBefore filtering..\n");
-  printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
-
-
-  PromoterList *list = malloc(sizeof(PromoterList));
-  readPromoterLengthFile(list, options.promoter_length);
-  // processFimoFile(myFimoFile, 5, 5000, list);
-  processFimoFile(myFimoFile, options.topk, options.topn, list);
-
-  // printNodeStore(&store);
-
-
-  genesNum = countNodesInStore(myFimoFile->nodeStore);
-  hitsNum  = countAllMotifHitsInStore(myFimoFile->nodeStore);
-  printf("\nAftering filtering..\n");
-  printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
-
-
-  freePromoterList(list);
-  // freeMotifHit(&hit);
-  freeNodeStore(&store);
-  free(myFimoFile);
-
-
-
+  /****************************************************************************
+   * save threshold scores for each motif
+   ****************************************************************************/
+  printf("Saving best threshold scores to %s\n\n",
+          paste(3,
+                "",
+                removeTrailingSlashAndReturn(options.output_dirname),
+                "/",
+                "binomial_thresholds.txt"));
+  writeScoreLabelPairVectorToTxt( bestThresholdScores,
+                                  paste(3,
+                                        "",
+                                        removeTrailingSlashAndReturn(options.output_dirname),
+                                        "/",
+                                        "binomial_thresholds.txt"));
 
   // Clean up.
+  freeScoreLabelPairVector(bestThresholdScores);
+
   free_cisml(cisml);
 
   fasta_reader->close(fasta_reader);

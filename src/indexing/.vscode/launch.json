@@ -7,10 +7,10 @@
         "request": "launch",
         "program": "${workspaceFolder}/bin/pmetindex",
         "args": [
-            "-f", "../../results/PMETindex_promoters/fimo",
+            "-f", "../../results/homotypic_promoters/fimo",
             "-k", "5",
             "-n", "5000",
-            "-p", "../../results/PMETindex_promoters/promoter_lengths.txt" ,
+            "-p", "../../results/homotypic_promoters/promoter_lengths.txt" ,
             "-o", "test_result"
         ],
         // "stopAtEntry": false,

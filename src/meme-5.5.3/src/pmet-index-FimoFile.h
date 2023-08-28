@@ -156,8 +156,9 @@ void freeFimoFile(FimoFile *file);
  * @param k Parameter for processing.
  * @param N Parameter for processing.
  * @param promSizes List containing promoter sizes.
+ * @return the best value to save in thresholds file
  */
-void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes);
+double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes);
 
 /**
  * Create a mock fimo file.

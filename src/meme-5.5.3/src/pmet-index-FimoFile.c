@@ -266,7 +266,7 @@ bool readFimoFile(FimoFile *fimoFile)
   return true;
 }
 
-void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
+double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
 {
   // Null checks
   if (!fimoFile || !fimoFile->nodeStore || !promSizes)
@@ -375,7 +375,12 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   if (binThresholds->size > N)
     retainTopN(binThresholds, N);
   // printVector(binThresholds);
-  writeScoreLabelPairVectorToTxt(binThresholds, paste(3, "", fimoFile->outDir, "/", "binomial_thresholds.txt"));
+  // writeScoreLabelPairVectorToTxt( binThresholds,
+  //                                 paste(4,
+  //                                       "",
+  //                                       removeTrailingSlashAndReturn(fimoFile->outDir),
+  //                                       "/",
+  //                                       fimoFile->motifName, "_binomial_thresholds.txt"));
 
   // printf("countNodesInStore(fimoFile->nodeStore): %ld\n", countNodesInStore(fimoFile->nodeStore));
 
@@ -420,11 +425,16 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
 
   // write the bin thresholds to file
   char *outputDir = removeTrailingSlashAndReturn(fimoFile->outDir);
-  printf("Write all processed fimo results to %s\n", paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
+  printf("  Write all processed fimo results to %s\n", paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
   writeMotifHitsToFile(fimoFile->nodeStore, paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
+
+  // return Nth best value to save in thresholds file
+  double thresholdScore = binThresholds->items[binThresholds->size-1].score;
 
   free(outputDir);
   freeScoreLabelPairVector(binThresholds); // Release the memory of a dynamic array.
+
+  return thresholdScore;
 }
 
 Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength)
