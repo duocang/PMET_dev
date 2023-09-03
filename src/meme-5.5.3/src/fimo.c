@@ -839,12 +839,6 @@ static void fimo_score_each_motif(
   int num_selected_motifs = get_num_strings(options.selected_motifs);
   int motif_index = 0;
 
-  FILE *file = fopen(paste(3, "", removeTrailingSlashAndReturn(outDir), "/", "binomial_thresholds.txt"), "w");
-  if (file == NULL) {
-      fprintf(stderr, "Failed to open the file for writing.\n");
-      exit(EXIT_FAILURE);
-  }
-
   ScoreLabelPairVector *binResults = createScoreLabelPairVector();
 
   for (motif_index = 0; motif_index < num_motifs; motif_index++) {
@@ -1037,9 +1031,6 @@ static void fimo_score_each_motif(
      *************************************************************************/
     // return Nth best value to save in thresholds file
     double thresholdScore = binThresholds->items[binThresholds->size-1].score;
-    fprintf(file, "%s\t%f\n", motif_id, thresholdScore);
-
-
     pushBack(binResults, thresholdScore, motif_id);
 
     deleteScoreLabelVector(binThresholds);
@@ -1069,18 +1060,9 @@ static void fimo_score_each_motif(
   } // All motifs parsed
 
   writeScoreLabelPairVectorToTxt(binResults,
-      paste(3, "", removeTrailingSlashAndReturn(outDir), "/", "binomial_thresholds1.txt")
+      paste(3, "", removeTrailingSlashAndReturn(outDir), "/", "binomial_thresholds.txt")
   );
   deleteScoreLabelVector(binResults);
-
-
-
-
-  // 关闭文件。
-  if (fclose(file) != 0) {
-      fprintf(stderr, "Error closing the file.\n");
-      exit(EXIT_FAILURE);
-  }
 
   if (reservoir != NULL) {
     free_reservoir(reservoir);
