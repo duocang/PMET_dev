@@ -48,8 +48,14 @@ size_t findPromoterLength(PromoterList *list, const char *promoterName);
  *
  * @param list Pointer to the PromoterList to be freed.
  */
-void freePromoterList(PromoterList *list);
+void deletePromoterLenListContent(PromoterList *list);
 
+/**
+ * Release all memory associated with a given promoter list, including each individual promoter and itelsf.
+ *
+ * @param list Pointer to the PromoterList to be freed.
+ */
+void deletePromoterLenList(PromoterList *list);
 
 /**
  * Inserts a new Promoter with the given name and length at the beginning of the PromoterList.

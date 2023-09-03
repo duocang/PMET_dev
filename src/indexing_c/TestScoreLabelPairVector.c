@@ -32,7 +32,7 @@ int main() {
     }
 
     // Clean up
-    freeScoreLabelPairVector(vec);
+    deletePromoterLenListContent(vec);
     // for (size_t i = 0; i < vec->size; i++) {
     //     free(vec->items[i].label); // If dynamically allocated in a real scenario
     // }

@@ -41,7 +41,7 @@ size_t findPromoterLength(PromoterList *list, const char *promoterName)
   return -1; // Not found
 }
 
-void freePromoterList(PromoterList *list)
+void deletePromoterLenListContent(PromoterList *list)
 {
   if (!list)
   {
@@ -61,6 +61,19 @@ void freePromoterList(PromoterList *list)
     free(toDelete);
   }
   list->head = NULL;
+}
+
+void deletePromoterLenList(PromoterList *list)
+{
+  if (!list)
+  {
+    fprintf(stderr, "Warning: Attempted to free a NULL PromoterList. Operation skipped.\n");
+    return;
+  }
+
+  deletePromoterLenListContent(list);
+
+  free(list);
 }
 
 void insertPromoter(PromoterList *list, const char *promoterName, int length)

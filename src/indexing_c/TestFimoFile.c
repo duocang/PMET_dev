@@ -147,7 +147,7 @@ void testProcess()
   processFimoFile(myFimoFile, 5, 5000, list);
 
 
-  freePromoterList(list);
+  deletePromoterLenListContent(list);
   deleteFimoFile(myFimoFile);
 
   printf("All tests in testReadFimoFile passed!\n");

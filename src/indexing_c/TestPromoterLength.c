@@ -10,7 +10,7 @@ int main() {
     printf("Length of AT1G01010: %zu\n", findPromoterLength(list, "AT1G01010"));
     // ... you can test with other gene names
 
-    freePromoterList(list);
+    deletePromoterLenListContent(list);
     return 0;
 }
 // clang TestPromoterLength.c PromoterLength.c -o test

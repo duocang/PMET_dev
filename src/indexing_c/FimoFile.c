@@ -203,7 +203,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       if (!geneID)
       {
         fprintf(stderr, "Error: Encountered a hash table with a null key.\n");
-        freeScoreLabelPairVector(binThresholds);
+        deletePromoterLenListContent(binThresholds);
         exit(1);
       }
 
@@ -211,7 +211,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       if (!vec)
       {
         fprintf(stderr, "Error: Encountered a hash table with a null value.\n");
-        freeScoreLabelPairVector(binThresholds);
+        deletePromoterLenListContent(binThresholds);
         exit(1);
       }
       sortMotifHitVectorByPVal(vec);
@@ -277,11 +277,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   if (binThresholds->size > N)
     retainTopN(binThresholds, N);
 
-  /*
-    #################################################################
-    #                   Write PMET index result                     #
-    #################################################################
-  */
+  /****************************************************************************
+   * Write PMET index result
+   ****************************************************************************/
   int i;
   for (i = 0; i < binThresholds->size; i++)
   {
@@ -293,12 +291,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
                       paste(4, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", fimoFile->motifName, ".txt"));
   }
 
-  /*
-    #################################################################
-    #               Write "binomial_thresholds.txt"                 #
-    #################################################################
-  */
-
+  /****************************************************************************
+   * Write "binomial_thresholds.txt"
+   ****************************************************************************/
   // 打开文件以供写入binomial_thresholds.txt。如果文件不存在，将创建一个新文件。
   FILE *file = fopen(paste(3, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", "binomial_thresholds.txt"),
                      "w");
@@ -312,7 +307,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   double thresholdScore = binThresholds->items[binThresholds->size - 1].score;
   fprintf(file, "%s\t%f\n", fimoFile->motifName, thresholdScore);
 
-  freeScoreLabelPairVector(binThresholds);
+  deleteScoreLabelVector(binThresholds);
 }
 
 Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength)
