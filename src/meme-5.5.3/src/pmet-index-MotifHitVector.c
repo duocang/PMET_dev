@@ -81,6 +81,74 @@ int compareMotifHitsByPVal(const void *a, const void *b)
   return 0;
 }
 
+MotifHitVector* deepCopyMotifHitVector(const MotifHitVector *original) {
+  if (original == NULL) {
+    return NULL;
+  }
+
+  // Allocate memory for new MotifHitVector
+  MotifHitVector *copy = malloc(sizeof(MotifHitVector));
+  if (copy == NULL) {
+    fprintf(stderr, "Error: Could not allocate memory for MotifHitVector copy.\n");
+    return NULL;
+  }
+
+  copy->size = original->size;
+  copy->capacity = original->capacity;
+
+  // Allocate memory for data array
+  copy->hits = malloc(original->capacity * sizeof(MotifHit));
+  if (copy->hits == NULL) {
+    fprintf(stderr, "Error: Could not allocate memory for MotifHitVector data copy.\n");
+    free(copy);
+    return NULL;
+  }
+
+  // Deep copy each MotifHit
+  size_t i;
+  for (i = 0; i < original->size; ++i) {
+    MotifHit *origHit = &original->hits[i];
+    MotifHit *copyHit = &copy->hits[i];
+
+    // Copy simple fields
+    // ... (other fields)
+
+    // Deep copy sequence_name
+    copyHit->sequence_name = strdup(origHit->sequence_name);
+    if (copyHit->sequence_name == NULL) {
+      fprintf(stderr, "Error: Could not allocate memory for sequence_name copy.\n");
+      // Clean up
+      size_t j;
+      for (j = 0; j < i; ++j) {
+        free(copy->hits[j].sequence_name);
+        // ... (other dynamically allocated fields)
+      }
+      free(copy->hits);
+      free(copy);
+      return NULL;
+    }
+
+    // Deep copy motif_id
+    copyHit->motif_id = strdup(origHit->motif_id);
+    if (copyHit->motif_id == NULL) {
+      fprintf(stderr, "Error: Could not allocate memory for motif_id copy.\n");
+      // Clean up
+      free(copyHit->sequence_name);
+      size_t j;
+      for (j = 0; j < i; ++j) {
+        free(copy->hits[j].sequence_name);
+        // ... (other dynamically allocated fields)
+      }
+      free(copy->hits);
+      free(copy);
+      return NULL;
+    }
+  }
+
+  return copy;
+}
+
+
 void sortMotifHitVectorByPVal(MotifHitVector *vec)
 {
   qsort(vec->hits, vec->size, sizeof(MotifHit), compareMotifHitsByPVal);

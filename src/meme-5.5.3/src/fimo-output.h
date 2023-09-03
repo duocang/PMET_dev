@@ -19,7 +19,7 @@ void insert_site_into_store(
   bool print_qvalue,
   MATCHED_ELEMENT_T *match,
   SCANNED_SEQUENCE_T *scanned_seq,
-  NodeStore *store
+  MotifHitVector *vec
 );
 
 /***********************************************************************

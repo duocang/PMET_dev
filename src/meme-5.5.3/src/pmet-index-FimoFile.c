@@ -427,7 +427,7 @@ double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes
   // write the bin thresholds to file
   char *outputDir = removeTrailingSlashAndReturn(fimoFile->outDir);
   printf("  Write all processed fimo results to %s\n", paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
-  writeMotifHitsToFile(fimoFile->nodeStore, paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
+  writeNodeStoreToFile(fimoFile->nodeStore, paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
 
   // return Nth best value to save in thresholds file
   double thresholdScore = binThresholds->items[binThresholds->size-1].score;

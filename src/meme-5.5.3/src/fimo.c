@@ -821,6 +821,10 @@ static void fimo_score_each_motif(
   DATA_BLOCK_READER_T *psp_reader,
   int *num_scanned_sequences,
   long *num_scanned_positions,
+  char* outDir,
+  int N,
+  int k,
+  PromoterList *promoter_len_list,
   NodeStore *stores
 ) {
 
@@ -837,17 +841,22 @@ static void fimo_score_each_motif(
   int num_selected_motifs = get_num_strings(options.selected_motifs);
   int motif_index = 0;
 
+  FILE *file = fopen(paste(3, "", removeTrailingSlashAndReturn(outDir), "/", "binomial_thresholds.txt"), "w");
+  if (file == NULL) {
+      fprintf(stderr, "Failed to open the file for writing.\n");
+      exit(EXIT_FAILURE);
+  }
+
   for (motif_index = 0; motif_index < num_motifs; motif_index++) {
 
-    MOTIF_T* motif = (MOTIF_T *) arraylst_get(motif_index, motifs);
-    char* motif_id = get_motif_st_id(motif);
-    char* bare_motif_id = get_motif_id(motif);
-    char* bare_motif_id2 = get_motif_id2(motif);
+    MOTIF_T *motif = (MOTIF_T *)arraylst_get(motif_index, motifs);
+    char *motif_id = get_motif_st_id(motif);
+    char *bare_motif_id = get_motif_id(motif);
+    char *bare_motif_id2 = get_motif_id2(motif);
     int motif_length = get_motif_length(motif);
 
     // Is this a selected motif?
-    if (num_selected_motifs > 0
-         && have_string(bare_motif_id, options.selected_motifs) == false ) {
+    if (num_selected_motifs > 0 && have_string(bare_motif_id, options.selected_motifs) == false) {
       if (verbosity >= NORMAL_VERBOSE) {
         fprintf(stderr, "Skipping motif %s.\n", motif_id);
       }
@@ -894,42 +903,138 @@ static void fimo_score_each_motif(
     PSSM_T* rev_pssm = NULL;
     fimo_build_pssms(motif, rev_motif, options, bg_freqs, prior_dist, &pos_pssm, &rev_pssm);
 
-    //if (first_motif) *num_scanned_sequences = 0;
-
     // Create cisml pattern for this motif.
-    PATTERN_T* pattern = allocate_pattern(bare_motif_id, bare_motif_id2);
+    PATTERN_T *pattern = allocate_pattern(bare_motif_id, bare_motif_id2);
     if (!options.text_only) {
       add_cisml_pattern(cisml, pattern);
       set_pattern_max_stored_matches(pattern, options.max_stored_scores);
       set_pattern_max_pvalue_retained(pattern, options.output_threshold);
     }
 
+    ScoreLabelPairVector *binThresholds = createScoreLabelPairVector();
 
+    if (!binThresholds) {
+      fprintf(stderr, "Error: Failed to create binThresholds vector.\n");
+      exit(EXIT_FAILURE);
+    }
 
     // Read the FASTA file one sequence at a time.
-    while (
-      fasta_reader->go_to_next_sequence(fasta_reader) != false
-    ) {
+    while (fasta_reader->go_to_next_sequence(fasta_reader) != false)
+    {
+      char *fasta_seq_name = NULL;
+      bool fasta_result = fasta_reader->get_seq_name(fasta_reader, &fasta_seq_name);
+
+      // MotifHitVector vec;
+      MotifHitVector *vec = malloc(sizeof(MotifHitVector));
+      initMotifHitVector(vec);
 
       long scanned_positions = fimo_score_sequence(
-        options,
-        reservoir,
-        fasta_reader,
-        psp_reader,
-        motif,
-        rev_motif,
-        bg_freqs,
-        pos_pssm,
-        rev_pssm,
-        pattern,
-        &stores[motif_index]
-      );
+          options,
+          reservoir,
+          fasta_reader,
+          psp_reader,
+          motif,
+          rev_motif,
+          bg_freqs,
+          pos_pssm,
+          rev_pssm,
+          pattern,
+          vec);
       if (first_motif) {
         ++(*num_scanned_sequences);
         *num_scanned_positions += scanned_positions;
       }
 
-    }  // All sequences parsed
+      if (vec->size == 0 ) {
+        // printf("Found no %s hit on %s\n", motif_id, fasta_seq_name);
+        freeMotifHitVector(vec);
+        continue;
+      }
+
+      // Sort hits within the gene based on their p-values.
+      sortMotifHitVectorByPVal(vec);
+
+      // Top k motifHit in vector with overlap with any one in the vector
+      size_t currentIndex = 0;
+      while (currentIndex < vec->size && currentIndex < k) {
+        size_t nextIndex = currentIndex + 1;
+
+        while (nextIndex < vec->size) {
+          if (motifsOverlap(&vec->hits[currentIndex], &vec->hits[nextIndex])) {
+            removeHitAtIndex(vec, nextIndex);
+            // Do not increment nextIndex here because after removing
+            // an element, the next element shifts to the current nextIndex
+          } else {
+            nextIndex++; // No overlap, move to next hit
+          }
+        }
+        currentIndex++;
+      }
+
+      if (vec->size == 0 ) {
+        freeMotifHitVector(vec);
+        continue;
+      }
+
+      if (vec->size > k) {
+        retainTopKMotifHits(vec, k);
+      }
+
+      // Find the promoter size for the current gene in promSizes map
+      size_t promterLength = findPromoterLength(promoter_len_list, fasta_seq_name);
+      if (promterLength == -1) {
+        printf("Error: Sequence ID: %s not found in promoter lengths file!\n", fasta_seq_name);
+        exit(EXIT_FAILURE);
+      }
+
+      // Calculate the binomial p-value and the corresponding bin value for this gene
+      Pair binom_p = geometricBinTest(vec, promterLength, motif_length);
+      // Save the best bin value for this gene in the binThresholds vector
+      pushBack(binThresholds, binom_p.score, fasta_seq_name);
+
+      // Resize the hits for this gene if necessary based on the bin value
+      if (vec->size > (binom_p.idx + 1)) {
+        retainTopKMotifHits(vec, binom_p.idx + 1);
+      }
+
+      insertVectorIntoNodeStore(&stores[motif_index/2], fasta_seq_name, vec);
+      // freeMotifHitVector(vec);
+    } // All sequences parsed
+
+    // Sort the binThresholds vector by ascending score and keep top N
+    sortVector(binThresholds);
+    if (binThresholds->size > N)
+      retainTopN(binThresholds, N);
+
+    if (motif_id[0] == '+') {
+        memmove(motif_id, motif_id + 1, strlen(motif_id));  // memmove also takes care of the null terminator
+    }
+    /*
+      #################################################################
+      #                   Write PMET index result                     #
+      #################################################################
+    */
+    int i;
+    for (i = 0; i < binThresholds->size; i++)
+    {
+      char *binThresholdName = binThresholds->items[i].label;
+      // printf("%s\t%f\n", binThresholdName, binThresholds->items[i].score);
+
+      Node *node = findNodeInStore(&stores[motif_index/2], binThresholdName);
+      // printSingleNode(node);
+      writeSingleNodeToFile(node,
+                            paste(4, "", removeTrailingSlashAndReturn(outDir), "/", motif_id, ".txt"));
+    }
+    /*
+      #################################################################
+      #               Write "binomial_thresholds.txt"                 #
+      #################################################################
+    */
+    // return Nth best value to save in thresholds file
+    double thresholdScore = binThresholds->items[binThresholds->size-1].score;
+    fprintf(file, "%s\t%f\n", motif_id, thresholdScore);
+
+    freeScoreLabelPairVector(binThresholds);
 
     // The pattern is complete.
     if (!options.text_only) {
@@ -955,10 +1060,15 @@ static void fimo_score_each_motif(
 
   } // All motifs parsed
 
+  // 关闭文件。
+  if (fclose(file) != 0) {
+      fprintf(stderr, "Error closing the file.\n");
+      exit(EXIT_FAILURE);
+  }
+
   if (reservoir != NULL) {
     free_reservoir(reservoir);
   }
-
 }
 
 /*************************************************************************
@@ -1014,6 +1124,9 @@ int main(int argc, char *argv[]) {
   /****************************************************************************
    * Iterate through each motif, searching homotypic matches on all promoters
    ****************************************************************************/
+
+  PromoterList *list1 = malloc(sizeof(PromoterList));
+  readPromoterLengthFile(list1, options.promoter_length);
   fimo_score_each_motif(
       options,
       bg_freqs,
@@ -1024,117 +1137,16 @@ int main(int argc, char *argv[]) {
       psp_reader,
       &num_scanned_sequences,
       &num_scanned_positions,
+      options.output_dirname,
+      5000,
+      5,
+      list1,
       stores);
 
-
-  /****************************************************************************
-   * Iterate through each motif, processing homotypic matches on all promoters
-   ****************************************************************************/
-  ScoreLabelPairVector *bestThresholdScores = createScoreLabelPairVector();
-  if (!bestThresholdScores)
-  {
-    fprintf(stderr, "Error: Failed to create binThresholds vector.\n");
-    exit(1);
-  }
-
-  for (i = 0; i < num_motif_names; ++i)
-  {
-    if (i % 2 == 1)
-    {
-      /****************************************************************************
-       * initialize a fimo
-       ****************************************************************************/
-      int motifLen = stores[i].head->value->hits[0].stopPos - stores[i].head->value->hits[0].startPos;
-
-      printf("\nWe are processing %s\n", stores[i].head->value->hits[0].motif_id);
-
-      FimoFile *myFimoFile = malloc(sizeof(FimoFile));
-      initFimoFile(myFimoFile,
-                   0,                                       // numLines
-                   stores[i].head->value->hits[0].motif_id, // motifName
-                   motifLen,                                // motifLength
-                   "test_data/MYB46_2_short.txt",           // fileName
-                   options.output_dirname,                  // outDir
-                   false,                                   // hasMotifAlt
-                   false                                    // binScore
-      );
-      printf("    output_dirname : %s\n", myFimoFile->outDir);
-      printf("    seq_filename   : %s\n", options.seq_filename);
-      printf("    motifName      : %s\n", stores[i].head->value->hits[0].motif_id);
-      printf("    motif_lengt    : %d\n", motifLen);
-      printf("    bg_filename    : %s\n", options.bg_filename);
-      printf("    promoter_length: %s\n", options.promoter_length);
-      printf("    topk           : %d\n", options.topk);
-      printf("    topn           : %d\n", options.topn);
-
-      myFimoFile->nodeStore = &stores[i];
-
-      long genesNum = countNodesInStore(myFimoFile->nodeStore);
-      size_t hitsNum = countAllMotifHitsInStore(myFimoFile->nodeStore);
-      printf("  Before filtering...\n");
-      printf("    %ld genes and %ld homotypic hits found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
-
-      PromoterList *list = malloc(sizeof(PromoterList));
-      readPromoterLengthFile(list, options.promoter_length);
-
-      /****************************************************************************
-       * process all homotypic motif matches in all promoters and save the filtered
-       ****************************************************************************/
-      double bestThresholdScore = processFimoFile(myFimoFile, options.topk, options.topn, list);
-
-      pushBack(bestThresholdScores, bestThresholdScore, stores[i].head->value->hits[0].motif_id);
-
-      // printNodeStore(&store);
-
-      genesNum = countNodesInStore(myFimoFile->nodeStore);
-      hitsNum = countAllMotifHitsInStore(myFimoFile->nodeStore);
-      printf("  Aftering filtering..\n");
-      printf("    %ld genes and %ld hits homotypic found related to %s\n\n", genesNum, hitsNum, myFimoFile->motifName);
-    }
-  }
-  // printVector(bestThresholdScores);
-
-  /****************************************************************************
-   * save threshold scores for each motif
-   ****************************************************************************/
-  printf("Saving best threshold scores to %s\n\n",
-          paste(3,
-                "",
-                removeTrailingSlashAndReturn(options.output_dirname),
-                "/",
-                "binomial_thresholds.txt"));
-  writeScoreLabelPairVectorToTxt( bestThresholdScores,
-                                  paste(5,
-                                        "",
-                                        removeTrailingSlashAndReturn(options.output_dirname),
-                                        "/",
-                                        "binomial_thresholds_",
-                                        stores[i].head->value->hits[0].motif_id,
-                                        ".txt"));
-
-  // Clean up.
-  freeScoreLabelPairVector(bestThresholdScores);
-
-  free_cisml(cisml);
-
-  fasta_reader->close(fasta_reader);
-  free_data_block_reader(fasta_reader);
-
-  if (psp_reader != NULL) {
-    psp_reader->close(psp_reader);
-    free_data_block_reader(psp_reader);
-  }
-  if (prior_dist != NULL) {
-    free_prior_dist(prior_dist);
-  }
-
-  free_motifs(motifs);
-  free_array(bg_freqs);
-  cleanup_options(options);
+  freePromoterList(list1);
+  free(list1);
 
   printf("\nDONE\n");
 
   return 0;
-
 }
-

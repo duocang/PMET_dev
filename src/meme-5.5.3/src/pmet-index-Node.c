@@ -14,52 +14,53 @@ void initNodeStore(NodeStore *store)
   store->head = NULL;
 }
 
-// bool areNodeStoresEqual(NodeStore *store1, NodeStore *store2)
-// {
-//   // Check for NULL pointers
-//   if (!store1 || !store2)
-//   {
-//     fprintf(stderr, "Error: One or both NodeStores provided are NULL.\n");
-//     return false;
-//   }
+/*
+bool areNodeStoresEqual(NodeStore *store1, NodeStore *store2)
+{
+  // Check for NULL pointers
+  if (!store1 || !store2)
+  {
+    fprintf(stderr, "Error: One or both NodeStores provided are NULL.\n");
+    return false;
+  }
 
-//   Node *node1 = store1->head;
-//   Node *node2 = store2->head;
+  Node *node1 = store1->head;
+  Node *node2 = store2->head;
 
-//   while (node1 && node2)
-//   {
-//     // Check node keys for NULL before comparing
-//     if ((!node1->key || !node2->key) ||
-//         (strcmp(node1->key, node2->key) != 0))
-//     {
-//       return false;
-//     }
+  while (node1 && node2)
+  {
+    // Check node keys for NULL before comparing
+    if ((!node1->key || !node2->key) ||
+        (strcmp(node1->key, node2->key) != 0))
+    {
+      return false;
+    }
 
-//     // Check MotifHitVectors for NULL before comparing
-//     if (!node1->value || !node2->value)
-//     {
-//       fprintf(stderr, "Error: One or both MotifHitVectors in a Node are NULL.\n");
-//       return false;
-//     }
+    // Check MotifHitVectors for NULL before comparing
+    if (!node1->value || !node2->value)
+    {
+      fprintf(stderr, "Error: One or both MotifHitVectors in a Node are NULL.\n");
+      return false;
+    }
 
-//     // Compare MotifHitVectors
-//     if (!areMotifHitVectorsEqual(node1->value, node2->value))
-//     {
-//       return false;
-//     }
+    // Compare MotifHitVectors
+    if (!areMotifHitVectorsEqual(node1->value, node2->value))
+    {
+      return false;
+    }
 
-//     node1 = node1->next;
-//     node2 = node2->next;
-//   }
+    node1 = node1->next;
+    node2 = node2->next;
+  }
 
-//   // If either of the linked lists has additional nodes, they aren't equal
-//   if (node1 || node2)
-//   {
-//     return false;
-//   }
+  // If either of the linked lists has additional nodes, they aren't equal
+  if (node1 || node2)
+  {
+    return false;
+  }
 
-//   return true;
-// }
+  return true;
+}*/
 
 Node *findNodeInStore(NodeStore *store, const char *key)
 {
@@ -145,6 +146,53 @@ void insertIntoNodeStore(NodeStore *store, const MotifHit *hit)
   pushMotifHitVector(node->value, hit);
 }
 
+void insertVectorIntoNodeStore(NodeStore *store, const char *key, MotifHitVector* vec)
+{
+  // printf("\n\n\n这里是插入函数，key是%s\n", key);
+  // printMotifHitVector(vec);
+
+  // printf("发腮发森阿赛发发肥儿丸人情味若%d,    %d\n", vec->capacity, vec->size);
+  if (store == NULL)
+  {
+    fprintf(stderr, "Error: Provided NodeStore pointer is NULL.\n");
+    return;
+  }
+  if (key == NULL)
+  {
+    fprintf(stderr, "Error: Provided key is NULL.\n");
+    return;
+  }
+  if (vec == NULL)
+  {
+    fprintf(stderr, "Error: Provided MotifHitVector is NULL.\n");
+    return;
+  }
+
+  // TODO: Think about if we need to check key existence.
+
+  // Create a new Node
+  Node *newNode = (Node *)malloc(sizeof(Node));
+  if (newNode == NULL) {
+    fprintf(stderr, "Memory allocation failed.\n");
+    return;
+  }
+
+  // Duplicate the key string
+  newNode->key = strdup(key);
+  if (newNode->key == NULL) {
+    fprintf(stderr, "Memory allocation for key failed.\n");
+    free(newNode);
+    return;
+  }
+
+  // Assign the value
+  newNode->value = vec;
+
+  // Point it to the old head
+  newNode->next = store->head;
+  store->head = newNode;
+}
+
 void freeNodeStore(NodeStore *store)
 {
   Node *current = store->head;
@@ -163,6 +211,33 @@ void freeNodeStore(NodeStore *store)
     temp = NULL; // Set to NULL after freeing
   }
   store->head = NULL; // Ensure the head of the store is NULL after all nodes are deleted
+}
+
+void printSingleNode(Node *node) {
+  if (node == NULL) {
+    fprintf(stderr, "Error: The given Node pointer is NULL.\n");
+    return;
+  }
+  if (node->key == NULL) {
+    fprintf(stderr, "Error: Encountered a node with a NULL key.\n");
+    return;
+  }
+  if (node->value == NULL) {
+    fprintf(stderr, "Error: Encountered a node with a NULL value.\n");
+    return;
+  }
+  if (node->value->hits == NULL) {
+    fprintf(stderr, "Error: The hits array in the node's value is NULL.\n");
+    return;
+  }
+  printf("Key: %s\n", node->key);
+
+  size_t i;
+  for (i = 0; i < node->value->size; ++i) {
+    printMotifHit(stdout, &node->value->hits[i]);
+  }
+
+  printf("------------------\n");
 }
 
 void printNodeStore(NodeStore *store)
@@ -292,11 +367,55 @@ bool deleteNodeByKeyStore(NodeStore *store, const char *key)
   return false; // 如果循环结束还没返回，说明没有找到匹配的节点
 }
 
-void writeMotifHitsToFile(const NodeStore *store, const char *filename)
+void writeSingleNodeToFile(const Node *node, const char *filename)
+{
+  if (node == NULL || filename == NULL)
+  {
+    fprintf(stderr, "Invalid parameters provided to writeSingleNodeToFile.\n");
+    return;
+  }
+
+  FILE *file = fopen(filename, "a");
+  if (file == NULL)
+  {
+    fprintf(stderr, "Failed to open the file for writing.\n");
+    return;
+  }
+
+  MotifHitVector *vec = node->value;
+  if (vec == NULL || vec->hits == NULL)
+  {
+    fprintf(stderr, "Invalid MotifHitVector in the provided node.\n");
+    fclose(file);
+    return;
+  }
+
+  size_t i;
+  for (i = 0; i < vec->size; i++)
+  {
+    MotifHit hit = vec->hits[i];
+    fprintf(file, "%s\t%s\t%ld\t%ld\t%c\t%f\t%.3e\t%s\n",
+            hit.motif_id,
+            hit.sequence_name,
+            hit.startPos,
+            hit.stopPos,
+            hit.strand,
+            hit.score,
+            hit.pVal,
+            hit.sequence);
+  }
+
+  if (fclose(file) != 0)
+  {
+    fprintf(stderr, "Error closing the file %s.\n", filename);
+  }
+}
+
+void writeNodeStoreToFile(const NodeStore *store, const char *filename)
 {
   if (store == NULL || filename == NULL)
   {
-    fprintf(stderr, "Invalid parameters provided to writeMotifHitsToFile.\n");
+    fprintf(stderr, "Invalid parameters provided to writeNodeStoreToFile.\n");
     return;
   }
   FILE *file = fopen(filename, "w");

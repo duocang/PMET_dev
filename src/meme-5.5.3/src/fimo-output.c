@@ -74,7 +74,7 @@ void insert_site_into_store(
   bool print_qvalue,
   MATCHED_ELEMENT_T *match,
   SCANNED_SEQUENCE_T *scanned_seq,
-  NodeStore *store
+  MotifHitVector *vec
 ) {
   static bool print_header = true;
 
@@ -131,8 +131,8 @@ void insert_site_into_store(
 
   MotifHit hit;
   initMotifHit(&hit, motif_id, motif_id2, seq_name, start, stop, strand, score, pvalue, seq, 0.0);
-  // pushMotifHitVector(vec, hit);
-  insertIntoNodeStore(store, &hit);
+  pushMotifHitVector(vec, &hit);
+  // insertIntoNodeStore(store, &hit);
 
 
   freeMotifHit(&hit);

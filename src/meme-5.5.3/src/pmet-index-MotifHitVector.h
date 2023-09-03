@@ -11,6 +11,8 @@ typedef struct {
 } MotifHitVector;
 
 
+MotifHitVector* deepCopyMotifHitVector(const MotifHitVector *original);
+
 /**
  * Returns the current size (number of elements) of the MotifHitVector.
  * @param vec Pointer to the MotifHitVector.
