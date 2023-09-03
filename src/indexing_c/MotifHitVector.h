@@ -25,6 +25,12 @@ size_t motifHitVectorSize(const MotifHitVector* vec);
 void printMotifHitVector(const MotifHitVector* vec);
 
 /**
+ * Creates the a MotifHitVector*.
+ * @return vec Pointer to the MotifHitVector to be initialized.
+ */
+MotifHitVector* createMotifHitVector();
+
+/**
  * Initializes the given MotifHitVector.
  * @param vec Pointer to the MotifHitVector to be initialized.
  */
@@ -69,6 +75,10 @@ void removeHitAtIndex(MotifHitVector* vec, size_t indx);
  * Clears all the MotifHits from the MotifHitVector without freeing the vector itself.
  * @param vec Pointer to the MotifHitVector to be cleared.
  */
-void freeMotifHitVector(MotifHitVector* vec);
+void deleteMotifHitVectorContent(MotifHitVector* vec);
+
+void deleteMotifHitVector(MotifHitVector *vec);
+
+void writeVectorToFile(const MotifHitVector *vec, const char *filename);
 
 #endif /* MOTIF_VECTOR_H */

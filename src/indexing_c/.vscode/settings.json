@@ -113,6 +113,13 @@
         "scorelabelpairvector.h": "c",
         "stdlib.h": "c",
         "fimofile.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "thread": "c",
+        "unordered_set": "c",
+        "filesystem": "c",
+        "node.h": "c",
+        "hashtable.h": "c",
+        "__memory": "c",
+        "charconv": "c"
     }
 }

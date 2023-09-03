@@ -18,6 +18,30 @@ void printMotifHitVector(const MotifHitVector *vec)
   }
 }
 
+
+MotifHitVector* createMotifHitVector() {
+    // 分配内存空间给 MotifHitVector
+    MotifHitVector* newVec = (MotifHitVector*)malloc(sizeof(MotifHitVector));
+    if (newVec == NULL) {
+        fprintf(stderr, "Failed to allocate memory for MotifHitVector.\n");
+        return NULL;
+    }
+
+    // 初始化新的 MotifHitVector 的属性
+    newVec->size = 0;
+    newVec->capacity = 10; // 你可以根据需要改变这个初始容量
+    newVec->hits = (MotifHit*)malloc(newVec->capacity * sizeof(MotifHit));
+    if (newVec->hits == NULL) {
+        fprintf(stderr, "Failed to allocate memory for hits array.\n");
+        free(newVec);
+        return NULL;
+    }
+
+    return newVec;
+}
+
+
+
 void initMotifHitVector(MotifHitVector *vec)
 {
   vec->hits = (MotifHit *)malloc(sizeof(MotifHit));
@@ -143,7 +167,7 @@ void removeHitAtIndex(MotifHitVector *vec, size_t indx)
   }
 }
 
-void freeMotifHitVector(MotifHitVector *vec)
+void deleteMotifHitVectorContent(MotifHitVector *vec)
 {
   for (size_t i = 0; i < vec->size; i++)
   {
@@ -156,4 +180,46 @@ void freeMotifHitVector(MotifHitVector *vec)
   vec->hits = NULL;
   vec->size = 0;
   vec->capacity = 0;
+}
+
+void deleteMotifHitVector(MotifHitVector *vec)
+{
+  deleteMotifHitVectorContent(vec);
+  free(vec);
+}
+
+void writeVectorToFile(const MotifHitVector *vec, const char *filename)
+{
+  if (vec == NULL || vec->hits == NULL || filename == NULL)
+  {
+    fprintf(stderr, "Invalid parameters provided to writeVectorToFile.\n");
+    return;
+  }
+
+  FILE *file = fopen(filename, "a");
+  if (file == NULL)
+  {
+    fprintf(stderr, "Failed to open the file for writing.\n");
+    return;
+  }
+
+  size_t i;
+  for (i = 0; i < vec->size; i++)
+  {
+    MotifHit hit = vec->hits[i];
+    fprintf(file, "%s\t%s\t%ld\t%ld\t%c\t%f\t%.3e\t%s\n",
+            hit.motif_id,
+            hit.sequence_name,
+            hit.startPos,
+            hit.stopPos,
+            hit.strand,
+            hit.score,
+            hit.pVal,
+            hit.sequence);
+  }
+
+  if (fclose(file) != 0)
+  {
+    fprintf(stderr, "Error closing the file %s.\n", filename);
+  }
 }

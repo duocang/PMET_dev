@@ -121,7 +121,6 @@ void test_insertIntoNodeStore2()
   printf("Memory freed successfully.\n");
 }
 
-
 // void testAreNodeStoresEqual() {
 //   printf("\nTesting areNodeStoresEqual...\n");
 //     // 1. Initialize hits
@@ -155,69 +154,107 @@ void test_insertIntoNodeStore2()
 //     printf("All tests for areNodeStoresEqual passed!\n");
 // }
 
-
-
-
-
-int main()
+void testMultipleMotifs(NodeStore *stores)
 {
-  testInitNodeStore1();
-  testInitNodeStore();
-  testFindNodeInStore();
-  test_insertIntoNodeStore2();
-
-  NodeStore store;
-  initNodeStore(&store);
+  NodeStore store1 = stores[0];
+  initNodeStore(&store1);
 
   MotifHit hit1, hit2, hit3, hit4;
   initMotifHit(&hit1, "AHL12", "孙悟空", "AT1G01020", 614, 621, '+', 7.85401, 0.000559, "AAATAATT", 0);
-  initMotifHit(&hit2, "AHL15", "唐三藏", "AT1G01021", 700, 708, '-', 8.5001, 0.000600, "AAGGTTAA", 1);
-  initMotifHit(&hit3, "AHL18", "猪八戒", "AT1G01022", 800, 808, '+', 6.7000, 0.000700, "TTAACCAA", 2);
-  initMotifHit(&hit4, "AHL20", "沙僧", "AT1G01020", 650, 658, '-', 7.1000, 0.000800, "GGGTTTCC", 3);
+  initMotifHit(&hit2, "AHL12", "唐三藏", "AT1G01021", 700, 708, '-', 8.5001, 0.000600, "AAGGTTAA", 1);
+  initMotifHit(&hit3, "AHL12", "猪八戒", "AT1G01022", 800, 808, '+', 6.7000, 0.000700, "TTAACCAA", 2);
+  initMotifHit(&hit4, "AHL12", "沙和尚", "AT1G01020", 650, 658, '-', 7.1000, 0.000800, "GGGTTTCC", 3);
 
   // Add the test data to the store
-  insertIntoNodeStore(&store, &hit1);
-  insertIntoNodeStore(&store, &hit2);
-  insertIntoNodeStore(&store, &hit3);
-  insertIntoNodeStore(&store, &hit4);
+  insertIntoNodeStore(&store1, &hit1);
+  insertIntoNodeStore(&store1, &hit2);
+  insertIntoNodeStore(&store1, &hit3);
+  insertIntoNodeStore(&store1, &hit4);
 
-  // Print the store content to check if the data has been added correctly.
-  printNodeStore(&store);
+  printf("Seond NodeStore:\n\n");
+  NodeStore store2 = stores[1];
+  initNodeStore(&store2);
+  initMotifHit(&hit1, "AHL15", "孙悟空1", "AT1G01020", 614, 621, '+', 7.85401, 0.000559, "AAATAATT", 0);
+  initMotifHit(&hit2, "AHL15", "唐三藏1", "AT1G01021", 700, 708, '-', 8.5001, 0.000600, "AAGGTTAA", 1);
+  initMotifHit(&hit3, "AHL15", "猪八戒1", "AT1G01022", 800, 808, '+', 6.7000, 0.000700, "TTAACCAA", 2);
+  initMotifHit(&hit4, "AHL15", "沙和尚1", "AT1G01020", 650, 658, '-', 7.1000, 0.000800, "GGGTTTCC", 3);
 
-  printf("Test 3 Passed!\n");
+  // Add the test data to the store
+  insertIntoNodeStore(&store2, &hit1);
+  insertIntoNodeStore(&store2, &hit2);
+  insertIntoNodeStore(&store2, &hit3);
+  insertIntoNodeStore(&store2, &hit4);
 
-  size_t genesNum = countNodesInStore(&store);
-  size_t hitsNum = countAllMotifHitsInStore(&store);
-  printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, "ALH15");
 
-  printf("Testing deleteNodeByKeyStore\n\n");
+  NodeStore store1 = stores[0];
+  NodeStore store2 = stores[1];
+  printNodeStore(&store1);
+  printNodeStore(&store2);
+}
 
-  if (deleteNodeByKeyStore(&store, "AT1G01022"))
-  {
-    printf("AT1G01022 is deleted\n");
-  }
-  else
-  {
-    printf("AT1G01022 does not exit.\n");
-  }
-  printNodeStore(&store);
+int main()
+{
+  // testInitNodeStore1();
+  // testInitNodeStore();
+  // testFindNodeInStore();
+  // test_insertIntoNodeStore2();
 
-  printf("Testing writeMotifHitsToFile\n\n");
-  writeMotifHitsToFile(&store, "test_result/TestNode_resut.txt");
+  // NodeStore store;
+  // initNodeStore(&store);
 
-  genesNum = countNodesInStore(&store);
-  hitsNum = countAllMotifHitsInStore(&store);
-  printf("Aftering filtering..\n");
-  printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, "ALH15");
+  // MotifHit hit1, hit2, hit3, hit4;
+  // initMotifHit(&hit1, "AHL12", "孙悟空", "AT1G01020", 614, 621, '+', 7.85401, 0.000559, "AAATAATT", 0);
+  // initMotifHit(&hit2, "AHL15", "唐三藏", "AT1G01021", 700, 708, '-', 8.5001, 0.000600, "AAGGTTAA", 1);
+  // initMotifHit(&hit3, "AHL18", "猪八戒", "AT1G01022", 800, 808, '+', 6.7000, 0.000700, "TTAACCAA", 2);
+  // initMotifHit(&hit4, "AHL20", "沙僧", "AT1G01020", 650, 658, '-', 7.1000, 0.000800, "GGGTTTCC", 3);
 
-  // Free allocated memory
-  freeMotifHit(&hit1);
-  freeMotifHit(&hit2);
-  freeMotifHit(&hit3);
-  freeNodeStore(&store);
-  printf("Memory freed successfully.\n");
+  // // Add the test data to the store
+  // insertIntoNodeStore(&store, &hit1);
+  // insertIntoNodeStore(&store, &hit2);
+  // insertIntoNodeStore(&store, &hit3);
+  // insertIntoNodeStore(&store, &hit4);
 
-  test_insertIntoNodeStore1();
+  // // Print the store content to check if the data has been added correctly.
+  // printNodeStore(&store);
+
+  // printf("Test 3 Passed!\n");
+
+  // size_t genesNum = countNodesInStore(&store);
+  // size_t hitsNum = countAllMotifHitsInStore(&store);
+  // printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, "ALH15");
+
+  // printf("Testing deleteNodeByKeyStore\n\n");
+
+  // if (deleteNodeByKeyStore(&store, "AT1G01022"))
+  // {
+  //   printf("AT1G01022 is deleted\n");
+  // }
+  // else
+  // {
+  //   printf("AT1G01022 does not exit.\n");
+  // }
+  // printNodeStore(&store);
+
+  // printf("Testing writeMotifHitsToFile\n\n");
+  // writeMotifHitsToFile(&store, "test_result/TestNode_resut.txt");
+
+  // genesNum = countNodesInStore(&store);
+  // hitsNum = countAllMotifHitsInStore(&store);
+  // printf("Aftering filtering..\n");
+  // printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, "ALH15");
+
+  // // Free allocated memory
+  // freeMotifHit(&hit1);
+  // freeMotifHit(&hit2);
+  // freeMotifHit(&hit3);
+  // freeNodeStore(&store);
+  // printf("Memory freed successfully.\n");
+
+  NodeStore *stores = malloc(2 * sizeof(NodeStore));
+
+  testMultipleMotifs(stores);
+
+  // test_insertIntoNodeStore1();
   return 0;
 }
 

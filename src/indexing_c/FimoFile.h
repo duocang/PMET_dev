@@ -16,7 +16,8 @@
 #include "FileRead.h"
 #include "MotifHit.h"
 #include "MotifHitVector.h"
-#include "Node.h"
+// #include "Node.h"
+#include "HashTable.h"
 
 /**
  * Struct representing a simple pair with an index and a score.
@@ -67,7 +68,7 @@ typedef struct
   char *outDir;
   bool hasMotifAlt;  // Indicates if there's an alternative motif present.
   bool binScore;     // Indicates if bin scores are used.
-  NodeStore *nodeStore; // Contains a collection of nodes (possibly for a tree or graph).
+  HashTable *ht;
 } FimoFile;
 
 /**
@@ -96,13 +97,13 @@ void initFimoFile(FimoFile *file,
                   bool hasMotifAlt,
                   bool binScore);
 
-/**
- * Copies the contents of a source FimoFile into a destination FimoFile.
- * @param source The source FimoFile.
- * @param dest The destination FimoFile.
- * @return Boolean indicating success of the operation.
- */
-bool copyFimoFile(const FimoFile *source, FimoFile *dest);
+// /**
+//  * Copies the contents of a source FimoFile into a destination FimoFile.
+//  * @param source The source FimoFile.
+//  * @param dest The destination FimoFile.
+//  * @return Boolean indicating success of the operation.
+//  */
+// bool copyFimoFile(const FimoFile *source, FimoFile *dest);
 
 /**
  * Read the contents of a FimoFile.
@@ -140,7 +141,7 @@ double binomialCDF(size_t numPVals, size_t numLocations, double gm);
  * Frees all memory allocated for a FimoFile' content only.
  * @param file The FimoFile to free.
  */
-void freeFimoFileContents(FimoFile *file);
+void deleteFimoFileContents(FimoFile *file);
 
 
 
@@ -148,7 +149,7 @@ void freeFimoFileContents(FimoFile *file);
  * Frees all memory allocated for a FimoFile.
  * @param file The FimoFile to free.
  */
-void freeFimoFile(FimoFile *file);
+void deleteFimoFile(FimoFile *file);
 
 /**
  * Process the contents of a FimoFile and potentially output some results.

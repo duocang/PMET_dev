@@ -23,26 +23,13 @@ void initFimoFile_(FimoFile *file)
   file->binScore = false;
   file->hasMotifAlt = false;
 
-  printf("Value of file->nodeStore: %p\n", file->nodeStore);
-
-  // The `FimoFile` variable allocated on the stack is not explicitly
-  // initialized to 0 or `NULL`, so the `nodeStore` member may contain
-  // random garbage values.
-  file->nodeStore = NULL;
-
-  // Check if the nodeStore has already been allocated.
-  if (!file->nodeStore)
+  file->ht = NULL;
+  file->ht = createHashTable();
+  if (!file->ht)
   {
-    file->nodeStore = malloc(sizeof(NodeStore));
-    if (!file->nodeStore)
-    {
-      fprintf(stderr, "Error: Memory allocation failed for nodeStore in initFimoFile_ function.\n");
-      exit(1); // Or handle the error in another way if you prefer
-    }
+    fprintf(stderr, "Error: Memory allocation failed for Hash table *ht in initFimoFile_ function.\n");
+    exit(1); // Or handle the error in another way if you prefer
   }
-
-  // Initialize the nodeStore
-  initNodeStore(file->nodeStore);
 }
 
 void initFimoFile(FimoFile *file,
@@ -74,12 +61,9 @@ void initFimoFile(FimoFile *file,
   file->fileName = fileName ? strdup(fileName) : NULL;
   file->outDir = outDir ? strdup(outDir) : NULL;
   // check ram allocating
-  if ((motifName && !file->motifName) ||
-      (fileName && !file->fileName) ||
-      (outDir && !file->outDir))
+  if ((motifName && !file->motifName) || (fileName && !file->fileName) || (outDir && !file->outDir))
   {
     fprintf(stderr, "Error: Memory allocation failed for strings in initFimoFile.\n");
-
     // Clean up any allocated memory to avoid memory leaks
     free(file->motifName);
     free(file->fileName);
@@ -87,10 +71,10 @@ void initFimoFile(FimoFile *file,
     return;
   }
 
-  file->nodeStore = malloc(sizeof(NodeStore));
-  if (file->nodeStore == NULL)
+  file->ht = createHashTable();
+  if (file->ht == NULL)
   {
-    fprintf(stderr, "Error: Memory allocation failed for NodeStore in initFimoFile.\n");
+    fprintf(stderr, "Error: Memory allocation failed for hash table in initFimoFile.\n");
 
     // Clean up the allocated memory to avoid memory leaks
     free(file->motifName);
@@ -98,101 +82,13 @@ void initFimoFile(FimoFile *file,
     free(file->outDir);
     return;
   }
-  initNodeStore(file->nodeStore);
 }
 
-// bool areFimoFilesEqual(const FimoFile *file1, const FimoFile *file2) {
-//     if (file1->numLines != file2->numLines)              return false;
-//     if (strcmp(file1->motifName, file2->motifName) != 0) return false;
-//     if (file1->motifLength != file2->motifLength)        return false;
-//     if (strcmp(file1->fileName, file2->fileName) != 0)   return false;
-//     if (strcmp(file1->outDir, file2->outDir) != 0)       return false;
-//     if (file1->hasMotifAlt != file2->hasMotifAlt)        return false;
-//     if (file1->binScore != file2->binScore)              return false;
-
-//     return areNodeStoresEqual(file1->nodeStore, file2->nodeStore);
-// }
-
-bool copyFimoFile(const FimoFile *source, FimoFile *dest)
-{
-  // Check if the provided FimoFile pointers and their nodeStores are valid
-  if (!source || !dest || !source->nodeStore || !dest->nodeStore)
-  {
-    return false;
-  }
-
-  dest->numLines = source->numLines;
-  dest->motifLength = source->motifLength;
-  dest->hasMotifAlt = source->hasMotifAlt;
-  dest->binScore = source->binScore; // Copying binScore
-
-  if (source->motifName)
-  {
-    dest->motifName = strdup(source->motifName);
-    if (!dest->motifName)
-    {
-      freeFimoFile(dest);
-      return false; // Memory allocation failed.
-    }
-  }
-
-  if (source->fileName)
-  {
-    dest->fileName = strdup(source->fileName);
-    if (!dest->fileName)
-    {
-      freeFimoFile(dest);
-      return false; // Memory allocation failed.
-    }
-  }
-
-  if (source->outDir)
-  {
-    dest->outDir = strdup(source->outDir);
-    if (!dest->outDir)
-    {
-      freeFimoFile(dest);
-      return false; // Memory allocation failed.
-    }
-  }
-
-  // Ensure the nodeStore is initialized for the destination
-  if (!dest->nodeStore)
-  {
-    dest->nodeStore = malloc(sizeof(NodeStore));
-    if (!dest->nodeStore)
-    {
-      freeFimoFile(dest);
-      return false; // Memory allocation failed.
-    }
-    initNodeStore(dest->nodeStore);
-  }
-  // Here, we should also copy the content of nodes.
-  // Depending on your specific needs, you might want to deep copy the list or just copy the pointers.
-
-  // Deep copy the content of nodes.
-  Node *currentSrcNode = source->nodeStore->head;
-  while (currentSrcNode)
-  {
-    for (size_t i = 0; i < currentSrcNode->value->size; i++)
-    {
-      // Insert each MotifHit into the destination's NodeStore
-      insertIntoNodeStore(dest->nodeStore, &(currentSrcNode->value->hits[i]));
-    }
-    currentSrcNode = currentSrcNode->next;
-  }
-
-  return true;
-}
 
 bool readFimoFile(FimoFile *fimoFile)
 {
-  // Ensure fimoFile and its nodeStore is initialized.
-  if (!fimoFile ||
-      !fimoFile->nodeStore ||
-      !fimoFile->fileName ||
-      !fimoFile->motifName ||
-      !fimoFile->outDir)
+  // Ensure fimoFile and its hash table is initialized.
+  if (!fimoFile || !fimoFile->ht || !fimoFile->fileName || !fimoFile->motifName || !fimoFile->outDir)
   {
     fprintf(stderr, "Error: Invalid FimoFile provided.\n");
     return false;
@@ -212,9 +108,10 @@ bool readFimoFile(FimoFile *fimoFile)
   char *saveptr; // Used for strtok_r
   char *line = strtok_r(fileContent, "\n", &saveptr);
   line = strtok_r(NULL, "\n", &saveptr); // skip header
-  // char *line = strtok(fileContent, "\n"); // strtok` is a function that will modify its inputs
-  // line = strtok(NULL, "\n"); // skip header
   int lineNum = 0;
+
+  MotifHitVector *currentVec = createMotifHitVector();
+  char prevGeneID[256] = "NO_GENE_YET";
 
   while (line)
   {
@@ -223,7 +120,7 @@ bool readFimoFile(FimoFile *fimoFile)
     char strand;
     double score, pval;
     MotifHit hit;
-
+    // parse each line of file
     if (fimoFile->binScore)
     {
       if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s %d", motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence, &binScore) != 10)
@@ -244,23 +141,32 @@ bool readFimoFile(FimoFile *fimoFile)
       }
       initMotifHit(&hit, motif, motifAlt, geneID, start, stop, strand, score, pval, sequence, -1);
     }
-
-    printf("motif: %s\n", motif);
-    // fprintf(stderr, "基因：%s\n\n", geneID);
     fimoFile->motifLength = (stop - start) + 1;
 
-    // Insert the hit into the NodeStore of the FimoFile
-    insertIntoNodeStore(fimoFile->nodeStore, &hit);
+    // 如果是第一行或者 geneID 发生了变化
+    if (strcmp(prevGeneID, geneID) != 0)
+    {
+      // 如果 currentVec 不为空，则保存到哈希表
+      if (currentVec && currentVec->size > 0)
+      {
+        putHashTable(fimoFile->ht, prevGeneID, currentVec);
+      }
+      // 创建新的 MotifHitVector
+      currentVec = createMotifHitVector();
+      strcpy(prevGeneID, geneID); // 更新prevGeneID
+    }
+    // 将 hit 加入到 currentVec
+    pushMotifHitVector(currentVec, &hit);
 
     line = strtok_r(NULL, "\n", &saveptr); // Get next line using strtok_r
-    // line = strtok(NULL, "\n"); // Get next line
-
-    // printf("Reading line %d out of %ld lines\n", lineNum, numLines);
     lineNum++;
-  }
 
-  size_t genesNum = countNodesInStore(fimoFile->nodeStore);
-  printf("%ld genes and %ld hits found related to %s\n\n", genesNum, numLines, fimoFile->motifName);
+  } // while (line)
+  // Add last MotifHitVector (gene)
+  if (currentVec)
+  {
+    putHashTable(fimoFile->ht, prevGeneID, currentVec);
+  }
 
   free(fileContent); // Free the content after processing
   return true;
@@ -268,14 +174,12 @@ bool readFimoFile(FimoFile *fimoFile)
 
 void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
 {
-  // Null checks
-  if (!fimoFile || !fimoFile->nodeStore || !promSizes)
+  if (!fimoFile || !fimoFile->ht || !promSizes)
   {
     fprintf(stderr, "Error: Null pointer passed to processFimoFile.\n");
     exit(1);
   }
 
-  // printf("%ld\n", countNodesInStore(fimoFile->nodeStore));
   ScoreLabelPairVector *binThresholds = createScoreLabelPairVector();
 
   if (!binThresholds)
@@ -284,89 +188,87 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
     exit(1);
   }
 
-  Node *currentNode = fimoFile->nodeStore->head;
-  size_t numDone = 0;
-
-  while (currentNode)
+  // 遍历每一个桶（bucket）
+  for (int i = 0; i < TABLE_SIZE; ++i)
   {
-    char *geneID = currentNode->key;
-    if (!geneID)
+    struct kv *current = fimoFile->ht->table[i];
+    // 如果当前桶非空，遍历其链表
+    while (current != NULL)
     {
-      fprintf(stderr, "Error: Encountered a node with a null key.\n");
-      freeScoreLabelPairVector(binThresholds);
-      exit(1);
-    }
-    size_t geneNum = countNodesInStore(fimoFile->nodeStore);
-    MotifHitVector *vec = currentNode->value;
-    if (!vec)
-    {
-      fprintf(stderr, "Error: Encountered a node with a null value.\n");
-      freeScoreLabelPairVector(binThresholds);
-      exit(1);
-    }
+      // // 这里，current->key 和 current->value 就是链表中当前节点的键和值。
+      // printf("Key: %s, Value:\n", current->key);
+      // printMotifHitVector(current->value);
 
-    // Sort hits within the gene based on their p-values.
-    sortMotifHitVectorByPVal(vec);
-
-    // Top k motifHit in vector with overlap with any one in the vector
-    size_t currentIndex = 0;
-    while (currentIndex < vec->size && currentIndex < k)
-    {
-      size_t nextIndex = currentIndex + 1;
-
-      while (nextIndex < vec->size)
+      char *geneID = current->key;
+      if (!geneID)
       {
-        if (motifsOverlap(&vec->hits[currentIndex], &vec->hits[nextIndex]))
-        {
-          removeHitAtIndex(vec, nextIndex);
-          // Do not increment nextIndex here because after removing
-          // an element, the next element shifts to the current nextIndex
-        }
-        else
-        {
-          nextIndex++; // No overlap, move to next hit
-        }
+        fprintf(stderr, "Error: Encountered a hash table with a null key.\n");
+        freeScoreLabelPairVector(binThresholds);
+        exit(1);
       }
-      currentIndex++;
+
+      MotifHitVector *vec = current->value;
+      if (!vec)
+      {
+        fprintf(stderr, "Error: Encountered a hash table with a null value.\n");
+        freeScoreLabelPairVector(binThresholds);
+        exit(1);
+      }
+      sortMotifHitVectorByPVal(vec);
+
+      // Top k motifHit in vector with overlap with any one in the vector
+      size_t currentIndex = 0;
+      while (currentIndex < vec->size && currentIndex < k)
+      {
+        size_t nextIndex = currentIndex + 1;
+
+        while (nextIndex < vec->size)
+        {
+          if (motifsOverlap(&vec->hits[currentIndex], &vec->hits[nextIndex]))
+          {
+            removeHitAtIndex(vec, nextIndex);
+            // Do not increment nextIndex here because after removing
+            // an element, the next element shifts to the current nextIndex
+          }
+          else
+          {
+            nextIndex++; // No overlap, move to next hit
+          }
+        }
+        currentIndex++;
+      }
+
+      if (vec->size > k)
+      {
+        retainTopKMotifHits(current->value, k);
+      }
+
+      // Find the promoter size for the current gene in promSizes map
+      size_t promterLength = findPromoterLength(promSizes, geneID);
+      if (promterLength == -1)
+      {
+        printf("Error: Sequence ID: %s not found in promoter lengths file!\n", geneID);
+        exit(1);
+      }
+
+      // Calculate the binomial p-value and the corresponding bin value for this gene
+      Pair binom_p = geometricBinTest(current->value, promterLength, fimoFile->motifLength);
+
+      // Save the best bin value for this gene in the binThresholds vector
+      pushBack(binThresholds, binom_p.score, geneID);
+
+      // Resize the hits for this gene if necessary based on the bin value
+      // void` pointers are general-purpose pointers that can point to any
+      // data type, but they don't carry type information, so you can't
+      // directly dereference them or access their members
+      if (((MotifHitVector *)(current->value))->size > (binom_p.idx + 1))
+      {
+        retainTopKMotifHits(current->value, binom_p.idx + 1);
+      }
+
+      current = current->next;
     }
-    if (vec->size > k)
-    {
-      retainTopKMotifHits(currentNode->value, k);
-    }
-
-    if (strcmp(geneID, "AT1G01470") == 0) {
-      printMotifHitVector(currentNode->value);
-    }
-
-    // Find the promoter size for the current gene in promSizes map
-    size_t promterLength = findPromoterLength(promSizes, geneID);
-    if (promterLength == -1)
-    {
-      printf("Error: Sequence ID: %s not found in promoter lengths file!\n", geneID);
-      exit(1);
-    }
-
-    // Calculate the binomial p-value and the corresponding bin value for this gene
-    Pair binom_p = geometricBinTest(currentNode->value, promterLength, fimoFile->motifLength);
-
-    // if (strcmp(geneID, "AT1G20680") == 0) {
-    //   printf(" binom_p.score：%f\n",  binom_p.score);
-
-    //   printf(" binom_p.idx：%ld\n",  binom_p.idx);
-
-    //   printf(" currentNode->value->size：%d\n",  currentNode->value->size);
-    // }
-    // Save the best bin value for this gene in the binThresholds vector
-    pushBack(binThresholds, binom_p.score, geneID);
-
-    // Resize the hits for this gene if necessary based on the bin value
-    if (currentNode->value->size > (binom_p.idx + 1))
-    {
-      retainTopKMotifHits(currentNode->value, binom_p.idx + 1);
-    }
-
-    currentNode = currentNode->next; // go for next gene
-  }                                  // while (currentNode)
+  }
 
   // Sort the binThresholds vector by ascending score
   sortVector(binThresholds);
@@ -374,58 +276,43 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   // Save the Nth best bin value and gene ID to the thresholds file
   if (binThresholds->size > N)
     retainTopN(binThresholds, N);
-  // printVector(binThresholds);
-  writeScoreLabelPairVectorToTxt(binThresholds, paste(3, "", fimoFile->outDir, "/", "binomial_thresholds.txt"));
 
-  // printf("countNodesInStore(fimoFile->nodeStore): %ld\n", countNodesInStore(fimoFile->nodeStore));
-
-  DynamicArray genesDeleted;
-  genesDeleted.items = malloc(sizeof(char *) * 10); // initial capacity, say 10
-  genesDeleted.size = 0;
-  genesDeleted.capacity = 10;
-
-  currentNode = fimoFile->nodeStore->head;
-  while (currentNode)
+  /*
+    #################################################################
+    #                   Write PMET index result                     #
+    #################################################################
+  */
+  int i;
+  for (i = 0; i < binThresholds->size; i++)
   {
-    char *geneID = currentNode->key;
+    char *binThresholdName = binThresholds->items[i].label;
+    // printf("%s\t%f\n", binThresholdName, binThresholds->items[i].score);
 
-    // Check if the gene is in binThresholds.
-    if (labelExists(binThresholds, geneID) != 1)
-    {
-      // Resize if necessary
-      if (genesDeleted.size == genesDeleted.capacity)
-      {
-        genesDeleted.capacity *= 2; // Double the capacity
-        genesDeleted.items = realloc(genesDeleted.items, sizeof(char *) * genesDeleted.capacity);
-      }
-      // Append geneID
-      genesDeleted.items[genesDeleted.size] = strdup(geneID);
-      genesDeleted.size++;
-    }
-    currentNode = currentNode->next; // go for next gene
-  }                                  // while (currentNode)
-
-  // 遍历之前存储在动态数组中的geneID
-  int i = 0;
-  for (i = 0; i < genesDeleted.size; i++)
-  {
-    char *geneIDToDelete = genesDeleted.items[i];
-    deleteNodeByKeyStore(fimoFile->nodeStore, geneIDToDelete);
+    MotifHitVector *vec = getHashTable(fimoFile->ht, binThresholdName);
+    writeVectorToFile(vec,
+                      paste(4, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", fimoFile->motifName, ".txt"));
   }
-  // Release the memory of a dynamic array.
-  for (i = 0; i < genesDeleted.size; i++)
+
+  /*
+    #################################################################
+    #               Write "binomial_thresholds.txt"                 #
+    #################################################################
+  */
+
+  // 打开文件以供写入binomial_thresholds.txt。如果文件不存在，将创建一个新文件。
+  FILE *file = fopen(paste(3, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", "binomial_thresholds.txt"),
+                     "w");
+  // 检查文件是否成功打开。
+  if (file == NULL)
   {
-    free(genesDeleted.items[i]); // Free each strdup'ed string
+    fprintf(stderr, "Failed to open the file for writing.\n");
+    exit(EXIT_FAILURE);
   }
-  free(genesDeleted.items);
+  // return Nth best value to save in thresholds file
+  double thresholdScore = binThresholds->items[binThresholds->size - 1].score;
+  fprintf(file, "%s\t%f\n", fimoFile->motifName, thresholdScore);
 
-  // write the bin thresholds to file
-  char *outputDir = removeTrailingSlashAndReturn(fimoFile->outDir);
-  printf("Write all processed fimo results to %s\n", paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
-  writeMotifHitsToFile(fimoFile->nodeStore, paste(4, "", outputDir, "/", fimoFile->motifName, ".txt"));
-
-  free(outputDir);
-  freeScoreLabelPairVector(binThresholds); // Release the memory of a dynamic array.
+  freeScoreLabelPairVector(binThresholds);
 }
 
 Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength)
@@ -529,17 +416,16 @@ double binomialCDF(size_t numPVals, size_t numLocations, double gm)
   return cdf;
 }
 
-void freeFimoFileContents(FimoFile *file)
+void deleteFimoFileContents(FimoFile *file)
 {
   if (!file)
     return; // Check if the provided pointer is not NULL
 
-  // Free the nodes store
-  if (file->nodeStore)
+  // Free the hash table
+  if (file->ht)
   {
-    freeNodeStore(file->nodeStore); // Assuming this function correctly frees the nodeStore and its inner data
-    free(file->nodeStore);
-    file->nodeStore = NULL;
+    deleteHashTable(file->ht);
+    file->ht = NULL;
   }
 
   // Free motifName if allocated
@@ -566,9 +452,9 @@ void freeFimoFileContents(FimoFile *file)
   printf("FimoFile (contents only) has been released!\n");
 }
 
-void freeFimoFile(FimoFile *file)
+void deleteFimoFile(FimoFile *file)
 {
-  freeFimoFileContents(file);
+  deleteFimoFileContents(file);
 
   // Finally, free the FimoFile struct itself
   free(file);
@@ -576,7 +462,7 @@ void freeFimoFile(FimoFile *file)
   printf("FimoFile (including itself) has been released!\n");
 }
 
-// 创建一个假的Fimo文件
+// Create a fake Fimo file
 void createMockFimoFile(const char *fileName)
 {
   FILE *file = fopen(fileName, "w");
@@ -586,10 +472,15 @@ void createMockFimoFile(const char *fileName)
     return;
   }
 
-  // 这是一个简单的模拟内容。请根据您的真实格式进行修改。
-  // fprintf(file, "HEADER LINE\n");
+  // a simple mockup of the motif hits. Please modify it to fit your real format.
+  //  fprintf(file, "HEADER LINE\n");
   fprintf(file, "motif_id	motif_alt_id	sequence_name	start	stop	strand	score	p-value	q-value	matched_sequence\n");
-  fprintf(file, "MOTIF1 MOTIF1-ALT GENE1 1 3 + 0.5 0.001 SEQ1 1\n");
-  fprintf(file, "MOTIF2 MOTIF2-ALT GENE2 2 4 + 0.6 0.002 SEQ2 0\n");
+  fprintf(file, "MOTIF11 MOTIF1-ALT GENE1 1 3 + 0.5 0.011 AAAC 1\n");
+  fprintf(file, "MOTIF11 MOTIF2-ALT GENE1 1 4 + 0.6 0.202 TTTT 0\n");
+  fprintf(file, "MOTIF11 MOTIF2-ALT GENE2 1 4 + 0.6 0.302 TTTT 0\n");
+  fprintf(file, "MOTIF11 MOTIF2-ALT GENE2 1 4 + 0.6 0.602 TTTT 0\n");
+  fprintf(file, "MOTIF11 MOTIF2-ALT GENE2 1 4 + 0.6 0.102 TTTT 0\n");
+  fprintf(file, "MOTIF11 MOTIF1-ALT GENE2 2 3 + 0.5 0.001 AAAT 1\n");
+  fprintf(file, "MOTIF11 MOTIF2-ALT GENE2 2 4 + 0.6 0.888 TTTT 0\n");
   fclose(file);
 }

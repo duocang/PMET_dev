@@ -56,7 +56,7 @@ int main()
   freeMotifHit(&hit1);
   freeMotifHit(&hit2);
   freeMotifHit(&hit3);
-  freeMotifHitVector(&vec);
+  deleteMotifHitVectorContent(&vec);
 
   return 0;
 }
