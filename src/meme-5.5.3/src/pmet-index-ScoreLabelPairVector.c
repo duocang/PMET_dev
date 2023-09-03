@@ -165,13 +165,12 @@ void printVector(ScoreLabelPairVector *vec)
   printf("==========================\n");
 }
 
-void freeScoreLabelPairVector(ScoreLabelPairVector *vec)
+void deleteScoreLabelVectorContent(ScoreLabelPairVector *vec)
 {
   if (!vec)
   {
     return;
   }
-
   // Free each label
   size_t i;
   for (i = 0; i < vec->size; i++)
@@ -183,6 +182,16 @@ void freeScoreLabelPairVector(ScoreLabelPairVector *vec)
   // Free the items array
   free(vec->items);
   vec->items = NULL;
+}
+
+void deleteScoreLabelVector(ScoreLabelPairVector *vec)
+{
+  if (!vec)
+  {
+    return;
+  }
+
+  deleteScoreLabelVectorContent(vec);
 
   // Free the vector itself
   free(vec);

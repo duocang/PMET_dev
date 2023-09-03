@@ -262,7 +262,8 @@ libcommon_la_SOURCES = \
   pmet-index-Node.c \
   pmet-index-PromoterLength.c \
   pmet-index-ScoreLabelPairVector.c \
-  pmet-index-utils.c
+  pmet-index-utils.c \
+  pmet-index-HashTable.c
 
 
 alphtype_CFLAGS = $(AM_CFLAGS)
@@ -788,4 +789,5 @@ EXTRA_DIST = \
   pmet-index-Node.h \
   pmet-index-PromoterLength.h \
   pmet-index-ScoreLabelPairVector.h \
-  pmet-index-utils.h
+  pmet-index-utils.h \
+  pmet-index-HashTable.h

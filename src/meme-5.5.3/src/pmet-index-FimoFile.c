@@ -294,7 +294,7 @@ double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes
     if (!geneID)
     {
       fprintf(stderr, "Error: Encountered a node with a null key.\n");
-      freeScoreLabelPairVector(binThresholds);
+      deletePromoterLenList(binThresholds);
       exit(1);
     }
     size_t geneNum = countNodesInStore(fimoFile->nodeStore);
@@ -302,7 +302,7 @@ double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes
     if (!vec)
     {
       fprintf(stderr, "Error: Encountered a node with a null value.\n");
-      freeScoreLabelPairVector(binThresholds);
+      deletePromoterLenList(binThresholds);
       exit(1);
     }
 
@@ -375,15 +375,6 @@ double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes
   // Save the Nth best bin value and gene ID to the thresholds file
   if (binThresholds->size > N)
     retainTopN(binThresholds, N);
-  // printVector(binThresholds);
-  // writeScoreLabelPairVectorToTxt( binThresholds,
-  //                                 paste(4,
-  //                                       "",
-  //                                       removeTrailingSlashAndReturn(fimoFile->outDir),
-  //                                       "/",
-  //                                       fimoFile->motifName, "_binomial_thresholds.txt"));
-
-  // printf("countNodesInStore(fimoFile->nodeStore): %ld\n", countNodesInStore(fimoFile->nodeStore));
 
   DynamicArray genesDeleted;
   genesDeleted.items = malloc(sizeof(char *) * 10); // initial capacity, say 10
@@ -433,7 +424,7 @@ double processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes
   double thresholdScore = binThresholds->items[binThresholds->size-1].score;
 
   free(outputDir);
-  freeScoreLabelPairVector(binThresholds); // Release the memory of a dynamic array.
+  deletePromoterLenList(binThresholds); // Release the memory of a dynamic array.
 
   return thresholdScore;
 }

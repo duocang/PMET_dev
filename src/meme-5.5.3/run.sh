@@ -33,8 +33,18 @@ print_white(){
 mkdir -p fimo_out
 start=$(date +%s)
 
-build/bin/fimo --topn 5 --topn 5000 --text  --no-qvalue --thresh 0.05 --verbosity 3 --oc fimo_out/   --bgfile fimo_test/promoters.bg fimo_test/motif_more.meme  fimo_test/promoters.fa fimo_test/promoter_lengths.txt
-
+build/bin/fimo                      \
+    --topn 5                        \
+    --topn 5000                     \
+    --text                          \
+    --no-qvalue                     \
+    --thresh 0.05                   \
+    --verbosity 1                   \
+    --oc fimo_out/                  \
+    --bgfile fimo_test/promoters.bg \
+    fimo_test/memefiles/a.txt       \
+    fimo_test/promoters.fa          \
+    fimo_test/promoter_lengths.txt
 
 end=$(date +%s)
 time_taken=$((end - start))

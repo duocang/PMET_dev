@@ -43,6 +43,7 @@
 #include "pmet-index-PromoterLength.h"
 #include "pmet-index-ScoreLabelPairVector.h"
 #include "pmet-index-utils.h"
+#include "pmet-index-HashTable.h"
 
 char* program_name = "fimo";
 
@@ -419,7 +420,7 @@ bool fimo_record_score(
   SCANNED_SEQUENCE_T *scanned_seq,
   RESERVOIR_SAMPLER_T *reservoir,
   MATCHED_ELEMENT_T *match,
-  NodeStore *store
+  MotifHitVector *NodeStore
 ) {
 
   double pvalue = get_matched_element_pvalue(match);
@@ -433,7 +434,7 @@ bool fimo_record_score(
   if (pvalue <= options.output_threshold) {
     if (options.text_only) {
       // print_site_as_tsv(stdout, false, match, scanned_seq);
-      insert_site_into_store(stdout, false, match, scanned_seq, store);
+      insert_site_into_store(stdout, false, match, scanned_seq, NodeStore);
     } else {
       // score_recorded = add_pattern_matched_element(pattern, match);
     }
@@ -532,7 +533,7 @@ static long fimo_score_sequence(
   PSSM_T*  pssm,
   PSSM_T*  rev_pssm,
   PATTERN_T* pattern,
-  NodeStore* store
+  MotifHitVector *vec
 )
 {
   assert(motif != NULL);
@@ -673,8 +674,6 @@ static long fimo_score_sequence(
     double rev_score = NAN;
     double rev_pvalue = NAN;
 
-
-
     // Always score forward strand
     scoreable_site = fimo_score_site(options, raw_seq, prior, pssm, &fwd_pvalue, &fwd_score);
     if (scoreable_site) {
@@ -708,11 +707,11 @@ static long fimo_score_sequence(
       else {
         // Certainly record the forward score
         fwd_match_recorded =
-          fimo_record_score(options, pattern, scanned_seq, reservoir, fwd_match, store);
+          fimo_record_score(options, pattern, scanned_seq, reservoir, fwd_match, vec);
         if (rev_match) {
           // Record the rev. score too
           rev_match_recorded =
-            fimo_record_score(options, pattern, scanned_seq, reservoir, rev_match, store);
+            fimo_record_score(options, pattern, scanned_seq, reservoir, rev_match, vec);
         }
       }
     }
@@ -824,8 +823,7 @@ static void fimo_score_each_motif(
   char* outDir,
   int N,
   int k,
-  PromoterList *promoter_len_list,
-  NodeStore *stores
+  PromoterList *promoter_len_list
 ) {
 
   // Create p-value sampling reservoir
@@ -846,6 +844,8 @@ static void fimo_score_each_motif(
       fprintf(stderr, "Failed to open the file for writing.\n");
       exit(EXIT_FAILURE);
   }
+
+  ScoreLabelPairVector *binResults = createScoreLabelPairVector();
 
   for (motif_index = 0; motif_index < num_motifs; motif_index++) {
 
@@ -911,6 +911,7 @@ static void fimo_score_each_motif(
       set_pattern_max_pvalue_retained(pattern, options.output_threshold);
     }
 
+    HashTable *ht = createHashTable();
     ScoreLabelPairVector *binThresholds = createScoreLabelPairVector();
 
     if (!binThresholds) {
@@ -947,7 +948,7 @@ static void fimo_score_each_motif(
 
       if (vec->size == 0 ) {
         // printf("Found no %s hit on %s\n", motif_id, fasta_seq_name);
-        freeMotifHitVector(vec);
+        deleteMotifHitVectorContent(vec);
         continue;
       }
 
@@ -972,7 +973,7 @@ static void fimo_score_each_motif(
       }
 
       if (vec->size == 0 ) {
-        freeMotifHitVector(vec);
+        deleteMotifHitVectorContent(vec);
         continue;
       }
 
@@ -980,6 +981,11 @@ static void fimo_score_each_motif(
         retainTopKMotifHits(vec, k);
       }
 
+      /*
+        #################################################################
+        #                  Calculate binomial p-value                   #
+        #################################################################
+      */
       // Find the promoter size for the current gene in promSizes map
       size_t promterLength = findPromoterLength(promoter_len_list, fasta_seq_name);
       if (promterLength == -1) {
@@ -997,8 +1003,14 @@ static void fimo_score_each_motif(
         retainTopKMotifHits(vec, binom_p.idx + 1);
       }
 
-      insertVectorIntoNodeStore(&stores[motif_index/2], fasta_seq_name, vec);
-      // freeMotifHitVector(vec);
+      /*
+        #################################################################
+        #                   Write PMET index result                     #
+        #################################################################
+      */
+      if (vec) {
+        putHashTable(ht, fasta_seq_name, vec);
+      }
     } // All sequences parsed
 
     // Sort the binThresholds vector by ascending score and keep top N
@@ -1009,32 +1021,28 @@ static void fimo_score_each_motif(
     if (motif_id[0] == '+') {
         memmove(motif_id, motif_id + 1, strlen(motif_id));  // memmove also takes care of the null terminator
     }
-    /*
-      #################################################################
-      #                   Write PMET index result                     #
-      #################################################################
-    */
+      /*************************************************************************
+     * Write PMET index result
+     *************************************************************************/
     int i;
     for (i = 0; i < binThresholds->size; i++)
     {
-      char *binThresholdName = binThresholds->items[i].label;
-      // printf("%s\t%f\n", binThresholdName, binThresholds->items[i].score);
-
-      Node *node = findNodeInStore(&stores[motif_index/2], binThresholdName);
-      // printSingleNode(node);
-      writeSingleNodeToFile(node,
-                            paste(4, "", removeTrailingSlashAndReturn(outDir), "/", motif_id, ".txt"));
+      MotifHitVector *vec = getHashTable(ht, binThresholds->items[i].label);
+      writeVectorToFile(vec,
+                        paste(4, "", removeTrailingSlashAndReturn(outDir), "/", motif_id, ".txt"));
     }
-    /*
-      #################################################################
-      #               Write "binomial_thresholds.txt"                 #
-      #################################################################
-    */
+    deleteHashTable(ht);
+    /*************************************************************************
+     * Write "binomial_thresholds.txt"
+     *************************************************************************/
     // return Nth best value to save in thresholds file
     double thresholdScore = binThresholds->items[binThresholds->size-1].score;
     fprintf(file, "%s\t%f\n", motif_id, thresholdScore);
 
-    freeScoreLabelPairVector(binThresholds);
+
+    pushBack(binResults, thresholdScore, motif_id);
+
+    deleteScoreLabelVector(binThresholds);
 
     // The pattern is complete.
     if (!options.text_only) {
@@ -1059,6 +1067,14 @@ static void fimo_score_each_motif(
     need_reset = true;
 
   } // All motifs parsed
+
+  writeScoreLabelPairVectorToTxt(binResults,
+      paste(3, "", removeTrailingSlashAndReturn(outDir), "/", "binomial_thresholds1.txt")
+  );
+  deleteScoreLabelVector(binResults);
+
+
+
 
   // 关闭文件。
   if (fclose(file) != 0) {
@@ -1115,18 +1131,11 @@ int main(int argc, char *argv[]) {
 
   int num_motif_names = arraylst_size(motifs);
 
-  NodeStore stores[num_motif_names];
-  int i;
-  for (i = 0; i < num_motif_names; ++i) {
-    stores[i].head = NULL; // 或其他适当的初始化
-  }
-
   /****************************************************************************
    * Iterate through each motif, searching homotypic matches on all promoters
    ****************************************************************************/
-
-  PromoterList *list1 = malloc(sizeof(PromoterList));
-  readPromoterLengthFile(list1, options.promoter_length);
+  PromoterList *promoterList = malloc(sizeof(PromoterList));
+  readPromoterLengthFile(promoterList, options.promoter_length);
   fimo_score_each_motif(
       options,
       bg_freqs,
@@ -1140,11 +1149,9 @@ int main(int argc, char *argv[]) {
       options.output_dirname,
       5000,
       5,
-      list1,
-      stores);
+      promoterList);
 
-  freePromoterList(list1);
-  free(list1);
+  deletePromoterLenList(promoterList);
 
   printf("\nDONE\n");
 

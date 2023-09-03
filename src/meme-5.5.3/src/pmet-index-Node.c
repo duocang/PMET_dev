@@ -202,7 +202,7 @@ void freeNodeStore(NodeStore *store)
     free(current->key);
     current->key = NULL; // Set to NULL after freeing
 
-    freeMotifHitVector(current->value); // This also frees internal strings and the hits array
+    deleteMotifHitVectorContent(current->value); // This also frees internal strings and the hits array
     free(current->value);
     current->value = NULL; // Set to NULL after freeing
 
@@ -354,7 +354,7 @@ bool deleteNodeByKeyStore(NodeStore *store, const char *key)
       }
 
       // 清除资源
-      freeMotifHitVector(current->value); // 假设MotifHitVector有一个free函数
+      deleteMotifHitVectorContent(current->value); // 假设MotifHitVector有一个free函数
       free(current->key);
       free(current);
       return true; // 返回true表示节点已被删除

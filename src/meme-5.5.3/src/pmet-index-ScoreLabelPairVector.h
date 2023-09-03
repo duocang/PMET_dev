@@ -109,8 +109,9 @@ void printVector(ScoreLabelPairVector *vec);
  *
  * @param vec The vector to free.
  */
-void freeScoreLabelPairVector(ScoreLabelPairVector *vec);
+void deleteScoreLabelVectorContent(ScoreLabelPairVector *vec);
 
+void deleteScoreLabelVector(ScoreLabelPairVector *vec);
 /**
  * Write the contents of the ScoreLabelPairVector to a text file.
  *

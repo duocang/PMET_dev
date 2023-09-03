@@ -228,7 +228,8 @@ am_libcommon_la_OBJECTS = libcommon_la-alignment.lo \
 	libcommon_la-pmet-index-Node.lo \
 	libcommon_la-pmet-index-PromoterLength.lo \
 	libcommon_la-pmet-index-ScoreLabelPairVector.lo \
-	libcommon_la-pmet-index-utils.lo
+	libcommon_la-pmet-index-utils.lo \
+	libcommon_la-pmet-index-HashTable.lo
 libcommon_la_OBJECTS = $(am_libcommon_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -835,6 +836,7 @@ am__depfiles_remade = ./$(DEPDIR)/alph_in-alph-in.Po \
 	./$(DEPDIR)/libcommon_la-parser-message.Plo \
 	./$(DEPDIR)/libcommon_la-pmet-index-FileRead.Plo \
 	./$(DEPDIR)/libcommon_la-pmet-index-FimoFile.Plo \
+	./$(DEPDIR)/libcommon_la-pmet-index-HashTable.Plo \
 	./$(DEPDIR)/libcommon_la-pmet-index-MotifHit.Plo \
 	./$(DEPDIR)/libcommon_la-pmet-index-MotifHitVector.Plo \
 	./$(DEPDIR)/libcommon_la-pmet-index-Node.Plo \
@@ -1465,7 +1467,8 @@ libcommon_la_SOURCES = \
   pmet-index-Node.c \
   pmet-index-PromoterLength.c \
   pmet-index-ScoreLabelPairVector.c \
-  pmet-index-utils.c
+  pmet-index-utils.c \
+  pmet-index-HashTable.c
 
 alphtype_CFLAGS = $(AM_CFLAGS)
 alphtype_LDADD = libcommon.la
@@ -1931,7 +1934,8 @@ EXTRA_DIST = \
   pmet-index-Node.h \
   pmet-index-PromoterLength.h \
   pmet-index-ScoreLabelPairVector.h \
-  pmet-index-utils.h
+  pmet-index-utils.h \
+  pmet-index-HashTable.h
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -2490,6 +2494,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-parser-message.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-pmet-index-FileRead.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-pmet-index-FimoFile.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-pmet-index-HashTable.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-pmet-index-MotifHit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-pmet-index-MotifHitVector.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcommon_la-pmet-index-Node.Plo@am__quote@ # am--include-marker
@@ -3537,6 +3542,13 @@ libcommon_la-pmet-index-utils.lo: pmet-index-utils.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pmet-index-utils.c' object='libcommon_la-pmet-index-utils.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcommon_la_CFLAGS) $(CFLAGS) -c -o libcommon_la-pmet-index-utils.lo `test -f 'pmet-index-utils.c' || echo '$(srcdir)/'`pmet-index-utils.c
+
+libcommon_la-pmet-index-HashTable.lo: pmet-index-HashTable.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcommon_la_CFLAGS) $(CFLAGS) -MT libcommon_la-pmet-index-HashTable.lo -MD -MP -MF $(DEPDIR)/libcommon_la-pmet-index-HashTable.Tpo -c -o libcommon_la-pmet-index-HashTable.lo `test -f 'pmet-index-HashTable.c' || echo '$(srcdir)/'`pmet-index-HashTable.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcommon_la-pmet-index-HashTable.Tpo $(DEPDIR)/libcommon_la-pmet-index-HashTable.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pmet-index-HashTable.c' object='libcommon_la-pmet-index-HashTable.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcommon_la_CFLAGS) $(CFLAGS) -c -o libcommon_la-pmet-index-HashTable.lo `test -f 'pmet-index-HashTable.c' || echo '$(srcdir)/'`pmet-index-HashTable.c
 
 alph_in-alph-in.o: alph-in.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(alph_in_CFLAGS) $(CFLAGS) -MT alph_in-alph-in.o -MD -MP -MF $(DEPDIR)/alph_in-alph-in.Tpo -c -o alph_in-alph-in.o `test -f 'alph-in.c' || echo '$(srcdir)/'`alph-in.c
@@ -5471,6 +5483,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libcommon_la-parser-message.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-FileRead.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-FimoFile.Plo
+	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-HashTable.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-MotifHit.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-MotifHitVector.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-Node.Plo
@@ -5761,6 +5774,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libcommon_la-parser-message.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-FileRead.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-FimoFile.Plo
+	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-HashTable.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-MotifHit.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-MotifHitVector.Plo
 	-rm -f ./$(DEPDIR)/libcommon_la-pmet-index-Node.Plo
