@@ -79,18 +79,23 @@ else
         -t 4 \
         data/homotypic_promoters/genome.fasta \
         data/homotypic_promoters/anno.gff3 \
-        data/homotypic_promoters/motif.meme
+        data/homotypic_promoters/motif_more.meme
 fi
 
 ########################## Running pmet indexing ##################################
 print_green "Running pmet indexing..."
 # run pmet index
 mkdir -p results/homotypic_promoters/fimohits
+start=$(date +%s)
 
 scripts/pmetindex \
     -f results/homotypic_promoters/fimo \
     -k 5 -n 5000 \
     -p results/homotypic_promoters/promoter_lengths.txt \
     -o results/homotypic_promoters/
+
+end=$(date +%s)
+time_taken=$((end - start))
+print_red "Time taken: $time_taken seconds"
 
 print_green "done"
