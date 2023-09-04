@@ -28,3 +28,4 @@ src/pmet/test_data
 src/indexing/bin
 src/indexing/build
 anno.gff3
+src/meme-5.5.3/build
