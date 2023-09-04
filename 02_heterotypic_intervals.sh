@@ -37,7 +37,6 @@ print_white(){
 }
 
 
-
 output=results/heterotypic_intervals
 indexoutput=results/homotypic_intervals
 gene_input_file=data/homotypic_intervals/intervals.txt

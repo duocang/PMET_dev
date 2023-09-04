@@ -36,6 +36,7 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
+# Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_intervals.sh
 
 ################################ Running FIMO #####################################

@@ -69,7 +69,7 @@ bash build.sh
 mv bin/pmet ../../scripts/
 
 
-
+# Give execute permission to all users for the file.
 chmod a+x scripts/pmetindex
 chomd a+x scripts/pmetParallel
 chmod a+x scripts/pmet

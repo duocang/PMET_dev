@@ -39,7 +39,7 @@ mkdir -p results/new_fimo_out
 start=$(date +%s)
 
 
-
+# Give execute permission to all users for the file.
 chmod a+x scripts/fimo
 
 scripts/fimo                                       \

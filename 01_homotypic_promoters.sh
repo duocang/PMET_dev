@@ -36,7 +36,7 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
-
+# Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
 chmod a+x scripts/gff3sort/gff3sort.pl
 ########################## Running FIMO #######################################
