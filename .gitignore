@@ -1,47 +1,5 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-results/PMETindex_/fimo/
-results/PMETindex_/fimohits/
-*.gff3
-*.bed
-*.zip
-*.fa
-*.fai
-*.pdf
-*.prof
 performance/pmetindex
 performance/pmetParallel
-*.fasta
 scripts/pmetindex
 scripts/pmetParallel
 src/pmet/bin/pmet
@@ -52,7 +10,6 @@ src/pmet/test/progress.log
 src/pmetParallel/bin/out/
 results/PMETindex/fimo/
 results/PMETindex/memefiles/
-progress
 data/anno.gff3temp
 results/PMETindex/IC.txt
 results/PMETindex/promoter_lengths.txt
@@ -70,3 +27,4 @@ results
 src/pmet/test_data
 src/indexing/bin
 src/indexing/build
+anno.gff3
