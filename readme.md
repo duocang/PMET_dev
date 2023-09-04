@@ -23,7 +23,7 @@ This is PMET.
 
 Both are writen in C++, source code can be found in `src/indexing` and `src/pmetParallel`.
 
-If necessary, it is possible to compile pmet index and pmet in different OS.
+If necessary, it is possible to compile `PMET index` and pmet in different OS.
 
 **Compile in one bash**
 
@@ -37,29 +37,56 @@ bash 00_binary_compile.sh
 
 After running the bash, all needed binary tools will be put in the `scripts` folder.
 
-## RUN PMET
+## 1. TEST PMET
 
 ```bash
 chmod a+x 01_homotypic_promoters.sh
 chmod a+x 02_heterotypic_promoters.sh
 ```
 
-### Search and filter homotypic motifs matching in all promoters
+### 1.1 search and filter homotypic motifs matches in all promoters
 
 ```bash
-bash 01_homotypic_intervals.sh
+bash 01_homotypic_promoters.sh
 # This can take a long time.
 ```
 
-### Search heterotypic motifs matching in all promoters
+### 1.2 search heterotypic motifs matching in all promoters
 
 ```bash
 bash 02_heterotypic_promoters.sh
 ```
 
+
+## 2. TEST new FIMO
+
+Before running `PMET index`, we need to run FIMO to find all the homotypic motifs, and then `PMET index` will use the results from FIMO to run. This process will consume **IO** resources.
+
+**IO is expensive.**
+
+To mitigate the IO resource consumption associated with FIMO and the `PMET index`, we aim to integrate the capabilities of the `PMET index` directly into FIMO. Details of this integration can be found in the `src/meme-5.3.3`directory.
+
+For instance, when querying 113 motif hits on the promoter of the Arabidopsis thaliana genome, the improved FIMO (referred to as NEW FIMO) can reduce write operations by 30GB and read operations by the same amount.
+
+```bash
+chmod a+x 03_test_new_fimo.sh
+bash 03_test_new_fimo.sh
+```
+
+Using the hardware specifications listed below, the traditional combination of FIMO and the `PMET index` takes more than double the time compared to using NEW FIMO. On a mechanical hard drive, this time difference can be amplified, possibly reaching 5 to 10 times.
+
+- Single core processor
+- Intel i9-12900K
+- Samsung 980 Pro SSD
+
+An additional consideration is the potential to divide the meme files (motifs) into segments and employ `GNU Parallel` for concurrent processing. This approach would decrease run times. Moreover, it would amplify the efficiency of  `NEW FIMO`. Given that IO resources are finite, the IO resource usage of the combined `FIMO` and `PMET index` increases multiplicatively. **No less time with more threads**.
+
+In contrast, `NEW FIMO` circumvents this issue entirely.
+
+
 ## Install GNU Parallel
 
-GNU Parallel helps PMET index (FIMO and PMET index) to run in parallel mode.
+GNU Parallel helps `PMET index` (FIMO and `PMET index`) to run in parallel mode.
 
 ```bash
 sudo apt-get update
