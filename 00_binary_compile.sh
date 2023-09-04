@@ -70,7 +70,6 @@ mv bin/pmet ../../scripts/
 
 
 
-
 chmod a+x scripts/pmetindex
 chomd a+x scripts/pmetParallel
 chmod a+x scripts/pmet

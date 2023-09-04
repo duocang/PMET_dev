@@ -37,9 +37,11 @@ print_white(){
 }
 
 
+chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
+chmod a+x scripts/gff3sort/gff3sort.pl
 ########################## Running FIMO #######################################
 # download data
- print_green "Downloading genome and annotation...\n"
+print_green "Downloading genome and annotation...\n"
 mkdir -p data/homotypic_promoters
 cd data
 if [ -f "homotypic_promoters/anno.gff3" ]; then
@@ -69,17 +71,17 @@ else
     print_green "   Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_promoters.sh \
-        -r scripts \
-        -o results/homotypic_promoters \
-        -i gene_id= \
-        -k 5 \
-        -n 5000 \
-        -p 1000 \
-        -v NoOverlap \
-        -u Yes \
-        -t 4 \
-        data/homotypic_promoters/genome.fasta \
-        data/homotypic_promoters/anno.gff3 \
+        -r scripts                                  \
+        -o results/homotypic_promoters              \
+        -i gene_id=                                 \
+        -k 5                                        \
+        -n 5000                                     \
+        -p 1000                                     \
+        -v NoOverlap                                \
+        -u Yes                                      \
+        -t 4                                        \
+        data/homotypic_promoters/genome.fasta       \
+        data/homotypic_promoters/anno.gff3          \
         data/homotypic_promoters/motif.meme
 fi
 
@@ -89,16 +91,14 @@ print_green "Running pmet indexing...\n"
 mkdir -p results/homotypic_promoters/fimohits
 start=$(date +%s)
 
-scripts/pmetindex \
-    -f results/homotypic_promoters/fimo \
-    -k 5 -n 5000 \
+scripts/pmetindex                                       \
+    -f results/homotypic_promoters/fimo                 \
+    -k 5 -n 5000                                        \
     -p results/homotypic_promoters/promoter_lengths.txt \
     -o results/homotypic_promoters/
 
 end=$(date +%s)
 time_taken=$((end - start))
 print_red "Time taken: $time_taken seconds"
-
-
 
 print_fluorescent_yellow "\n\nYou many want to run '02_heterotypic_promoters.sh' now..."

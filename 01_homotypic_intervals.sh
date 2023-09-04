@@ -36,6 +36,7 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
+chmod a+x scripts/cpp_debug_needed/homotypic_intervals.sh
 
 ################################ Running FIMO #####################################
 # check if fimo ready for PMETindex
@@ -52,13 +53,13 @@ else
     print_green "Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_intervals.sh  \
-    -r scripts \
-    -o results/homotypic_intervals \
-    -n 5000 \
-    -k 5 \
-    -f 0.05 \
-    -t 8 \
-    data/homotypic_intervals/intervals.fa \
+    -r scripts                                       \
+    -o results/homotypic_intervals                   \
+    -n 5000                                          \
+    -k 5                                             \
+    -f 0.05                                          \
+    -t 8                                             \
+    data/homotypic_intervals/intervals.fa            \
     data/homotypic_intervals/motif_more.meme
 fi
 
@@ -67,15 +68,12 @@ print_green "Running pmet index"
 
 mkdir -p results/homotypic_intervals/fimohits
 # run pmet index
-scripts/pmetindex \
-    -f results/homotypic_intervals/fimo \
-    -k 5 \
-    -n 5000 \
+scripts/pmetindex                                       \
+    -f results/homotypic_intervals/fimo                 \
+    -k 5                                                \
+    -n 5000                                             \
     -p results/homotypic_intervals/promoter_lengths.txt \
     -o results/homotypic_intervals/
 
-
 print_green "done"
-
-
 print_fluorescent_yellow "\n\nYou many want to run '02_heterotypic_intervals.sh' now..."

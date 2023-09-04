@@ -33,7 +33,6 @@ print_white(){
 }
 
 print_fluorescent_yellow "New fimo is running ..."
-
 print_fluorescent_yellow "You can view results in 'results/new_fimo_out'"
 
 mkdir -p results/new_fimo_out
@@ -59,5 +58,7 @@ scripts/fimo                                       \
 end=$(date +%s)
 time_taken=$((end - start))
 print_red "Time taken: $time_taken seconds"
+
+print_fluorescent_yellow "You can view results in 'results/new_fimo_out'"
 
 print_green "done"

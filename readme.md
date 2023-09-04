@@ -9,12 +9,13 @@ This is PMET.
 ├── 02_heterotypic_intervals.sh
 ├── 02_heterotypic_promoters.sh
 ├── 02_heterotypic_promoters_single_CPU.sh
+├── 03_test_new_fimo.sh
 ├── data
-├── readme.md
 ├── results
 ├── scripts
 ├── src
-└── visualize_pmet_php
+├── visualize_pmet_php
+└── readme.md
 ```
 
 ![](https://raw.githubusercontent.com/duocang/images/master/PicGo/202307202339573.png)

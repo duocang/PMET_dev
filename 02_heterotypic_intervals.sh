@@ -52,15 +52,15 @@ gene_input_file=data/homotypic_intervals/intervals.txt
 if [[ -f "$indexoutput/promoter_lengths.txt" ]]; then
     print_green "Searching for heterotypic motif hits..."
     mkdir -p $output
-    scripts/pmetParallel \
-        -d . \
-        -g $gene_input_file \
-        -i 4 \
-        -p $indexoutput/promoter_lengths.txt \
+    scripts/pmetParallel                        \
+        -d .                                    \
+        -g $gene_input_file                     \
+        -i 4                                    \
+        -p $indexoutput/promoter_lengths.txt    \
         -b $indexoutput/binomial_thresholds.txt \
-        -c $indexoutput/IC.txt \
-        -f $indexoutput/fimohits \
-        -o $output \
+        -c $indexoutput/IC.txt                  \
+        -f $indexoutput/fimohits                \
+        -o $output                              \
         -t 1
 
     cat $output/*.txt > $output/motif_output.txt
