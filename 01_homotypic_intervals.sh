@@ -39,17 +39,17 @@ print_white(){
 
 ################################ Running FIMO #####################################
 # check if fimo ready for PMETindex
-print_orange "check if fimo ready for PMET index"
+print_fluorescent_yellow "Checking if fimo result (txt files) is ready for PMET index"
 
 directory="results/homotypic_intervals/fimo"
 mkdir -p $directory
 
 txt_files=$(find "$directory" -name "*.txt")
 if [ -n "$txt_files" ]; then
-    print_green "(FIMO result) txt files exist in $directory."
+    print_green "   Yes, FIMO result (txt files) exist in $directory.\n\n"
 else
-    print_red "(FIMO result) no txt files found in $directory."
-    print_fluorescent_yellow "Running fimo.sh..."
+    print_red   "   No, no FIMO result (txt files) exist in $directory.\n\n"
+    print_green "Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_intervals.sh  \
     -r scripts \
@@ -63,7 +63,7 @@ else
 fi
 
 ########################## Running pmet indexing ##################################
-print_green "Running pmet indexing..."
+print_green "Running pmet index"
 
 mkdir -p results/homotypic_intervals/fimohits
 # run pmet index
@@ -76,3 +76,6 @@ scripts/pmetindex \
 
 
 print_green "done"
+
+
+print_fluorescent_yellow "\n\nYou many want to run '02_heterotypic_intervals.sh' now..."

@@ -36,12 +36,10 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
-print_green "Searching for heterotypic motif hits..."
+
 
 output=results/heterotypic_intervals
 indexoutput=results/homotypic_intervals
-mkdir -p $output
-
 gene_input_file=data/homotypic_intervals/intervals.txt
 
 # # remove genes not present in promoter_lengths.txt
@@ -51,21 +49,24 @@ gene_input_file=data/homotypic_intervals/intervals.txt
 # done > genes/temp_${task}.txt
 # rm indexoutput/temp_genes_list.txt
 
-scripts/pmetParallel \
-    -d . \
-    -g $gene_input_file \
-    -i 4 \
-    -p $indexoutput/promoter_lengths.txt \
-    -b $indexoutput/binomial_thresholds.txt \
-    -c $indexoutput/IC.txt \
-    -f $indexoutput/fimohits \
-    -o $output \
-    -t 2
+if [[ -f "$indexoutput/promoter_lengths.txt" ]]; then
+    print_green "Searching for heterotypic motif hits..."
+    mkdir -p $output
+    scripts/pmetParallel \
+        -d . \
+        -g $gene_input_file \
+        -i 4 \
+        -p $indexoutput/promoter_lengths.txt \
+        -b $indexoutput/binomial_thresholds.txt \
+        -c $indexoutput/IC.txt \
+        -f $indexoutput/fimohits \
+        -o $output \
+        -t 1
 
-cat $output/*.txt > $output/motif_output.txt
-rm $output/temp*.txt
+    cat $output/*.txt > $output/motif_output.txt
+    rm $output/temp*.txt
 
-
-# mkdir -p performance
-# mv pmetParallel.prof performance
-# cp scripts/pmetParallel performance
+else
+    print_red "Nothing found in $indexoutput.\n"
+    print_fluorescent_yellow "Please run '01_homotypic_intervals.sh' first."
+fi

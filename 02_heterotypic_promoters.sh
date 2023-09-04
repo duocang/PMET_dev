@@ -36,29 +36,40 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
-print_green "Searching for heterotypic motif hits..."
 
 output=results/heterotypic_promoters
 indexoutput=results/homotypic_promoters
-
 gene_input_file=data/gene.txt
 
-mkdir -p $output
 
-# remove genes not present in pre-computed pmet index
-grep -Ff $indexoutput/universe.txt $gene_input_file > $gene_input_file"temp"
 
-scripts/pmetParallel\
-    -d . \
-    -g $gene_input_file"temp" \
-    -i 4 \
-    -p $indexoutput/promoter_lengths.txt \
-    -b $indexoutput/binomial_thresholds.txt \
-    -c $indexoutput/IC.txt \
-    -f $indexoutput/fimohits \
-    -o $output \
-    -t 2
+if [[ -f "$indexoutput/universe.txt" ]]; then
+    print_green "Searching for heterotypic motif hits..."
+    mkdir -p $output
 
-cat $output/*.txt > $output/motif_output.txt
-rm $output/temp*.txt
-rm $gene_input_file"temp"
+    # remove genes not present in pre-computed pmet index
+    grep -Ff $indexoutput/universe.txt $gene_input_file > $gene_input_file"temp"
+
+    scripts/pmetParallel\
+        -d . \
+        -g $gene_input_file"temp" \
+        -i 4 \
+        -p $indexoutput/promoter_lengths.txt \
+        -b $indexoutput/binomial_thresholds.txt \
+        -c $indexoutput/IC.txt \
+        -f $indexoutput/fimohits \
+        -o $output \
+        -t 2
+
+    cat $output/*.txt > $output/motif_output.txt
+    rm $output/temp*.txt
+    rm $gene_input_file"temp"
+else
+    print_red "Nothing found in $indexoutput.\n"
+    print_fluorescent_yellow "Please run 01_homotypic_promoters.sh first."
+fi
+
+
+
+
+

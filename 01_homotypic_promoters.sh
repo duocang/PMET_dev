@@ -39,6 +39,7 @@ print_white(){
 
 ########################## Running FIMO #######################################
 # download data
+ print_green "Downloading genome and annotation...\n"
 mkdir -p data/homotypic_promoters
 cd data
 if [ -f "homotypic_promoters/anno.gff3" ]; then
@@ -55,17 +56,17 @@ cd ..
 
 ################################ Running FIMO ###################################
 # check if fimo ready for PMETindex
-print_orange "check if fimo ready for PMETindex"
+print_fluorescent_yellow "Checking if fimo result (txt files) ready for PMET index\n"
 
 directory="results/homotypic_promoters/fimo"
 mkdir -p $directory
 
 txt_files=$(find "$directory" -name "*.txt")
 if [ -n "$txt_files" ]; then
-    print_green "(FIMO result) txt files exist in $directory."
+    print_green "Yes, (FIMO result) txt files exist in $directory.\n"
 else
-    print_red "(FIMO result) no txt files found in $directory."
-    print_fluorescent_yellow "Running fimo.sh..."
+    print_red   "   No, no FIMO result (txt files) found in $directory."
+    print_green "   Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_promoters.sh \
         -r scripts \
@@ -79,11 +80,11 @@ else
         -t 4 \
         data/homotypic_promoters/genome.fasta \
         data/homotypic_promoters/anno.gff3 \
-        data/homotypic_promoters/motif_more.meme
+        data/homotypic_promoters/motif.meme
 fi
 
 ########################## Running pmet indexing ##################################
-print_green "Running pmet indexing..."
+print_green "Running pmet indexing...\n"
 # run pmet index
 mkdir -p results/homotypic_promoters/fimohits
 start=$(date +%s)
@@ -98,4 +99,6 @@ end=$(date +%s)
 time_taken=$((end - start))
 print_red "Time taken: $time_taken seconds"
 
-print_green "done"
+
+
+print_fluorescent_yellow "\n\nYou many want to run '02_heterotypic_promoters.sh' now..."

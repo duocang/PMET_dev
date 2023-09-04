@@ -29,3 +29,7 @@ src/indexing/bin
 src/indexing/build
 anno.gff3
 src/meme-5.5.3/build
+src/pmetParallel/bin
+src/pmet/bin
+fimo
+genome.fasta
