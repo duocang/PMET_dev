@@ -205,7 +205,7 @@ void writeScoreLabelPairVectorToTxt(ScoreLabelPairVector *vector, const char *fi
     return;
   }
 
-  FILE *file = fopen(filename, "w");
+  FILE *file = fopen(filename, "a");
   if (!file)
   {
     perror("Unable to open file for writing");
