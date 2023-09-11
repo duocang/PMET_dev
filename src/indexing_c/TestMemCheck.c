@@ -48,6 +48,14 @@ int main()
   printf("Age: %d\n", s->age);
   printf("Student ID: %d\n", s->student_id);
 
+
+  char *str1 = new_strdup("Hello, World!");
+
+  char *str2 = new_strdup("Hello, World!");
+
+  new_free(str1);
+
+
   return 0;
 }
 

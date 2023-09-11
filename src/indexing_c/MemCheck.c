@@ -16,7 +16,7 @@ mem_node *head = NULL;
 static void mem_node_add(void *ptr, size_t block, size_t line, char *filename)
 {
   // 产生节点
-  mem_node *node =  malloc(sizeof(mem_node));
+  mem_node *node = malloc(sizeof(mem_node));
   node->ptr = ptr;
   node->block = block;
   node->line = line;
@@ -48,7 +48,7 @@ static void mem_node_remove(void *ptr)
       // 获取头节点的下一个节点
       mem_node *pn = head->next;
       // 删除头节点
-       new_free(head);
+      new_free(head);
       // 令头节点指针指向下一个节点
       head = pn;
     }
@@ -66,7 +66,7 @@ static void mem_node_remove(void *ptr)
         if (pn->ptr == ptr)
         {
           pc->next = pnext; // 删除当前节点
-           new_free(pn);
+          new_free(pn);
         }
         else
           pc = pc->next;
@@ -110,7 +110,7 @@ void show_block()
       // 累加内存泄漏总量
       total += pn->block;
       // 删除链表节点
-       new_free(pn);
+      new_free(pn);
       // 指向下一个节点
       pn = pnext;
     }
@@ -129,6 +129,19 @@ void *dbg_malloc(size_t elem_size, char *filename, size_t line)
   void *ptr = malloc(elem_size);
   // 将分配内存的地址加入链表
   mem_node_add(ptr, elem_size, line, filename);
+  return ptr;
+}
+
+char *dbg_strdup(const char *s, char *filename, size_t line)
+{
+  if (!s) // 如果传入的字符串是NULL，直接返回NULL
+    return NULL;
+
+  char *ptr = strdup(s); // 使用标准库的strdup来复制字符串
+
+  // 将分配内存的地址加入链表
+  mem_node_add(ptr, strlen(s) + 1, line, filename);
+
   return ptr;
 }
 
