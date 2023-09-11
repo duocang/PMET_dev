@@ -5,34 +5,35 @@
 #include <string.h>
 #include <stdarg.h>
 
-int main() {
-    char* result = paste(5, "-", "Hello", "world", "this", "is", "C", NULL);
-    printf("%s\n", result); // Outputs: Hello-world-this-is-C
-    free(result);
+int main()
+{
+#ifdef DEBUG
+  atexit(show_block); // 在程序结束后显示内存泄漏报告
+#endif
+  char *result = paste(5, "-", "Hello", "world", "this", "is", "C", NULL);
+  printf("%s\n", result); // Outputs: Hello-world-this-is-C
+  new_free(result);
 
-    result = paste(5, NULL, "Hello", "world", "this", "is", "C");
-    printf("%s\n", result); // Outputs: Hello-world-this-is-C
-    free(result);
+  result = paste(5, NULL, "Hello", "world", "this", "is", "C");
+  printf("%s\n", result); // Outputs: Hello-world-this-is-C
+  new_free(result);
 
-    result = paste(5, "", "Hello", "world", "this", "is", "C");
-    printf("%s\n", result); // Outputs: Hello-world-this-is-C
-    free(result);
+  result = paste(5, "", "Hello", "world", "this", "is", "C");
+  printf("%s\n", result); // Outputs: Hello-world-this-is-C
+  new_free(result);
 
+  result = paste2("Hello", "world", "-");
+  printf("%s\n", result); // Outputs: Hello-world-this-is-C
+  new_free(result);
 
+  result = paste2("", "Hello", "world");
+  printf("%s\n", result); // Outputs: Hello-world-this-is-C
+  new_free(result);
 
-    result = paste2("Hello", "world", "-");
-    printf("%s\n", result); // Outputs: Hello-world-this-is-C
-    free(result);
-
-    result = paste2("", "Hello", "world");
-    printf("%s\n", result); // Outputs: Hello-world-this-is-C
-    free(result);
-
-    result = paste2(NULL, "Hello", "world");
-    printf("%s\n", result); // Outputs: Hello-world-this-is-C
-    free(result);
-    return 0;
+  result = paste2(NULL, "Hello", "world");
+  printf("%s\n", result); // Outputs: Hello-world-this-is-C
+  new_free(result);
+  return 0;
 }
 
-
-// clang -o test TestUtils.c utils.c
+// clang -DDEBUG  -o test TestUtils.c utils.c MemCheck.c

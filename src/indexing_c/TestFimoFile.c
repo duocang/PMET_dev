@@ -9,13 +9,17 @@
 
 #include "FimoFile.h"
 #include "HashTable.h"
+#include "MemCheck.h"
 
 void testInitFimoFile_()
 {
   // Scenario 1: Normal initialization of a FimoFile
   printf("Testing ininatization:\n");
   printf("\n    Scenario 1: Normal initialization of a FimoFile:");
-  FimoFile *file = malloc(sizeof(FimoFile));
+  // FimoFile *file = malloc(sizeof(FimoFile));
+  FimoFile *file;
+  file = (FimoFile *)new_malloc(sizeof(FimoFile));
+  // file = (FimoFile *)malloc(sizeof(FimoFile));
   if (!file)
   {
     fprintf(stderr, "Error: Memory allocation failed for FimoFile in testInitFimoFile_.\n");
@@ -33,11 +37,17 @@ void testInitFimoFile_()
   assert(file->ht != NULL);
 
   deleteFimoFileContents(file); // Assuming you have a function that can free the resources held by FimoFile
+  new_free(file);
 
   // Scenario 2: Pass a NULL FimoFile to initFimoFile_
   // This should print an error message but not crash.
   printf("\n    Scenario 2: Pass a NULL FimoFile to initFimoFile_:\n");
   initFimoFile_(NULL);
+
+  // Scenario 3: No free of the resources held by FimoFile
+  FimoFile *file2;
+  file2 = (FimoFile *)new_malloc(sizeof(FimoFile));
+
 
   printf("All tests passed for initFimoFile_!\n\n\n\n");
 }
@@ -143,9 +153,7 @@ void testProcess()
   readPromoterLengthFile(list, "test_data/promoter_lengths.txt");
   printf("Length of AT1G01010: %ld\n", findPromoterLength(list, "AT1G01010"));
 
-
   processFimoFile(myFimoFile, 5, 5000, list);
-
 
   deletePromoterLenListContent(list);
   deleteFimoFile(myFimoFile);
@@ -155,13 +163,31 @@ void testProcess()
 
 int main()
 {
-  // testInitFimoFile_();
+#ifdef DEBUG
+  atexit(show_block); // 在程序结束后显示内存泄漏报告
+#endif
+  testInitFimoFile_();
   // testInitFimoFile();
   // testReadFimoFile();
 
-  testProcess();
+  // testProcess();
 
   return 0;
 }
 
-// clang -o test TestFimoFile.c FileRead.c Node.c MotifHit.c MotifHitVector.c FimoFile.c PromoterLength.c ScoreLabelPairVector.c utils.c HashTable.c
+/*
+clang -DDEBUG \
+      -o test \
+      TestFimoFile.c  \
+      FileRead.c  \
+      HashTable.c  \
+      MemCheck.c  \
+      Node.c  \
+      MotifHit.c  \
+      MotifHitVector.c  \
+      FimoFile.c  \
+      PromoterLength.c  \
+      ScoreLabelPairVector.c  \
+      utils.c
+
+*/

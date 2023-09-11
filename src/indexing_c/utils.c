@@ -15,7 +15,7 @@ char *paste2(const char *spe, const char *string1, const char *string2)
   spe = spe ? spe : ""; // If spe is NULL, treat it as an empty string
   int lenSep = strlen(spe);
 
-  char *result = malloc(len1 + len2 + lenSep + 1); // +1 for the null-terminator
+  char *result = new_malloc(len1 + len2 + lenSep + 1); // +1 for the null-terminator
   if (!result)
   {
     perror("Memory allocation failed");
@@ -53,7 +53,7 @@ char *paste(int numStrings, const char *sep, ...)
   va_end(args);
 
   // Allocate memory for the result
-  char *result = (char *)malloc(length + 1);
+  char *result = (char *)new_malloc(length + 1);
   if (!result)
   {
     perror("Memory allocation failed");
@@ -95,7 +95,7 @@ char *getFilenameNoExt(const char *path)
   char *dot = strrchr(base, '.');
   size_t len = dot ? (size_t)(dot - base) : strlen(base);
 
-  char *filename = (char *)malloc(len + 1);
+  char *filename = (char *)new_malloc(len + 1);
   if (!filename)
   {
     // 如果需要，处理内存分配失败的情况

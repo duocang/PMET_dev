@@ -2,7 +2,7 @@
 
 ScoreLabelPairVector *createScoreLabelPairVector()
 {
-  ScoreLabelPairVector *vec = (ScoreLabelPairVector *)malloc(sizeof(ScoreLabelPairVector));
+  ScoreLabelPairVector *vec = (ScoreLabelPairVector *)new_malloc(sizeof(ScoreLabelPairVector));
   if (!vec)
   {
     perror("Failed to allocate memory for ScoreLabelPairVector");
@@ -60,7 +60,7 @@ bool pushBack(ScoreLabelPairVector *vec, double score, char *label)
       会指向无效的内存。为了解决这个问题，你应该在pushBack函数里为label分配堆内存，并复制字符
       串到这片内存。
   */
-  vec->items[vec->size].label = strdup(label);
+  vec->items[vec->size].label = new_strdup(label);
   if (!vec->items[vec->size].label)
   {
     fprintf(stderr, "Memory allocation for label failed in pushBack.\n");
@@ -88,7 +88,7 @@ void retainTopN(ScoreLabelPairVector *vec, size_t N)
   // Free memory for labels that are beyond the Nth element
   for (size_t i = N; i < vec->size; ++i)
   {
-    free(vec->items[i].label);
+    new_free(vec->items[i].label);
   }
 
   // Update the size of the vector to N
@@ -162,7 +162,7 @@ void printVector(ScoreLabelPairVector *vec)
   printf("==========================\n");
 }
 
-void deleteScoreLabelVectorContent(ScoreLabelPairVector *vec)
+void deleteScoreLabelVectorContents(ScoreLabelPairVector *vec)
 {
   if (!vec)
   {
@@ -172,16 +172,16 @@ void deleteScoreLabelVectorContent(ScoreLabelPairVector *vec)
   // Free each label
   for (size_t i = 0; i < vec->size; i++)
   {
-    free(vec->items[i].label);
+    new_free(vec->items[i].label);
     vec->items[i].label = NULL;
   }
 
   // Free the items array
-  free(vec->items);
+  new_free(vec->items);
   vec->items = NULL;
 
   // Free the vector itself
-  free(vec);
+  new_free(vec);
 }
 
 void deleteScoreLabelVector(ScoreLabelPairVector *vec)
@@ -191,10 +191,10 @@ void deleteScoreLabelVector(ScoreLabelPairVector *vec)
     return;
   }
 
-  deleteScoreLabelVectorContent(vec);
+  deleteScoreLabelVectorContents(vec);
 
   // Free the vector itself
-  free(vec);
+  new_free(vec);
 }
 
 void writeScoreLabelPairVectorToTxt(ScoreLabelPairVector *vector, const char *filename)

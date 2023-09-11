@@ -26,9 +26,9 @@ static void freeKV(struct kv *kv)
     {
       kv->free_value(kv->value);
     }
-    free(kv->key);
+    new_free(kv->key);
     kv->key = NULL;
-    free(kv);
+    new_free(kv);
   }
 }
 
@@ -68,13 +68,13 @@ static unsigned int hash33(char *key)
  */
 HashTable *createHashTable()
 {
-  HashTable *ht = malloc(sizeof(HashTable));
+  HashTable *ht = new_malloc(sizeof(HashTable));
   if (NULL == ht)
   {
     deleteHashTable(ht);
     return NULL;
   }
-  ht->table = malloc(sizeof(struct kv *) * TABLE_SIZE);
+  ht->table = new_malloc(sizeof(struct kv *) * TABLE_SIZE);
   if (NULL == ht->table)
   {
     deleteHashTable(ht);
@@ -111,10 +111,10 @@ void deleteHashTable(HashTable *ht)
           p = q;       // Move to the next node
         }
       }
-      free(ht->table); // Free the hash table array
+      new_free(ht->table); // Free the hash table array
       ht->table = NULL;
     }
-    free(ht);          // Free the hash table struct
+    new_free(ht);          // Free the hash table struct
   }
 }
 
@@ -162,14 +162,14 @@ int putHashTable2(HashTable *ht, char *key, void *value, void (*free_value)(void
   }
 
   // Allocate memory for new key and kv struct
-  char *kstr = strdup(key);
+  char *kstr = new_strdup(key);
   if (kstr == NULL) {
     return -1;
   }
 
-  struct kv *kv = malloc(sizeof(struct kv));
+  struct kv *kv = new_malloc(sizeof(struct kv));
   if (kv == NULL) {
-    free(kstr);
+    new_free(kstr);
     return -1;
   }
 

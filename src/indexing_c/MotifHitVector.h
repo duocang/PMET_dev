@@ -2,6 +2,7 @@
 #define MOTIF_VECTOR_H
 
 #include "MotifHit.h"
+#include "MemCheck.h"
 
 // 动态数组结构体
 typedef struct {
@@ -75,7 +76,7 @@ void removeHitAtIndex(MotifHitVector* vec, size_t indx);
  * Clears all the MotifHits from the MotifHitVector without freeing the vector itself.
  * @param vec Pointer to the MotifHitVector to be cleared.
  */
-void deleteMotifHitVectorContent(MotifHitVector* vec);
+void deleteMotifHitVectorContents(MotifHitVector* vec);
 
 void deleteMotifHitVector(MotifHitVector *vec);
 

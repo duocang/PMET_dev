@@ -244,9 +244,9 @@ int main()
   // printf("%ld genes and %ld hits found related to %s\n\n", genesNum, hitsNum, "ALH15");
 
   // // Free allocated memory
-  // freeMotifHit(&hit1);
-  // freeMotifHit(&hit2);
-  // freeMotifHit(&hit3);
+  // deleteMotifHitContents(&hit1);
+  // deleteMotifHitContents(&hit2);
+  // deleteMotifHitContents(&hit3);
   // freeNodeStore(&store);
   // printf("Memory freed successfully.\n");
 

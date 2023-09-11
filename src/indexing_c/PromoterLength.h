@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "MemCheck.h"
+
 #define MAX_PROMOTER_NAME_LENGTH 100 // Maximum allowable length for a promoter name
 
 /**

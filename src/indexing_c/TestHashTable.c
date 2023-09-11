@@ -6,6 +6,8 @@
 #include "MotifHit.h"
 #include "MotifHitVector.h"
 
+#include "MemCheck.h"
+
 // 要放入哈希表中的结构体
 struct Student
 {
@@ -18,7 +20,7 @@ struct Student
 // 结构体内存释放函数
 static void free_student(void *stu)
 {
-  free(stu);
+  new_free(stu);
 }
 
 // 显示学生信息的函数
@@ -37,9 +39,9 @@ void testStudent()
   }
 
   // 向哈希表中加入多个学生结构体
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < 10; i++)
   {
-    struct Student *stu = (struct Student *)malloc(sizeof(struct Student));
+    struct Student *stu = (struct Student *)new_malloc(sizeof(struct Student));
     stu->age = 18 + rand() % 5;
     stu->score = 50.0f + rand() % 100;
     sprintf(stu->name, "同学%d", i);
@@ -59,6 +61,71 @@ void testStudent()
   deleteHashTable(ht);
 }
 
+// 要放入哈希表中的结构体
+struct Teacher
+{
+  int age;
+  int id;
+  char *name;
+  char data[1024 * 1024 * 10];
+};
+
+// 结构体内存释放函数
+static void free_teacher(void *tec)
+{
+  struct Teacher *t = (struct Teacher *)tec;
+  new_free(t->name); // Free the dynamically allocated name
+  new_free(t);   // Free the teacher struct itself
+}
+
+// 显示教师信息的函数
+static void show_teacher(struct Teacher *p)
+{
+  printf("姓名:%s, 年龄:%d, 工号:%.2d\n", p->name, p->age, p->id);
+}
+
+void testTeacher()
+{
+  // 新建一个HashTable实例
+  HashTable *ht = createHashTable();
+  if (NULL == ht)
+  {
+    printf("Fail to create a hash table!\n");
+  }
+
+  // 向哈希表中加入多个教师结构体
+  for (int i = 0; i < 10; i++)
+  {
+    struct Teacher *tec = (struct Teacher *)new_malloc(sizeof(struct Teacher));
+    tec->age = 18 + rand() % 5;
+    tec->id = 50.0f + rand() % 100;
+
+    char name_buffer[100]; // Temporary buffer to format the name
+    sprintf(name_buffer, "教师%d", i);
+
+    tec->name = strdup(name_buffer); // Duplicate the string to assign to tec->name
+
+    putHashTable2(ht, tec->name, tec, free_teacher);
+  }
+
+  // 根据教师姓名查找教师结构
+  for (int i = 0; i < 10; i++)
+  {
+    char name[32];
+    sprintf(name, "教师%d", i);
+    struct Teacher *tec = (struct Teacher *)getHashTable(ht, name);
+    show_teacher(tec);
+  }
+
+  // 销毁哈希表实例
+  deleteHashTable(ht);
+}
+
+static void free_hit(void *hit)
+{
+  MotifHit *hp = (MotifHit *)hit;
+  deleteMotifHitContents(hp);
+}
 
 void testMotif()
 {
@@ -74,46 +141,60 @@ void testMotif()
     printf("Fail to create a hash table!\n");
   }
 
-  putHashTable(ht, "西游记", &hit1);
-  putHashTable(ht, "西游记", &hit2);
-  putHashTable(ht, "三国志", &hit3);
-  putHashTable(ht, "三国志", &hit4);
-
+  putHashTable2(ht, "西游记", &hit1, free_hit);
+  putHashTable2(ht, "西游记", &hit2, free_hit);
+  putHashTable2(ht, "三国志", &hit3, free_hit);
+  putHashTable2(ht, "三国志", &hit4, free_hit);
 
   MotifHit *hit = getHashTable(ht, "西游记");
 
-  printMotifHit(stdout, hit);
+  printMotifHit(hit);
 
   deleteHashTable(ht);
 }
 
+void freeVec(void *ptr)
+{
+  MotifHitVector *vec = (MotifHitVector *)ptr;
 
-void freeVec(void *ptr) {
-    MotifHitVector *vec = (MotifHitVector *)ptr;
-    if(vec) {
-        deleteMotifHitVectorContent(vec);  // 释放 hits 数组
-        free(vec);        // 释放 MotifHitVector 结构
-    }
+  printMotifHitVector(vec);
+
+  if (vec)
+  {
+    deleteMotifHitVectorContents(vec); // 释放 hits 数组
+    new_free(vec);                        // 释放 MotifHitVector 结构
+  }
 }
 
 void testMotifVector()
 {
-  MotifHit hit1, hit2, hit3, hit4;
-  initMotifHit(&hit1, "AHL12", "孙悟空", "西游记", 614, 621, '+', 7.8501, 0.000559, "AAATAATT", 0);
-  initMotifHit(&hit2, "AHL12", "唐三藏", "西游记", 700, 708, '-', 8.5001, 0.000600, "AAGGTTAA", 1);
+  MotifHit hit3, hit4;
+
   initMotifHit(&hit3, "AHL12", "诸葛亮", "三国志", 800, 808, '+', 6.7000, 0.000700, "TTAACCAA", 2);
   initMotifHit(&hit4, "AHL12", "刘皇叔", "三国志", 650, 658, '-', 7.1000, 0.000800, "GGGTTTCC", 3);
 
-  // MotifHitVector vec1, vec2;
-  MotifHitVector vec1;
-  MotifHitVector *vec2 = createMotifHitVector();
-  initMotifHitVector(&vec1);
-  // initMotifHitVector(&vec2);
+  // 动态分配内存给hit5和hit6
+  MotifHit *hit5 = (MotifHit *)new_malloc(sizeof(MotifHit));
+  MotifHit *hit6 = (MotifHit *)new_malloc(sizeof(MotifHit));
+  // 使用动态分配的结构初始化
+  initMotifHit(hit5, "AHL12", "智多星", "水浒传", 800, 808, '+', 6.7000, 0.000700, "TTAACCAA", 2);
+  initMotifHit(hit6, "AHL12", "小李广", "水浒传", 650, 658, '-', 7.1000, 0.000800, "GGGTTTCC", 3);
 
-  pushMotifHitVector(&vec1, &hit1);
-  pushMotifHitVector(&vec1, &hit2);
+  printMotifHit(hit5);
+  printMotifHit(hit6);
+
+  MotifHitVector *vec2 = createMotifHitVector();
+
+  MotifHitVector *vec3 = (MotifHitVector *)new_malloc(sizeof(MotifHitVector));
+  vec3->size = 0;
+  vec3->capacity = 10;
+  vec3->hits = (MotifHit*)new_malloc(vec3->capacity * sizeof(MotifHit));
+
+
   pushMotifHitVector(vec2, &hit3);
   pushMotifHitVector(vec2, &hit4);
+  pushMotifHitVector(vec3, hit5);
+  pushMotifHitVector(vec3, hit6);
 
   HashTable *ht = createHashTable();
   if (NULL == ht)
@@ -121,26 +202,38 @@ void testMotifVector()
     printf("Fail to create a hash table!\n");
   }
 
-  putHashTable2(ht, "西游记", &vec1, NULL);
   putHashTable2(ht, "三国志", vec2, freeVec);
+  putHashTable2(ht, "水浒传", vec3, freeVec);
 
-  printf("提取三国志：\n");
+  printf("\n提取三国志：\n");
   MotifHitVector *vec = getHashTable(ht, "三国志");
   printMotifHitVector(vec);
+
+
+  printf("\n提取水浒传：\n");
+  vec = getHashTable(ht, "水浒传");
+  printMotifHitVector(vec);
+
+
+  deleteMotifHitContents(&hit3);
+  deleteMotifHitContents(&hit4);
+  deleteMotifHit(hit5);
+  deleteMotifHit(hit6);
 
   deleteHashTable(ht);
 }
 
-
-
-
-
 int main()
 {
+#ifdef DEBUG
+  atexit(show_block); // 在程序结束后显示内存泄漏报告
+#endif
+
   // testStudent();
+  // testTeacher();
   // testMotif();
   testMotifVector();
   return 0;
 }
 
-// clang -o test TestHashTable.c HashTable.c MotifHit.c MotifHitVector.c
+// clang -DDEBUG -o test TestHashTable.c HashTable.c MotifHit.c MotifHitVector.c MemCheck.c

@@ -55,10 +55,10 @@ void deletePromoterLenListContent(PromoterList *list)
     Promoter *toDelete = current;
     if (toDelete->promoterName)
     {
-      free(toDelete->promoterName);
+      new_free(toDelete->promoterName);
     }
     current = current->next;
-    free(toDelete);
+    new_free(toDelete);
   }
   list->head = NULL;
 }
@@ -73,7 +73,7 @@ void deletePromoterLenList(PromoterList *list)
 
   deletePromoterLenListContent(list);
 
-  free(list);
+  new_free(list);
 }
 
 void insertPromoter(PromoterList *list, const char *promoterName, int length)
@@ -90,18 +90,18 @@ void insertPromoter(PromoterList *list, const char *promoterName, int length)
     exit(EXIT_FAILURE);
   }
 
-  Promoter *newPromoter = (Promoter *)malloc(sizeof(Promoter));
+  Promoter *newPromoter = (Promoter *)new_malloc(sizeof(Promoter));
   if (!newPromoter)
   {
     perror("Failed to allocate memory for new promoter");
     exit(EXIT_FAILURE);
   }
 
-  newPromoter->promoterName = strdup(promoterName);
+  newPromoter->promoterName = new_strdup(promoterName);
   if (!newPromoter->promoterName)
   {
     perror("Failed to allocate memory for promoter name");
-    free(newPromoter);
+    new_free(newPromoter);
     exit(EXIT_FAILURE);
   }
 

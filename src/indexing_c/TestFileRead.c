@@ -3,10 +3,11 @@
 #include <string.h>
 
 #include "FileRead.h"
+#include "MemCheck.h"
 
 int main() {
     char* content;
-    long lines = readFileAndCountLines("test_data/MYB46_2.txt", &content);
+    long lines = readFileAndCountLines("test_data/MYB46_2_short.txt", &content);
     printf("Number of lines: %ld\n", lines);
     printf("Content:\n%s", content);
 
@@ -28,3 +29,5 @@ int main() {
 
     return 0;
 }
+
+// clang -DDEBUG -o test TestFileRead.c FileRead.c MemCheck.c

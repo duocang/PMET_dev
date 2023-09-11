@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include "MemCheck.h"
+
 /**
  * Concatenate two strings using a specified separator.
  *

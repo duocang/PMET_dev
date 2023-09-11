@@ -1,6 +1,12 @@
 #ifndef HASH_TABLE
 #define HASH_TABLE
 
+// #include <stdlib.h>
+// #include <stdio.h>
+// #include <string.h>
+
+#include "MemCheck.h"
+
 // #pragma once
 typedef struct HashTable HashTable;
 

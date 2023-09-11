@@ -1,16 +1,20 @@
 #include "PromoterLength.h"
 
-int main() {
+int main()
+{
+#ifdef DEBUG
+  atexit(show_block); // 在程序结束后显示内存泄漏报告
+#endif
 
-    PromoterList* list = malloc(sizeof(PromoterList));
-    initPromoterList(list);
+  PromoterList *list = new_malloc(sizeof(PromoterList));
+  initPromoterList(list);
 
-    readPromoterLengthFile(list, "test_data/promoter_lengths.txt");
+  readPromoterLengthFile(list, "test_data/promoter_lengths.txt");
 
-    printf("Length of AT1G01010: %zu\n", findPromoterLength(list, "AT1G01010"));
-    // ... you can test with other gene names
+  printf("Length of AT1G01010: %zu\n", findPromoterLength(list, "AT1G01010"));
+  // ... you can test with other gene names
 
-    deletePromoterLenListContent(list);
-    return 0;
+  deletePromoterLenList(list);
+  return 0;
 }
-// clang TestPromoterLength.c PromoterLength.c -o test
+// clang -DDEBUG -o test TestPromoterLength.c PromoterLength.c MemCheck.c

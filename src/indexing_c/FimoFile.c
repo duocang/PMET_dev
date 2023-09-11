@@ -203,7 +203,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       if (!geneID)
       {
         fprintf(stderr, "Error: Encountered a hash table with a null key.\n");
-        deletePromoterLenListContent(binThresholds);
+        deleteScoreLabelVectorContent(binThresholds);
         exit(1);
       }
 
@@ -211,7 +211,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       if (!vec)
       {
         fprintf(stderr, "Error: Encountered a hash table with a null value.\n");
-        deletePromoterLenListContent(binThresholds);
+        deleteScoreLabelVectorContent(binThresholds);
         exit(1);
       }
       sortMotifHitVectorByPVal(vec);

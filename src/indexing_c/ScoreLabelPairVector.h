@@ -7,6 +7,8 @@
  * score-label pairs, with functions for sorting, searching, and file I/O.
  */
 
+#include "MemCheck.h"
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -109,7 +111,7 @@ void printVector(ScoreLabelPairVector *vec);
  *
  * @param vec The vector to free.
  */
-void deleteScoreLabelVectorContent(ScoreLabelPairVector *vec);
+void deleteScoreLabelVectorContents(ScoreLabelPairVector *vec);
 
 void deleteScoreLabelVector(ScoreLabelPairVector *vec);
 
