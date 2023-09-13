@@ -5,12 +5,13 @@
 #include <math.h>
 #include <float.h> // for DBL_MAX
 
-void initFimoFile_(FimoFile *file)
+FimoFile *createFimoFile()
 {
+  FimoFile *file = (FimoFile *)new_malloc(sizeof(FimoFile));
   if (!file)
   {
-    fprintf(stderr, "Error: Invalid FimoFile provided.\n");
-    return;
+    fprintf(stderr, "Error: FimoFile Can not be created.\n");
+    return NULL;
   }
   // Setting the entire structure to zero ensures that all members are `NULL` or `0`:
   memset(file, 0, sizeof(FimoFile));
@@ -22,14 +23,15 @@ void initFimoFile_(FimoFile *file)
   file->outDir = NULL;
   file->binScore = false;
   file->hasMotifAlt = false;
-
   file->ht = NULL;
   file->ht = createHashTable();
+
   if (!file->ht)
   {
-    fprintf(stderr, "Error: Memory allocation failed for Hash table *ht in initFimoFile_ function.\n");
+    fprintf(stderr, "Error: Memory allocation failed for Hash table *ht in createFimoFile function.\n");
     exit(1); // Or handle the error in another way if you prefer
   }
+  return file;
 }
 
 void initFimoFile(FimoFile *file,
@@ -54,20 +56,19 @@ void initFimoFile(FimoFile *file,
   file->hasMotifAlt = hasMotifAlt;
   file->binScore = binScore;
 
-  // 使用strdup为字符串创建新的内存副本
+  // Creating a new memory copy of a string using strdup
   // If the passed pointer is NULL, strdup will return NULL, so these operations are safe.
-  // this can be different in other platforms, so we do as following
-  file->motifName = motifName ? strdup(motifName) : NULL;
-  file->fileName = fileName ? strdup(fileName) : NULL;
-  file->outDir = outDir ? strdup(outDir) : NULL;
+  file->motifName = motifName ? new_strdup(motifName) : NULL;
+  file->fileName = fileName ? new_strdup(fileName) : NULL;
+  file->outDir = outDir ? new_strdup(outDir) : NULL;
   // check ram allocating
   if ((motifName && !file->motifName) || (fileName && !file->fileName) || (outDir && !file->outDir))
   {
     fprintf(stderr, "Error: Memory allocation failed for strings in initFimoFile.\n");
     // Clean up any allocated memory to avoid memory leaks
-    free(file->motifName);
-    free(file->fileName);
-    free(file->outDir);
+    new_free(file->motifName);
+    new_free(file->fileName);
+    new_free(file->outDir);
     return;
   }
 
@@ -77,20 +78,19 @@ void initFimoFile(FimoFile *file,
     fprintf(stderr, "Error: Memory allocation failed for hash table in initFimoFile.\n");
 
     // Clean up the allocated memory to avoid memory leaks
-    free(file->motifName);
-    free(file->fileName);
-    free(file->outDir);
+    new_free(file->motifName);
+    new_free(file->fileName);
+    new_free(file->outDir);
     return;
   }
 }
-
 
 bool readFimoFile(FimoFile *fimoFile)
 {
   // Ensure fimoFile and its hash table is initialized.
   if (!fimoFile || !fimoFile->ht || !fimoFile->fileName || !fimoFile->motifName || !fimoFile->outDir)
   {
-    fprintf(stderr, "Error: Invalid FimoFile provided.\n");
+    fprintf(stderr, "Error: Invalid FimoFile provided.\n\n");
     return false;
   }
 
@@ -99,8 +99,13 @@ bool readFimoFile(FimoFile *fimoFile)
 
   if (numLines <= 0)
   {
-    free(fileContent);
+    new_free(fileContent);
+    printf("Error: Invalid FimoFile");
     return false;
+  }
+  else
+  {
+    printf("Reading %s with %ld records...\n", fimoFile->fileName, numLines);
   }
 
   fimoFile->numLines = numLines;
@@ -108,7 +113,7 @@ bool readFimoFile(FimoFile *fimoFile)
   char *saveptr; // Used for strtok_r
   char *line = strtok_r(fileContent, "\n", &saveptr);
   line = strtok_r(NULL, "\n", &saveptr); // skip header
-  int lineNum = 0;
+  int currentLineNum = 0;
 
   MotifHitVector *currentVec = createMotifHitVector();
   char prevGeneID[256] = "NO_GENE_YET";
@@ -125,8 +130,8 @@ bool readFimoFile(FimoFile *fimoFile)
     {
       if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s %d", motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence, &binScore) != 10)
       {
-        free(fileContent);
-        fprintf(stderr, "Error: Failed to parse line %d.\n", lineNum);
+        new_free(fileContent);
+        fprintf(stderr, "Error: Failed to parse line %d.\n", currentLineNum);
         return false;
       }
       initMotifHit(&hit, motif, motifAlt, geneID, start, stop, strand, score, pval, sequence, binScore);
@@ -135,40 +140,44 @@ bool readFimoFile(FimoFile *fimoFile)
     {
       if (sscanf(line, "%255s %255s %255s %d %d %c %lf %lf %255s", motif, motifAlt, geneID, &start, &stop, &strand, &score, &pval, sequence) != 9)
       {
-        free(fileContent);
-        fprintf(stderr, "Error: Failed to parse line %d.\n", lineNum);
+        new_free(fileContent);
+        fprintf(stderr, "Error: Failed to parse line %d.\n", currentLineNum);
         return false;
       }
       initMotifHit(&hit, motif, motifAlt, geneID, start, stop, strand, score, pval, sequence, -1);
     }
     fimoFile->motifLength = (stop - start) + 1;
 
-    // 如果是第一行或者 geneID 发生了变化
+    //  first line or geneID has changed.
     if (strcmp(prevGeneID, geneID) != 0)
     {
-      // 如果 currentVec 不为空，则保存到哈希表
+      // If currentVec is not null, save to hash table
       if (currentVec && currentVec->size > 0)
       {
-        putHashTable(fimoFile->ht, prevGeneID, currentVec);
+        putHashTable2(fimoFile->ht, prevGeneID, currentVec, adapterDeleteFunction);
       }
-      // 创建新的 MotifHitVector
-      currentVec = createMotifHitVector();
-      strcpy(prevGeneID, geneID); // 更新prevGeneID
+      // Creates a new MotifHitVector if it is not reading the first line
+      if (currentLineNum > 0)
+      {
+        currentVec = createMotifHitVector();
+      }
+      strcpy(prevGeneID, geneID); // Update prevGeneID
     }
-    // 将 hit 加入到 currentVec
+
     pushMotifHitVector(currentVec, &hit);
+    deleteMotifHitContents(&hit);
 
     line = strtok_r(NULL, "\n", &saveptr); // Get next line using strtok_r
-    lineNum++;
-
+    currentLineNum++;
   } // while (line)
+
   // Add last MotifHitVector (gene)
   if (currentVec)
   {
-    putHashTable(fimoFile->ht, prevGeneID, currentVec);
+    putHashTable2(fimoFile->ht, prevGeneID, currentVec, adapterDeleteFunction);
   }
 
-  free(fileContent); // Free the content after processing
+  new_free(fileContent); // Free the content after processing
   return true;
 }
 
@@ -203,7 +212,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       if (!geneID)
       {
         fprintf(stderr, "Error: Encountered a hash table with a null key.\n");
-        deleteScoreLabelVectorContent(binThresholds);
+        deleteScoreLabelVectorContents(binThresholds);
         exit(1);
       }
 
@@ -211,12 +220,15 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       if (!vec)
       {
         fprintf(stderr, "Error: Encountered a hash table with a null value.\n");
-        deleteScoreLabelVectorContent(binThresholds);
+        deleteScoreLabelVectorContents(binThresholds);
         exit(1);
       }
       sortMotifHitVectorByPVal(vec);
 
       // Top k motifHit in vector with overlap with any one in the vector
+#ifdef DEBUG
+      printf("Delete motif hit in vector with overlap\n\n");
+#endif
       size_t currentIndex = 0;
       while (currentIndex < vec->size && currentIndex < k)
       {
@@ -226,6 +238,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
         {
           if (motifsOverlap(&vec->hits[currentIndex], &vec->hits[nextIndex]))
           {
+#ifdef DEBUG
+            printf("Key: %s\n", current->key);
+#endif
             removeHitAtIndex(vec, nextIndex);
             // Do not increment nextIndex here because after removing
             // an element, the next element shifts to the current nextIndex
@@ -240,7 +255,8 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
 
       if (vec->size > k)
       {
-        retainTopKMotifHits(current->value, k);
+        // retainTopKMotifHits(current->value, k);
+        retainTopKMotifHits(vec, k);
       }
 
       // Find the promoter size for the current gene in promSizes map
@@ -261,7 +277,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       // void` pointers are general-purpose pointers that can point to any
       // data type, but they don't carry type information, so you can't
       // directly dereference them or access their members
-      if (((MotifHitVector *)(current->value))->size > (binom_p.idx + 1))
+
+      MotifHitVector *temp = current->value;
+      if (temp->size > (binom_p.idx + 1))
       {
         retainTopKMotifHits(current->value, binom_p.idx + 1);
       }
@@ -280,23 +298,20 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   /****************************************************************************
    * Write PMET index result
    ****************************************************************************/
+  char *motifHitFilePath = paste(4, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", fimoFile->motifName, ".txt");
   int i;
   for (i = 0; i < binThresholds->size; i++)
   {
     char *binThresholdName = binThresholds->items[i].label;
-    // printf("%s\t%f\n", binThresholdName, binThresholds->items[i].score);
-
     MotifHitVector *vec = getHashTable(fimoFile->ht, binThresholdName);
-    writeVectorToFile(vec,
-                      paste(4, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", fimoFile->motifName, ".txt"));
+    writeVectorToFile(vec, motifHitFilePath);
   }
 
   /****************************************************************************
    * Write "binomial_thresholds.txt"
    ****************************************************************************/
-  // 打开文件以供写入binomial_thresholds.txt。如果文件不存在，将创建一个新文件。
-  FILE *file = fopen(paste(3, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", "binomial_thresholds.txt"),
-                     "w");
+  char *binomialThresholdFilePaht = paste(3, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", "binomial_thresholds.txt");
+  FILE *file = fopen(binomialThresholdFilePaht, "w");
   // 检查文件是否成功打开。
   if (file == NULL)
   {
@@ -306,6 +321,10 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   // return Nth best value to save in thresholds file
   double thresholdScore = binThresholds->items[binThresholds->size - 1].score;
   fprintf(file, "%s\t%f\n", fimoFile->motifName, thresholdScore);
+
+  // Free memory
+  new_free(motifHitFilePath);
+  new_free(binomialThresholdFilePaht);
 
   deleteScoreLabelVector(binThresholds);
 }
@@ -328,7 +347,7 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
 
   size_t possibleLocations = 2 * (promoterLength - motifLength + 1);
 
-  double *pVals = (double *)malloc(hitsVec->size * sizeof(double));
+  double *pVals = (double *)new_malloc(hitsVec->size * sizeof(double));
 
   // Check memory allocation
   if (!pVals)
@@ -359,7 +378,7 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
     }
   }
 
-  free(pVals);
+  new_free(pVals);
 
   Pair result;
   result.idx = lowestIdx;
@@ -426,35 +445,38 @@ void deleteFimoFileContents(FimoFile *file)
   // Free motifName if allocated
   if (file->motifName)
   {
-    free(file->motifName);
+    new_free(file->motifName);
     file->motifName = NULL;
   }
 
   // Free fileName if allocated
   if (file->fileName)
   {
-    free(file->fileName);
+    new_free(file->fileName);
     file->fileName = NULL;
   }
 
   // Free outDir if allocated
   if (file->outDir)
   {
-    free(file->outDir);
+    new_free(file->outDir);
     file->outDir = NULL;
   }
-
-  printf("FimoFile (contents only) has been released!\n");
+#ifdef DEBUG
+  printf("    FimoFile (contents only) has been released!\n");
+#endif
 }
 
 void deleteFimoFile(FimoFile *file)
 {
   deleteFimoFileContents(file);
 
-  // Finally, free the FimoFile struct itself
-  free(file);
+  // Finally, release FimoFile struct itself
+  new_free(file);
 
-  printf("FimoFile (including itself) has been released!\n");
+#ifdef DEBUG
+  printf("    FimoFile (including itself) has been released!\n");
+#endif
 }
 
 // Create a fake Fimo file

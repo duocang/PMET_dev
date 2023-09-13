@@ -20,8 +20,8 @@ extern "C"
  * This is not a limit on the number of key-value pairs that can be stored in the hash table.
  * Rather, it's a trade-off between memory usage and lookup efficiency.
  */
-#define TABLE_SIZE 175447
-
+// #define TABLE_SIZE 175447
+#define TABLE_SIZE 50
 /* element of the hash table's chain list */
 struct kv
 {
@@ -86,6 +86,8 @@ void *getHashTable(HashTable *ht, char *key);
 
 /* remove a value indexed by key */
 void rmHashTable(HashTable *ht, char *key);
+
+void printHashTable(const HashTable *ht, void (*print_value)(void *));
 
 #ifdef __cplusplus
 }

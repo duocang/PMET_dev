@@ -42,7 +42,7 @@ bool pushBack(ScoreLabelPairVector *vec, double score, char *label)
   if (vec->size >= vec->capacity)
   {
     size_t newCapacity = vec->capacity == 0 ? 4 : vec->capacity * 2;
-    ScoreLabelPair *newItems = (ScoreLabelPair *)realloc(vec->items, newCapacity * sizeof(ScoreLabelPair));
+    ScoreLabelPair *newItems = (ScoreLabelPair *)new_realloc(vec->items, newCapacity * sizeof(ScoreLabelPair));
     if (!newItems)
     {
       fprintf(stderr, "Memory allocation failed in pushBack.\n");
@@ -99,7 +99,7 @@ void retainTopN(ScoreLabelPairVector *vec, size_t N)
   // 而原始的 vec->items 保持不变。这样，如果 realloc 失败并返回 NULL，
   // 你仍然有原始的 vec->items 指针指向之前分配的内存，这样你就不会丢失对
   // 那块内存的引用，可以在后续中安全地释放它。
-  ScoreLabelPair *newItems = realloc(vec->items, N * sizeof(ScoreLabelPair));
+  ScoreLabelPair *newItems = new_realloc(vec->items, N * sizeof(ScoreLabelPair));
   if (newItems == NULL)
   {
     fprintf(stderr, "Error: Memory reallocation failed in retainTopN.\n");
@@ -179,9 +179,6 @@ void deleteScoreLabelVectorContents(ScoreLabelPairVector *vec)
   // Free the items array
   new_free(vec->items);
   vec->items = NULL;
-
-  // Free the vector itself
-  new_free(vec);
 }
 
 void deleteScoreLabelVector(ScoreLabelPairVector *vec)

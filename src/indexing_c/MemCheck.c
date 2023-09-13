@@ -81,7 +81,6 @@ static void mem_node_remove(void *ptr)
  */
 void show_block()
 {
-  printf("这里是show_block函数\n");
   if (head)
   {
     // 保存总内存泄漏数量
@@ -115,6 +114,10 @@ void show_block()
       pn = pnext;
     }
     printf("总计内存泄漏(Total memory leak): %zubyte\n", total);
+  }
+  else
+  {
+      printf("\n\n无内存泄露 (No memory leak)\n");
   }
 }
 
@@ -158,6 +161,31 @@ void *dbg_calloc(size_t count, size_t elem_size, char *filename, size_t line)
   // 将分配内存的地址加入链表
   mem_node_add(ptr, elem_size * count, line, filename);
   return ptr;
+}
+
+void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t line)
+{
+  void *new_ptr = realloc(original_ptr, new_size);
+
+  if (new_ptr != original_ptr)
+  {
+    #ifdef DEBUG
+    printf("New address: %p. New size: %zu bytes.\n", new_ptr, new_size);
+    #endif
+
+    // 如果地址改变，从跟踪数据结构中删除原始指针的记录
+    mem_node_remove(original_ptr);
+    // 将新的内存块信息（或更新的信息）添加到跟踪数据结构中
+    mem_node_add(new_ptr, new_size, line, filename);
+  }
+  else
+  {
+    #ifdef DEBUG
+    printf("Memory block resized in place. New size: %zu bytes.\n", new_size);
+    #endif
+  }
+
+  return new_ptr;
 }
 
 /**

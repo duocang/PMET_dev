@@ -41,7 +41,7 @@ size_t findPromoterLength(PromoterList *list, const char *promoterName)
   return -1; // Not found
 }
 
-void deletePromoterLenListContent(PromoterList *list)
+void deletePromoterLenListContents(PromoterList *list)
 {
   if (!list)
   {
@@ -71,7 +71,7 @@ void deletePromoterLenList(PromoterList *list)
     return;
   }
 
-  deletePromoterLenListContent(list);
+  deletePromoterLenListContents(list);
 
   new_free(list);
 }

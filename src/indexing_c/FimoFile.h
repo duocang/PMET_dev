@@ -18,6 +18,7 @@
 #include "MotifHitVector.h"
 // #include "Node.h"
 #include "HashTable.h"
+#include "MemCheck.h"
 
 /**
  * Struct representing a simple pair with an index and a score.
@@ -72,9 +73,9 @@ typedef struct
 } FimoFile;
 
 /**
- * Initialize an already allocated FimoFile with default values.
+ * Create an FimoFile with default values.
  */
-void initFimoFile_(FimoFile *file);
+FimoFile* createFimoFile();
 
 /**
  * Initializes a FimoFile structure with the provided values.

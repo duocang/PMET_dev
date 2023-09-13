@@ -39,6 +39,9 @@ typedef struct _mem_node
 // instead of calloc
 #define new_calloc(c, s) dbg_calloc(c, s, __FILE__, __LINE__)
 
+// instead of realloc
+#define new_realloc(p, s) dbg_realloc(p, s, __FILE__, __LINE__)
+
 // instead of free
 #define new_free(p) dbg_free(p)
 
@@ -54,6 +57,12 @@ char *dbg_strdup(const char *s, char *filename, size_t line);
  * allocation and zero memory
  */
 void *dbg_calloc(size_t count, size_t elem_size, char *filename, size_t line);
+
+/**
+ * The movement of memory and may return a different pointer address if the original
+ * block cannot be extended.
+*/
+void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t line);
 
 /**
  * deallocate memory

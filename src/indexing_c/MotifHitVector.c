@@ -18,26 +18,39 @@ void printMotifHitVector(const MotifHitVector *vec)
   }
 }
 
+void adapterPrintFunction(void *ptr)
+{
+  printMotifHitVector((MotifHitVector *)ptr);
+}
 
-MotifHitVector* createMotifHitVector() {
-    // 分配内存空间给 MotifHitVector
-    MotifHitVector* newVec = (MotifHitVector*)new_malloc(sizeof(MotifHitVector));
-    if (newVec == NULL) {
-        fprintf(stderr, "Failed to allocate memory for MotifHitVector.\n");
-        return NULL;
-    }
+MotifHitVector *createMotifHitVector()
+{
+  // 分配内存空间给 MotifHitVector
+  MotifHitVector *newVec = (MotifHitVector *)new_malloc(sizeof(MotifHitVector));
+  if (newVec == NULL)
+  {
+    #ifdef DEBUG
+    fprintf(stderr, "Failed to allocate memory for MotifHitVector.\n");
+    #endif
 
-    // 初始化新的 MotifHitVector 的属性
-    newVec->size = 0;
-    newVec->capacity = 10; // 你可以根据需要改变这个初始容量
-    newVec->hits = (MotifHit*)new_malloc(newVec->capacity * sizeof(MotifHit));
-    if (newVec->hits == NULL) {
-        fprintf(stderr, "Failed to allocate memory for hits array.\n");
-        new_free(newVec);
-        return NULL;
-    }
+    return NULL;
+  }
 
-    return newVec;
+  // 初始化新的 MotifHitVector 的属性
+  newVec->size = 0;
+  newVec->capacity = 10; // 你可以根据需要改变这个初始容量
+  newVec->hits = (MotifHit *)new_malloc(newVec->capacity * sizeof(MotifHit));
+  if (newVec->hits == NULL)
+  {
+    #ifdef DEBUG
+    fprintf(stderr, "Failed to allocate memory for hits array.\n");
+    #endif
+
+    new_free(newVec);
+    return NULL;
+  }
+
+  return newVec;
 }
 
 void initMotifHitVector(MotifHitVector *vec)
@@ -46,48 +59,50 @@ void initMotifHitVector(MotifHitVector *vec)
   if (!vec->hits)
   {
     fprintf(stderr, "Failed to allocate memory for MotifVector.\n");
+
     exit(EXIT_FAILURE);
   }
   vec->size = 0;
   vec->capacity = 1;
 }
 
-void pushMotifHitVector(MotifHitVector* vec, const MotifHit* hit)
+void pushMotifHitVector(MotifHitVector *vec, const MotifHit *hit)
 {
-    // Check if capacity expansion is required
-    if (vec->size == vec->capacity)
+  // Check if capacity expansion is required
+  if (vec->size == vec->capacity)
+  {
+    vec->capacity *= 2;
+    vec->hits = (MotifHit *)new_realloc(vec->hits, vec->capacity * sizeof(MotifHit));
+
+    // Still need to check if realloc is successful. If there is not enough memory, realloc will return NULL.
+    if (!vec->hits)
     {
-        vec->capacity *= 2;
-        vec->hits = (MotifHit*)realloc(vec->hits, vec->capacity * sizeof(MotifHit));
+      // Handle out-of-memory situations, such as printing an error message and exiting
+      fprintf(stderr, "Failed to reallocate memory for MotifVector.\n");
 
-        // Still need to check if realloc is successful. If there is not enough memory, realloc will return NULL.
-        if (!vec->hits)
-        {
-            // Handle out-of-memory situations, such as printing an error message and exiting
-            fprintf(stderr, "Failed to reallocate memory for MotifVector.\n");
-            exit(EXIT_FAILURE);
-        }
+      exit(EXIT_FAILURE);
     }
+  }
 
-    /*  Copy the content of the new element to an array.
-     *  Field-by-field copying (using `new_strdup`) is a deep
-     *  copy method that ensures independent copies of string fields.
-    */
-    vec->hits[vec->size].motif_id      = new_strdup(hit->motif_id);
-    vec->hits[vec->size].motif_alt_id  = new_strdup(hit->motif_alt_id);
-    vec->hits[vec->size].sequence_name = new_strdup(hit->sequence_name);
-    vec->hits[vec->size].startPos      = hit->startPos;
-    vec->hits[vec->size].stopPos       = hit->stopPos;
-    vec->hits[vec->size].strand        = hit->strand;
-    vec->hits[vec->size].score         = hit->score;
-    vec->hits[vec->size].pVal          = hit->pVal;
-    vec->hits[vec->size].sequence      = new_strdup(hit->sequence);
-    vec->hits[vec->size].binScore      = hit->binScore;
+  /*  Copy the content of the new element to an array.
+   *  Field-by-field copying (using `new_strdup`) is a deep
+   *  copy method that ensures independent copies of string fields.
+   */
+  vec->hits[vec->size].motif_id = new_strdup(hit->motif_id);
+  vec->hits[vec->size].motif_alt_id = new_strdup(hit->motif_alt_id);
+  vec->hits[vec->size].sequence_name = new_strdup(hit->sequence_name);
+  vec->hits[vec->size].startPos = hit->startPos;
+  vec->hits[vec->size].stopPos = hit->stopPos;
+  vec->hits[vec->size].strand = hit->strand;
+  vec->hits[vec->size].score = hit->score;
+  vec->hits[vec->size].pVal = hit->pVal;
+  vec->hits[vec->size].sequence = new_strdup(hit->sequence);
+  vec->hits[vec->size].binScore = hit->binScore;
 
-    // Shallow copy. This means that the string field only copies the pointer, not the actual data.
-    // vec->hits[vec->size] = *hit;
+  // Shallow copy. This means that the string field only copies the pointer, not the actual data.
+  // vec->hits[vec->size] = *hit;
 
-    vec->size++;
+  vec->size++;
 }
 
 int compareMotifHitsByPVal(const void *a, const void *b)
@@ -123,7 +138,7 @@ void retainTopKMotifHits(MotifHitVector *vec, size_t k)
     deleteMotifHit(&vec->hits[i]);
   }
   // 使用realloc来重新分配vec->hits的大小
-  vec->hits = realloc(vec->hits, new_size * sizeof(MotifHit));
+  vec->hits = new_realloc(vec->hits, new_size * sizeof(MotifHit));
   vec->size = new_size;
 }
 
@@ -134,29 +149,28 @@ void removeHitAtIndex(MotifHitVector *vec, size_t indx)
     return; // Invalid vector or index
   }
 
+  // Free memory of removed hits
+  deleteMotifHitContents(&vec->hits[indx]);
+
+  // Move elements to the left
   for (size_t i = indx; i < vec->size - 1; ++i)
   {
-    vec->hits[i] = vec->hits[i + 1]; // Move elements to the left
+    vec->hits[i] = vec->hits[i + 1];
   }
 
   vec->size--; // Decrement the size
-
-  // // Optionally, you can reallocate memory to shrink the dynamic array
-  // vec->hits = realloc(vec->hits, sizeof(MotifHit) * vec->size);
 
   // Consider resizing the capacity if size is much smaller than capacity
   if (vec->size < vec->capacity / 2)
   {
     vec->capacity /= 2; // halve the capacity
-    MotifHit *newSpace = realloc(vec->hits, sizeof(MotifHit) * vec->capacity);
+    MotifHit *newSpace = (MotifHit *)new_realloc(vec->hits, sizeof(MotifHit) * vec->capacity);
     if (newSpace)
     {
       vec->hits = newSpace;
     }
     else
     {
-      // realloc failed; it's up to you how you want to handle this.
-      // For now, I'm printing an error and exiting.
       perror("Memory reallocation failed in removeHitAtIndex");
       exit(EXIT_FAILURE);
     }
@@ -179,6 +193,11 @@ void deleteMotifHitVector(MotifHitVector *vec)
 {
   deleteMotifHitVectorContents(vec);
   new_free(vec);
+}
+
+void adapterDeleteFunction(void *ptr)
+{
+  deleteMotifHitVector((MotifHitVector *)ptr);
 }
 
 void writeVectorToFile(const MotifHitVector *vec, const char *filename)

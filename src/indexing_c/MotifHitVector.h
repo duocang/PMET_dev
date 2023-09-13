@@ -25,6 +25,8 @@ size_t motifHitVectorSize(const MotifHitVector* vec);
  */
 void printMotifHitVector(const MotifHitVector* vec);
 
+void adapterPrintFunction(void *ptr);
+
 /**
  * Creates the a MotifHitVector*.
  * @return vec Pointer to the MotifHitVector to be initialized.
@@ -77,6 +79,13 @@ void removeHitAtIndex(MotifHitVector* vec, size_t indx);
  * @param vec Pointer to the MotifHitVector to be cleared.
  */
 void deleteMotifHitVectorContents(MotifHitVector* vec);
+
+/**
+ * Adapter function to bridge between a generic void pointer and the specific MotifHitVector deletion function.
+ * Converts the void pointer back to a MotifHitVector pointer and then calls the appropriate delete function.
+ * @param ptr Generic pointer to the object, which is expected to be of type MotifHitVector.
+ */
+void adapterDeleteFunction(void *ptr);
 
 void deleteMotifHitVector(MotifHitVector *vec);
 
