@@ -41,7 +41,7 @@ char *paste(int numStrings, const char *sep, ...)
 
   // First pass: calculate the total length
   va_start(args, sep);
-  for (int i = 0; i < numStrings; i++)
+  for (size_t i = 0; i < numStrings; i++)
   {
     const char *str = va_arg(args, const char *);
     length += strlen(str);

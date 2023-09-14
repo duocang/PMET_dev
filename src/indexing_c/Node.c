@@ -202,7 +202,7 @@ void printNodeStore(NodeStore *store)
         fprintf(stderr, "Error: The hits array in a node's value is NULL.\n");
         return;
       }
-      printMotifHit(stdout, &node->value->hits[i]);
+      printMotifHit(&node->value->hits[i]);
     }
     printf("------------------\n\n");
     node = node->next;
@@ -310,6 +310,7 @@ void writeMotifHitsToFile(const NodeStore *store, const char *filename)
   while (currentNode)
   {
     MotifHitVector *vec = currentNode->value;
+
     for (size_t i = 0; i < vec->size; i++)
     {
       MotifHit hit = vec->hits[i];

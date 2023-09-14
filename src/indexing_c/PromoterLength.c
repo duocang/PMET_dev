@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "PromoterLength.h"
 
@@ -48,7 +49,8 @@ void deletePromoterLenListContents(PromoterList *list)
     fprintf(stderr, "Warning: Attempted to free a NULL PromoterList. Operation skipped.\n");
     return;
   }
-
+  // Start timing
+  clock_t start_time = clock();
   Promoter *current = list->head;
   while (current)
   {
@@ -61,6 +63,15 @@ void deletePromoterLenListContents(PromoterList *list)
     new_free(toDelete);
   }
   list->head = NULL;
+
+  // Stop timing
+  clock_t end_time = clock();
+
+  #ifdef DEBUG
+  // Calculate and print the elapsed time.
+  double time_taken = ((double)end_time - start_time) / CLOCKS_PER_SEC; // in seconds
+  printf("deletePromoterLenListContents took %f seconds to execute.\n", time_taken);
+  #endif
 }
 
 void deletePromoterLenList(PromoterList *list)

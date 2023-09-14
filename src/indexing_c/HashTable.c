@@ -94,8 +94,7 @@ void deleteHashTable(HashTable *ht)
     if (ht->table)
     {
       // Loop through each bucket in the hash table
-      int i = 0;
-      for (i = 0; i < TABLE_SIZE; i++)
+      for (size_t i = 0; i < TABLE_SIZE; i++)
       {
         struct kv *p = ht->table[i]; // Pointer to the head of the linked list at bucket 'i'
         struct kv *q = NULL;         // Temporary pointer for traversal
@@ -262,7 +261,7 @@ void printHashTable(const HashTable *ht, void (*print_value)(void *))
   }
 
   // Iterate over each bucket in the hashtable
-  for (int i = 0; i < TABLE_SIZE; i++)
+  for (size_t i = 0; i < TABLE_SIZE; i++)
   {
     struct kv *p = ht->table[i];
     while (p)

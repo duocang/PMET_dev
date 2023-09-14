@@ -11,7 +11,7 @@
 // 要放入哈希表中的结构体
 struct Student
 {
-  int age;
+  size_t age;
   float score;
   char name[32];
   char data[1024 * 1024 * 10];
@@ -26,7 +26,7 @@ static void free_student(void *stu)
 // 显示学生信息的函数
 static void show_student(struct Student *p)
 {
-  printf("姓名:%s, 年龄:%d, 学分:%.2f\n", p->name, p->age, p->score);
+  printf("姓名:%s, 年龄:%zu, 学分:%.2f\n", p->name, p->age, p->score);
 }
 
 void testStudent()
@@ -39,20 +39,20 @@ void testStudent()
   }
 
   // 向哈希表中加入多个学生结构体
-  for (int i = 0; i < 10; i++)
+  for (size_t i = 0; i < 10; i++)
   {
     struct Student *stu = (struct Student *)new_malloc(sizeof(struct Student));
     stu->age = 18 + rand() % 5;
     stu->score = 50.0f + rand() % 100;
-    sprintf(stu->name, "同学%d", i);
+    sprintf(stu->name, "同学%zu", i);
     putHashTable2(ht, stu->name, stu, free_student);
   }
 
   // 根据学生姓名查找学生结构
-  for (int i = 0; i < 10; i++)
+  for (size_t i = 0; i < 10; i++)
   {
     char name[32];
-    sprintf(name, "同学%d", i);
+    sprintf(name, "同学%zu", i);
     struct Student *stu = (struct Student *)getHashTable(ht, name);
     show_student(stu);
   }
@@ -64,8 +64,8 @@ void testStudent()
 // 要放入哈希表中的结构体
 struct Teacher
 {
-  int age;
-  int id;
+  size_t age;
+  size_t id;
   char *name;
   char data[1024 * 1024 * 10];
 };
@@ -81,7 +81,7 @@ static void free_teacher(void *tec)
 // 显示教师信息的函数
 static void show_teacher(struct Teacher *p)
 {
-  printf("姓名:%s, 年龄:%d, 工号:%.2d\n", p->name, p->age, p->id);
+  printf("姓名:%s, 年龄:%zu, 工号:%.2zu\n", p->name, p->age, p->id);
 }
 
 void testTeacher()
@@ -94,14 +94,14 @@ void testTeacher()
   }
 
   // 向哈希表中加入多个教师结构体
-  for (int i = 0; i < 10; i++)
+  for (size_t i = 0; i < 10; i++)
   {
     struct Teacher *tec = (struct Teacher *)new_malloc(sizeof(struct Teacher));
     tec->age = 18 + rand() % 5;
     tec->id = 50.0f + rand() % 100;
 
     char name_buffer[100]; // Temporary buffer to format the name
-    sprintf(name_buffer, "教师%d", i);
+    sprintf(name_buffer, "教师%zu", i);
 
     tec->name = strdup(name_buffer); // Duplicate the string to assign to tec->name
 
@@ -109,10 +109,10 @@ void testTeacher()
   }
 
   // 根据教师姓名查找教师结构
-  for (int i = 0; i < 10; i++)
+  for (size_t i = 0; i < 10; i++)
   {
     char name[32];
-    sprintf(name, "教师%d", i);
+    sprintf(name, "教师%zu", i);
     struct Teacher *tec = (struct Teacher *)getHashTable(ht, name);
     show_teacher(tec);
   }

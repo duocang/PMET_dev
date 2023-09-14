@@ -135,7 +135,7 @@ void retainTopKMotifHits(MotifHitVector *vec, size_t k)
   for (size_t i = new_size; i < vec->size; ++i)
   {
     // MotifHit has dynamic memory allocations like strings, free them here.
-    deleteMotifHit(&vec->hits[i]);
+    deleteMotifHitContents(&vec->hits[i]);
   }
   // 使用realloc来重新分配vec->hits的大小
   vec->hits = new_realloc(vec->hits, new_size * sizeof(MotifHit));
@@ -195,7 +195,7 @@ void deleteMotifHitVector(MotifHitVector *vec)
   new_free(vec);
 }
 
-void adapterDeleteFunction(void *ptr)
+void adapeterDeleteMotifHitVector(void *ptr)
 {
   deleteMotifHitVector((MotifHitVector *)ptr);
 }
@@ -215,8 +215,7 @@ void writeVectorToFile(const MotifHitVector *vec, const char *filename)
     return;
   }
 
-  size_t i;
-  for (i = 0; i < vec->size; i++)
+  for (size_t i = 0; i < vec->size; i++)
   {
     MotifHit hit = vec->hits[i];
     fprintf(file, "%s\t%s\t%ld\t%ld\t%c\t%f\t%.3e\t%s\n",

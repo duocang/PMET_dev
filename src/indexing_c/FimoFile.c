@@ -154,7 +154,7 @@ bool readFimoFile(FimoFile *fimoFile)
       // If currentVec is not null, save to hash table
       if (currentVec && currentVec->size > 0)
       {
-        putHashTable2(fimoFile->ht, prevGeneID, currentVec, adapterDeleteFunction);
+        putHashTable2(fimoFile->ht, prevGeneID, currentVec, adapeterDeleteMotifHitVector);
       }
       // Creates a new MotifHitVector if it is not reading the first line
       if (currentLineNum > 0)
@@ -174,7 +174,7 @@ bool readFimoFile(FimoFile *fimoFile)
   // Add last MotifHitVector (gene)
   if (currentVec)
   {
-    putHashTable2(fimoFile->ht, prevGeneID, currentVec, adapterDeleteFunction);
+    putHashTable2(fimoFile->ht, prevGeneID, currentVec, adapeterDeleteMotifHitVector);
   }
 
   new_free(fileContent); // Free the content after processing
@@ -198,7 +198,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   }
 
   // 遍历每一个桶（bucket）
-  for (int i = 0; i < TABLE_SIZE; ++i)
+  for (size_t i = 0; i < TABLE_SIZE; ++i)
   {
     struct kv *current = fimoFile->ht->table[i];
     // 如果当前桶非空，遍历其链表
@@ -226,9 +226,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       sortMotifHitVectorByPVal(vec);
 
       // Top k motifHit in vector with overlap with any one in the vector
-#ifdef DEBUG
+      #ifdef DEBUG
       printf("Delete motif hit in vector with overlap\n\n");
-#endif
+      #endif
       size_t currentIndex = 0;
       while (currentIndex < vec->size && currentIndex < k)
       {
@@ -238,9 +238,9 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
         {
           if (motifsOverlap(&vec->hits[currentIndex], &vec->hits[nextIndex]))
           {
-#ifdef DEBUG
+            #ifdef DEBUG
             printf("Key: %s\n", current->key);
-#endif
+            #endif
             removeHitAtIndex(vec, nextIndex);
             // Do not increment nextIndex here because after removing
             // an element, the next element shifts to the current nextIndex
@@ -253,11 +253,18 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
         currentIndex++;
       }
 
+
+      printf("\n开始：retainTopKMotifHits\n");
+      printMotifHitVector(vec);
+      printf("有%d记录, k的值为%d\n", vec->size, k);
+
       if (vec->size > k)
       {
         // retainTopKMotifHits(current->value, k);
         retainTopKMotifHits(vec, k);
       }
+
+      printf("完成：retainTopKMotifHits\n");
 
       // Find the promoter size for the current gene in promSizes map
       size_t promterLength = findPromoterLength(promSizes, geneID);
@@ -299,8 +306,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
    * Write PMET index result
    ****************************************************************************/
   char *motifHitFilePath = paste(4, "", removeTrailingSlashAndReturn(fimoFile->outDir), "/", fimoFile->motifName, ".txt");
-  int i;
-  for (i = 0; i < binThresholds->size; i++)
+  for (size_t i = 0; i < binThresholds->size; i++)
   {
     char *binThresholdName = binThresholds->items[i].label;
     MotifHitVector *vec = getHashTable(fimoFile->ht, binThresholdName);

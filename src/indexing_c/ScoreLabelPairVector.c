@@ -155,6 +155,7 @@ void printVector(ScoreLabelPairVector *vec)
 
   printf("Printing vector contents:\n");
   printf("==========================\n");
+
   for (size_t i = 0; i < vec->size; i++)
   {
     printf("Item %zu - Score: %.15f, Label: %s\n", i, vec->items[i].score, vec->items[i].label);

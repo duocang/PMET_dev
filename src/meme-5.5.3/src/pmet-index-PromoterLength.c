@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "pmet-index-PromoterLength.h"
 
@@ -41,26 +42,36 @@ size_t findPromoterLength(PromoterList *list, const char *promoterName)
   return -1; // Not found
 }
 
-void deletePromoterLenListContent(PromoterList *list)
+void deletePromoterLenListContents(PromoterList *list)
 {
   if (!list)
   {
     fprintf(stderr, "Warning: Attempted to free a NULL PromoterList. Operation skipped.\n");
     return;
   }
-
+  // Start timing
+  clock_t start_time = clock();
   Promoter *current = list->head;
   while (current)
   {
     Promoter *toDelete = current;
     if (toDelete->promoterName)
     {
-      free(toDelete->promoterName);
+      new_free(toDelete->promoterName);
     }
     current = current->next;
-    free(toDelete);
+    new_free(toDelete);
   }
   list->head = NULL;
+
+  // Stop timing
+  clock_t end_time = clock();
+
+  #ifdef DEBUG
+  // Calculate and print the elapsed time.
+  double time_taken = ((double)end_time - start_time) / CLOCKS_PER_SEC; // in seconds
+  printf("deletePromoterLenListContents took %f seconds to execute.\n", time_taken);
+  #endif
 }
 
 void deletePromoterLenList(PromoterList *list)
@@ -71,9 +82,9 @@ void deletePromoterLenList(PromoterList *list)
     return;
   }
 
-  deletePromoterLenListContent(list);
+  deletePromoterLenListContents(list);
 
-  free(list);
+  new_free(list);
 }
 
 void insertPromoter(PromoterList *list, const char *promoterName, int length)
@@ -90,18 +101,18 @@ void insertPromoter(PromoterList *list, const char *promoterName, int length)
     exit(EXIT_FAILURE);
   }
 
-  Promoter *newPromoter = (Promoter *)malloc(sizeof(Promoter));
+  Promoter *newPromoter = (Promoter *)new_malloc(sizeof(Promoter));
   if (!newPromoter)
   {
     perror("Failed to allocate memory for new promoter");
     exit(EXIT_FAILURE);
   }
 
-  newPromoter->promoterName = strdup(promoterName);
+  newPromoter->promoterName = new_strdup(promoterName);
   if (!newPromoter->promoterName)
   {
     perror("Failed to allocate memory for promoter name");
-    free(newPromoter);
+    new_free(newPromoter);
     exit(EXIT_FAILURE);
   }
 

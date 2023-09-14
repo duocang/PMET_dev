@@ -124,6 +124,7 @@ void testProcess()
 
   // Iterate to print all the contents of the hash table
   HashTable *ht = myFimoFile->ht;
+
   for (size_t i = 0; i < TABLE_SIZE; i++)
   {
     struct kv *current = myFimoFile->ht->table[i];
@@ -145,8 +146,9 @@ void testProcess()
 
 
   printf("\n\nPrinting complete hash table:\n\n");
-  // printHashTable(ht, adapterPrintFunction);
-    for (size_t i = 0; i < TABLE_SIZE; i++)
+  printHashTable(ht, adapterPrintFunction);
+
+  for (size_t i = 0; i < TABLE_SIZE; i++)
   {
     struct kv *current = myFimoFile->ht->table[i];
     while (current != NULL)
@@ -170,9 +172,9 @@ int main()
 #ifdef DEBUG
   atexit(show_block); // 在程序结束后显示内存泄漏报告
 #endif
-  // testCreateFimoFile();
-  // testInitFimoFile();
-  // testReadFimoFile();
+  testCreateFimoFile();
+  testInitFimoFile();
+  testReadFimoFile();
   testProcess();
   return 0;
 }

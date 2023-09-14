@@ -31,6 +31,9 @@ void initMotifHit(MotifHit *hit,
 // Free the memory used by a MotifHit.
 void deleteMotifHitContents(MotifHit *hit)
 {
+  #ifdef DEBUG
+  printf("deleteMotifHit具体内容\n");
+  #endif
   new_free(hit->motif_id);
   new_free(hit->motif_alt_id);
   new_free(hit->sequence_name);
@@ -44,8 +47,16 @@ void deleteMotifHitContents(MotifHit *hit)
 
 void deleteMotifHit(MotifHit *hit)
 {
+
+  printf("deleteMotifHit开始 %p\n", hit);
+
+  printMotifHit(hit);
   deleteMotifHitContents(hit);
+
   new_free(hit);
+  #ifdef DEBUG
+  printf("deleteMotifHit完成\n");
+  #endif
 }
 
 // Compare two MotifHit structures based on their pVal.

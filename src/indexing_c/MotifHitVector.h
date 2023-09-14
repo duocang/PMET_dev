@@ -85,7 +85,7 @@ void deleteMotifHitVectorContents(MotifHitVector* vec);
  * Converts the void pointer back to a MotifHitVector pointer and then calls the appropriate delete function.
  * @param ptr Generic pointer to the object, which is expected to be of type MotifHitVector.
  */
-void adapterDeleteFunction(void *ptr);
+void adapeterDeleteMotifHitVector(void *ptr);
 
 void deleteMotifHitVector(MotifHitVector *vec);
 
