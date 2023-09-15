@@ -921,8 +921,6 @@ static void fimo_score_each_motif(
       char* fasta_seq_name = NULL;
       bool fasta_result = fasta_reader->get_seq_name(fasta_reader, &fasta_seq_name);
 
-      // MotifHitVector vec;
-      // MotifHitVector *vec = malloc(sizeof(MotifHitVector));
       MotifHitVector *vec = createMotifHitVector();
 
       long scanned_positions = fimo_score_sequence(
@@ -1012,10 +1010,7 @@ static void fimo_score_each_motif(
       if (vec) {
         putHashTable2(ht, fasta_seq_name, vec, adapterDeleteFunction);
       }
-
-      // printf("释放\n################################");
-      // deleteMotifHitVector(vec);
-
+      // Release of vec has been taken care of by the adapter function in hash table
     } // All sequences parsed
 
     // Sort the binThresholds vector by ascending score and keep top N
@@ -1141,7 +1136,7 @@ int main(int argc, char* argv[]) {
   /****************************************************************************
    * Iterate through each motif, searching homotypic matches on all promoters
    ****************************************************************************/
-  PromoterList *promoterList = malloc(sizeof(PromoterList));
+  PromoterList *promoterList = new_malloc(sizeof(PromoterList));
   readPromoterLengthFile(promoterList, options.promoter_length);
   fimo_score_each_motif(
       options,

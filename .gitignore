@@ -33,3 +33,5 @@ src/pmetParallel/bin
 src/pmet/bin
 fimo
 genome.fasta
+src/meme-5.5.3/fimo_out
+test

@@ -74,6 +74,10 @@ static void mem_node_remove(void *ptr)
       }
     }
   }
+  else
+  {
+    printf("\nError: Try to free a non-existing pointer\n");
+  }
 }
 
 /**
@@ -130,11 +134,8 @@ void show_block()
 void *dbg_malloc(size_t elem_size, char *filename, size_t line)
 {
   void *ptr = malloc(elem_size);
-
-  // #ifdef DEBUG
   // 将分配内存的地址加入链表
   mem_node_add(ptr, elem_size, line, filename);
-  // #endif
 
   return ptr;
 }
@@ -146,10 +147,8 @@ char *dbg_strdup(const char *s, char *filename, size_t line)
 
   char *ptr = strdup(s); // 使用标准库的strdup来复制字符串
 
-  // #ifdef DEBUG
   // 将分配内存的地址加入链表
   mem_node_add(ptr, strlen(s) + 1, line, filename);
-  // #endif
 
   return ptr;
 }
@@ -164,10 +163,9 @@ char *dbg_strdup(const char *s, char *filename, size_t line)
 void *dbg_calloc(size_t count, size_t elem_size, char *filename, size_t line)
 {
   void *ptr = calloc(count, elem_size);
-  #ifdef DEBUG
-  // 将分配内存的地址加入链表
+
   mem_node_add(ptr, elem_size * count, line, filename);
-   #endif
+
   return ptr;
 }
 
@@ -177,11 +175,8 @@ void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t li
 
   if (new_ptr != original_ptr)
   {
-    #ifdef DEBUG
     printf("New address: %p. New size: %zu bytes.\n", new_ptr, new_size);
-    #endif
 
-    // #ifdef DEBUG
     /**
      * 如果地址改变，从跟踪数据结构中删除原始指针的记录
      * If the address changes, remove the record of
@@ -194,13 +189,10 @@ void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t li
      * to the trace data structure
     */
     mem_node_add(new_ptr, new_size, line, filename);
-    // #endif
   }
   else
   {
-    #ifdef DEBUG
     printf("Memory block resized in place. New size: %zu bytes.\n", new_size);
-    #endif
   }
 
   return new_ptr;
@@ -213,9 +205,5 @@ void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t li
 void dbg_free(void *ptr)
 {
   free(ptr);
-
-  // #ifdef DEBUG
-  // 从链表中删除节点
   mem_node_remove(ptr);
-  // #endif
 }
