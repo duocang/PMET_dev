@@ -55,5 +55,10 @@ void removeTrailingSlash(char *path);
  */
 char *removeTrailingSlashAndReturn(const char *path);
 
+// Function to check if a number is prime
+int isPrime(size_t num);
+
+// Function to get the next prime greater than the given number
+size_t getPrime(size_t num);
 
 #endif /* PMET_INDEX_UTILS_H */

@@ -11,6 +11,8 @@
 #include "HashTable.h"
 #include "MemCheck.h"
 
+size_t TABLE_SIZE = 175447;
+
 void testCreateFimoFile()
 {
   printf("Testing creation:\n");
@@ -192,5 +194,4 @@ clang -DDEBUG \
       PromoterLength.c  \
       ScoreLabelPairVector.c  \
       utils.c
-
 */

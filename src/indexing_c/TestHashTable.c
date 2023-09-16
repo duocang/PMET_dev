@@ -8,6 +8,8 @@
 
 #include "MemCheck.h"
 
+size_t TABLE_SIZE = 79;
+
 // 要放入哈希表中的结构体
 struct Student
 {
