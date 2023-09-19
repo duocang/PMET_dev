@@ -67,11 +67,11 @@ void deletePromoterLenListContents(PromoterList *list)
   // Stop timing
   clock_t end_time = clock();
 
-  #ifdef DEBUG
+#ifdef DEBUG
   // Calculate and print the elapsed time.
   double time_taken = ((double)end_time - start_time) / CLOCKS_PER_SEC; // in seconds
   printf("deletePromoterLenListContents took %f seconds to execute.\n", time_taken);
-  #endif
+#endif
 }
 
 void deletePromoterLenList(PromoterList *list)
@@ -121,31 +121,39 @@ void insertPromoter(PromoterList *list, const char *promoterName, int length)
   list->head = newPromoter;
 }
 
-void readPromoterLengthFile(PromoterList *list, const char *filename)
+size_t readPromoterLengthFile(PromoterList *list, const char *filename)
 {
   if (list == NULL)
   {
     fprintf(stderr, "Error: The provided PromoterList pointer is NULL. Cannot initialize.\n");
     exit(EXIT_FAILURE);
   }
-  // 初始化PromoterList
+
+  // Initialize PromoterList
   initPromoterList(list);
+
   FILE *file = fopen(filename, "r");
   if (!file)
   {
     perror("Failed to open file");
-    return;
+    return 0; // Return 0 if unable to open the file
   }
 
   char promoterName[MAX_PROMOTER_NAME_LENGTH];
   long length;
+  size_t lineCount = 0; // To keep track of the number of lines read
+
   while (fscanf(file, "%99s %ld", promoterName, &length) == 2)
-  { // Read max 99 chars to prevent overflow
+  {
+    // Read max 99 chars to prevent overflow
+    lineCount++; // Increase the count for every line read
+
     if (strlen(promoterName) >= MAX_PROMOTER_NAME_LENGTH - 1)
     {
       fprintf(stderr, "Promoter name too long: %s\n", promoterName);
       continue; // Skip this line and move to next
     }
+
     insertPromoter(list, promoterName, length);
   }
 
@@ -153,4 +161,6 @@ void readPromoterLengthFile(PromoterList *list, const char *filename)
   {
     perror("Failed to close the file");
   }
+
+  return lineCount; // Return the number of lines read
 }

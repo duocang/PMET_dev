@@ -21,7 +21,8 @@ extern "C"
  * Rather, it's a trade-off between memory usage and lookup efficiency.
  */
 // #define TABLE_SIZE 175447
-#define TABLE_SIZE 50
+extern size_t TABLE_SIZE;
+
 /* element of the hash table's chain list */
 struct kv
 {

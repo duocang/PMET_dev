@@ -48,7 +48,8 @@ if [ -f "homotypic_promoters/anno.gff3" ]; then
     echo "anno.gff3 exists."
 else
     echo "anno.gff3 does not exist. Fetching data..."
-    ./fetch_data.sh
+    chmod a+x ./fetch_data.sh
+    bash ./fetch_data.sh
     mv anno.gff3 homotypic_promoters/
     mv genome.fasta homotypic_promoters/
     rm anno.gff3

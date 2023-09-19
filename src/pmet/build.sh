@@ -1,7 +1,6 @@
 #!/bin/bash
 
 mkdir -p test_result
-
 mkdir -p bin
 
 cd bin

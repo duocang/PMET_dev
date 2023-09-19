@@ -4,7 +4,8 @@ mkdir -p bin
 
 cd bin
 
-cmake -DCMAKE_BUILD_TYPE=Debug ..
+# cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake ..
 
 make
 

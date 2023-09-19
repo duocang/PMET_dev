@@ -30,36 +30,52 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
-# fimo wht pmet index
+rm scripts/pmetindex
+rm scripts/pmetParallel
+rm scripts/pmet
+rm scripts/fimo
+
+############################# fimo with pmet index ##############################
 print_fluorescent_yellow "Compiling FIMO with PMET homotopic (index) binary..."
 cd src/meme-5.5.3
 
 make distclean
 
 currentDir=$(pwd)
-chmod a+x ./configure
 echo $currentDir/build
+
+if [ -d "$currentDir/build" ]; then
+    rm -rf "$currentDir/build"
+fi
+
+mkdir -p $currentDir/build
+
+
+chmod a+x ./configure
 ./configure --prefix=$currentDir/build  --enable-build-libxml2 --enable-build-libxslt
 make
 make install
 cp build/bin/fimo ../../scripts/
 make distclean
+rm -rf build
 print_fluorescent_yellow "make distclean finished...\n"
 
 
-# pmetindex
-print_fluorescent_yellow "Compiling PMET homotopic (index) binary...\n"
+################################### pmetindex ####################################
+print_fluorescent_yellow "Compiling PMET homotypic (index) binary...\n"
 cd ../indexing
 chmod a+x build.sh
 bash build.sh
 mv bin/pmetindex ../../scripts/
+rm -rf bin/*
 
-# pmetParallel
+################################## pmetParallel ##################################
 print_fluorescent_yellow "Compiling PMET heterotypic (pair) binary...\n"
 cd ../pmetParallel
 chmod a+x build.sh
 bash build.sh
 mv bin/pmetParallel ../../scripts/
+rm -rf bin/*
 
 # pmet
 print_fluorescent_yellow "Compiling PMET heterotypic (pair) binary...\n"
@@ -67,14 +83,43 @@ cd ../pmet
 chmod a+x build.sh
 bash build.sh
 mv bin/pmet ../../scripts/
+rm -rf bin/*
+
+cd ../../
+pwd
+################### Check if the compilation was successful ########################
+exists=""
+not_exists=""
+
+for file in scripts/pmetindex scripts/pmetParallel scripts/pmet scripts/fimo; do
+    if [ -f "$file" ]; then
+        exists="$exists $file"
+    else
+        not_exists="$not_exists $file"
+    fi
+done
+
+if [ ! -z "$exists" ]; then
+    echo
+    echo
+    echo
+    print_green "Compilation Success:$exists"
+fi
 
 
-# Give execute permission to all users for the file.
+if [ ! -z "$not_exists" ]; then
+    echo
+    echo
+    echo
+    print_red "Compilation Failure:$not_exists"
+fi
+
+############# Give execute permission to all users for the file. ##################
 chmod a+x scripts/pmetindex
-chomd a+x scripts/pmetParallel
+chmod a+x scripts/pmetParallel
 chmod a+x scripts/pmet
 chmod a+x scripts/fimo
 
-print_green "\n\npmet, pmetParallel, pmetindex and NEW fimo are ready in 'scripts' folder.\n"
+# print_green "\n\npmet, pmetParallel, pmetindex and NEW fimo are ready in 'scripts' folder.\n"
 
 print_green "DONE"

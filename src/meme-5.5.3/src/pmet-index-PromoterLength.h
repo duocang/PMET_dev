@@ -74,7 +74,8 @@ void insertPromoter(PromoterList *list, const char *promoterName, int length);
  *
  * @param list Pointer to the PromoterList to be populated.
  * @param filename Name/path of the file containing promoter data.
+ * @return Number of file lines read from the file
  */
-void readPromoterLengthFile(PromoterList *list, const char *filename);
+size_t readPromoterLengthFile(PromoterList *list, const char *filename);
 
 #endif /* PROMOTER_LENGTH_H */

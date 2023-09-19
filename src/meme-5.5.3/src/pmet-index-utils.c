@@ -144,3 +144,42 @@ char *removeTrailingSlashAndReturn(const char *path)
 
   return newPath;
 }
+
+// Function to check if a number is prime
+int isPrime(size_t num)
+{
+  if (num <= 1)
+    return 0; // false
+  if (num == 2)
+    return 1; // true
+  if (num % 2 == 0)
+    return 0; // false
+
+  for (size_t i = 3; i * i <= num; i += 2)
+  {
+    if (num % i == 0)
+    {
+      return 0; // false
+    }
+  }
+  return 1; // true
+}
+
+// Function to get the next prime greater than the given number
+size_t getPrime(size_t num)
+{
+
+  if (isPrime(num))
+  {
+    return num;
+  }
+  // Start with the next number
+  num = (num % 2 == 0) ? num + 1 : num + 2;
+
+  // Check until a prime number is found
+  while (!isPrime(num))
+  {
+    num += 2; // Even numbers >2 can't be prime, so only checking odds
+  }
+  return num;
+}
