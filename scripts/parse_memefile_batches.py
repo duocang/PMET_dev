@@ -21,10 +21,10 @@ bigfile = np.asarray(args.file.readlines())
 
 motif_number = count_motifs_in_file(bigfile)
 
-print(motif_number)
+# print(motif_number)
 
 batches = int(motif_number / args.batch)
-print(batches)
+# print(batches)
 
 headind = 0
 while bigfile[headind].find('MOTIF') == -1:
