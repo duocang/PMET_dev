@@ -134,8 +134,8 @@ void show_block()
 void *dbg_malloc(size_t elem_size, char *filename, size_t line)
 {
   void *ptr = malloc(elem_size);
-  // 将分配内存的地址加入链表
-  mem_node_add(ptr, elem_size, line, filename);
+  // // 将分配内存的地址加入链表
+  // mem_node_add(ptr, elem_size, line, filename);
 
   return ptr;
 }
@@ -147,8 +147,8 @@ char *dbg_strdup(const char *s, char *filename, size_t line)
 
   char *ptr = strdup(s); // 使用标准库的strdup来复制字符串
 
-  // 将分配内存的地址加入链表
-  mem_node_add(ptr, strlen(s) + 1, line, filename);
+  // // 将分配内存的地址加入链表
+  // mem_node_add(ptr, strlen(s) + 1, line, filename);
 
   return ptr;
 }
@@ -164,7 +164,8 @@ void *dbg_calloc(size_t count, size_t elem_size, char *filename, size_t line)
 {
   void *ptr = calloc(count, elem_size);
 
-  mem_node_add(ptr, elem_size * count, line, filename);
+  // // 将分配内存的地址加入链表
+  // mem_node_add(ptr, elem_size * count, line, filename);
 
   return ptr;
 }
@@ -173,27 +174,27 @@ void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t li
 {
   void *new_ptr = realloc(original_ptr, new_size);
 
-  if (new_ptr != original_ptr)
-  {
-    printf("New address: %p. New size: %zu bytes.\n", new_ptr, new_size);
+  // if (new_ptr != original_ptr)
+  // {
+  //   printf("New address: %p. New size: %zu bytes.\n", new_ptr, new_size);
 
-    /**
-     * 如果地址改变，从跟踪数据结构中删除原始指针的记录
-     * If the address changes, remove the record of
-     * the original pointer from the tracking data structure.
-    */
-    mem_node_remove(original_ptr);
-    /**
-     * 将新的内存块信息（或更新的信息）添加到跟踪数据结构中
-     * Add new memory block information (or updated information)
-     * to the trace data structure
-    */
-    mem_node_add(new_ptr, new_size, line, filename);
-  }
-  else
-  {
-    printf("Memory block resized in place. New size: %zu bytes.\n", new_size);
-  }
+  //   /**
+  //    * 如果地址改变，从跟踪数据结构中删除原始指针的记录
+  //    * If the address changes, remove the record of
+  //    * the original pointer from the tracking data structure.
+  //   */
+  //   mem_node_remove(original_ptr);
+  //   /**
+  //    * 将新的内存块信息（或更新的信息）添加到跟踪数据结构中
+  //    * Add new memory block information (or updated information)
+  //    * to the trace data structure
+  //   */
+  //   mem_node_add(new_ptr, new_size, line, filename);
+  // }
+  // else
+  // {
+  //   printf("Memory block resized in place. New size: %zu bytes.\n", new_size);
+  // }
 
   return new_ptr;
 }
@@ -205,5 +206,5 @@ void *dbg_realloc(void *original_ptr, size_t new_size, char *filename, size_t li
 void dbg_free(void *ptr)
 {
   free(ptr);
-  mem_node_remove(ptr);
+  // mem_node_remove(ptr);
 }
