@@ -1159,7 +1159,7 @@ int main(int argc, char* argv[]) {
 
   deletePromoterLenList(promoterList);
 
-  show_block(); // 显示内存泄漏报告 memory leak report
+  // show_block(); // 显示内存泄漏报告 memory leak report
 
   // // Stop timing
   // clock_t end_time = clock();
