@@ -39,15 +39,16 @@ print_white(){
 # Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
 chmod a+x scripts/gff3sort/gff3sort.pl
-########################## Running FIMO #######################################
+########################## Downloading data #######################################
 # download data
-print_green "Downloading genome and annotation...\n"
-mkdir -p data/homotypic_promoters
+
 cd data
 if [ -f "homotypic_promoters/anno.gff3" ]; then
-    echo "anno.gff3 exists."
+    echo ""
 else
-    echo "anno.gff3 does not exist. Fetching data..."
+    print_green "Downloading genome and annotation...\n"
+    mkdir -p data/homotypic_promoters
+
     chmod a+x ./fetch_data.sh
     bash ./fetch_data.sh
     mv anno.gff3 homotypic_promoters/
@@ -68,8 +69,8 @@ txt_files=$(find "$directory" -name "*.txt")
 if [ -n "$txt_files" ]; then
     print_green "Yes, (FIMO result) txt files exist in $directory.\n"
 else
-    print_red   "   No, no FIMO result (txt files) found in $directory."
-    print_green "   Running fimo...\n"
+    print_red   "   No FIMO result (txt files) found in $directory.\n"
+    print_green "Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_promoters.sh \
         -r scripts                                  \
