@@ -236,9 +236,10 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
     # 11. add 5' UTR
     if [ $utr == 'Yes' ]; then
         print_fluorescent_yellow "    11. Adding UTRs...";
-        python3 $pmetroot/parse_utrs.py \
+        python3 $pmetroot/parse_utrs.py      \
             $indexingOutputDir/promoters.bed \
-            $gff3file $universefile
+            $indexingOutputDir/sorted.gff3   \
+            $universefile
     else
         print_fluorescent_yellow "    11. (skipped) Adding UTRs...";
     fi
@@ -302,21 +303,23 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
     # 17. create promoters fasta
     print_fluorescent_yellow "    17. Creating promoters file (promoters_rough.fa)";
     bedtools getfasta -fi \
-        $indexingOutputDir/genome_stripped.fa \
-        -bed $indexingOutputDir/promoters.bed \
-        -s -fo $indexingOutputDir/promoters_rough.fa
+        $indexingOutputDir/genome_stripped.fa     \
+        -bed $indexingOutputDir/promoters.bed     \
+        -fo $indexingOutputDir/promoters_rough.fa \
+        -name -s
 
     # -------------------------------------------------------------------------------------------
     # 18. replace the id of each seq with gene names
     print_fluorescent_yellow "    18. Replacing the id of each sequences' with gene names (promoters.fa)"
-    awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
-        $indexingOutputDir/promoters.bed \
-        $indexingOutputDir/promoters_rough.fa \
-        > $indexingOutputDir/promoters.fa
-    # python3 $pmetroot/parse_promoters.py \
-    #     $indexingOutputDir/promoters_rough.fa \
+    # awk 'BEGIN{OFS="\t"} NR==FNR{a[NR]=$4; next} /^>/{$0=">"a[++i]} 1' \
     #     $indexingOutputDir/promoters.bed \
-    #     $indexingOutputDir/promoters.fa
+    #     $indexingOutputDir/promoters_rough.fa \
+    #     > $indexingOutputDir/promoters.fa
+    # # python3 $pmetroot/parse_promoters.py \
+    # #     $indexingOutputDir/promoters_rough.fa \
+    # #     $indexingOutputDir/promoters.bed \
+    # #     $indexingOutputDir/promoters.fa
+    sed 's/::.*//g' $indexingOutputDir/promoters_rough.fa > $indexingOutputDir/promoters.fa
 
     # -------------------------------------------------------------------------------------------
     # 19. promoters.bg from promoters.fa
