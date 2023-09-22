@@ -217,9 +217,9 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
     # -------------------------------------------------------------------------------------------
     print_fluorescent_yellow "     8.1 Remove promoters with less than 20 base pairs"
     # remove promoter length < 20
-    awk '($3 - $2) >= 20' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+    awk '($3 - $2) >= 10' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
     mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
-    awk '($3 - $2) <  20' $indexingOutputDir/promoters.bed > $indexingOutputDir/8_promoters_less_20.bed
+    awk '($3 - $2) <  10' $indexingOutputDir/promoters.bed > $indexingOutputDir/8_promoters_less_20.bed
 
     # -------------------------------------------------------------------------------------------
     # 9. remove overlapping promoter chunks
@@ -237,8 +237,8 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
     # -------------------------------------------------------------------------------------------
     # remove promoter length < 20
     print_fluorescent_yellow "     9.1 Remove promoters with less than 20 base pairs"
-    awk '($3 - $2) <  20' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_20.bed
-    awk '($3 - $2) >= 20' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+    awk '($3 - $2) <  10' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_20.bed
+    awk '($3 - $2) >= 10' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
     mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
 
     # -------------------------------------------------------------------------------------------
