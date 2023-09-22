@@ -213,6 +213,14 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
         -g $indexingOutputDir/bedgenome.genome \
         > $indexingOutputDir/promoters.bed
 
+
+    # -------------------------------------------------------------------------------------------
+    print_fluorescent_yellow "     8.1 Remove promoters with less than 20 base pairs"
+    # remove promoter length < 20
+    awk '($3 - $2) >= 20' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+    mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
+    awk '($3 - $2) <  20' $indexingOutputDir/promoters.bed > $indexingOutputDir/8_promoters_less_20.bed
+
     # -------------------------------------------------------------------------------------------
     # 9. remove overlapping promoter chunks
     if [ $overlap == 'NoOverlap' ]; then
@@ -226,6 +234,12 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
         print_fluorescent_yellow "     9. (skipped) Removing overlapping promoter chunks (promoters.bed)"
     fi
 
+    # -------------------------------------------------------------------------------------------
+    # remove promoter length < 20
+    print_fluorescent_yellow "     9.1 Remove promoters with less than 20 base pairs"
+    awk '($3 - $2) <  20' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_20.bed
+    awk '($3 - $2) >= 20' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+    mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
 
     # -------------------------------------------------------------------------------------------
     # 10. check split promoters. if so, keep the bit closer to the TSS
