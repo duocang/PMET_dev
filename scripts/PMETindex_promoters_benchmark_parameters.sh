@@ -373,14 +373,14 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
                 findOutdir=$indexingOutputDirOld/fimoThresh005_promLength${promlength}_maxK${maxk}_topN${topn}
 
                 mkdir -p $findOutdir/fimohits
-                $pmetroot/fimo              \
-                    --topk $maxk            \
-                    --topn $topn            \
-                    --text                  \
-                    --no-qvalue             \
-                    --thresh 0.05           \
-                    --verbosity 1           \
-                    --oc $findOutdir        \
+                $pmetroot/fimo                \
+                    --topk $maxk              \
+                    --topn $topn              \
+                    --text                    \
+                    --no-qvalue               \
+                    --thresh 0.05             \
+                    --verbosity 1             \
+                    --oc $findOutdir/fimohits \
                     --bgfile $indexingOutputDir/promoters.bg \
                     $memefile                                \
                     $indexingOutputDir/promoters.fa          \
