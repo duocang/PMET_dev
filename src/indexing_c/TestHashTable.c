@@ -10,7 +10,7 @@
 
 size_t TABLE_SIZE = 79;
 
-// 要放入哈希表中的结构体
+// 要放入哈希表中的结构体 Structures to be placed in the hash table
 struct Student
 {
   size_t age;
@@ -19,16 +19,16 @@ struct Student
   char data[1024 * 1024 * 10];
 };
 
-// 结构体内存释放函数
+// 结构体内存释放函数 Release Function of the structure
 static void free_student(void *stu)
 {
   new_free(stu);
 }
 
-// 显示学生信息的函数
+// 显示学生信息的函数 Function to display student information
 static void show_student(struct Student *p)
 {
-  printf("姓名:%s, 年龄:%zu, 学分:%.2f\n", p->name, p->age, p->score);
+  printf("姓名name:%s, 年龄age:%zu, 学分score:%.2f\n", p->name, p->age, p->score);
 }
 
 void testStudent()
@@ -46,15 +46,15 @@ void testStudent()
     struct Student *stu = (struct Student *)new_malloc(sizeof(struct Student));
     stu->age = 18 + rand() % 5;
     stu->score = 50.0f + rand() % 100;
-    sprintf(stu->name, "同学%zu", i);
+    sprintf(stu->name, "同学student%zu", i);
     putHashTable2(ht, stu->name, stu, free_student);
   }
 
-  // 根据学生姓名查找学生结构
+  // 根据学生姓名查找学生结构 Search for student structure based on teacher name.
   for (size_t i = 0; i < 10; i++)
   {
     char name[32];
-    sprintf(name, "同学%zu", i);
+    sprintf(name, "同学student%zu", i);
     struct Student *stu = (struct Student *)getHashTable(ht, name);
     show_student(stu);
   }
@@ -63,7 +63,7 @@ void testStudent()
   deleteHashTable(ht);
 }
 
-// 要放入哈希表中的结构体
+// 要放入哈希表中的结构体 Structures to be placed in the hash table
 struct Teacher
 {
   size_t age;
@@ -72,7 +72,7 @@ struct Teacher
   char data[1024 * 1024 * 10];
 };
 
-// 结构体内存释放函数
+// 结构体内存释放函数 Release Function of the structure
 static void free_teacher(void *tec)
 {
   struct Teacher *t = (struct Teacher *)tec;
@@ -80,10 +80,10 @@ static void free_teacher(void *tec)
   new_free(t);   // Free the teacher struct itself
 }
 
-// 显示教师信息的函数
+// 显示教师信息的函数 Function to display teacher information
 static void show_teacher(struct Teacher *p)
 {
-  printf("姓名:%s, 年龄:%zu, 工号:%.2zu\n", p->name, p->age, p->id);
+  printf("姓名name:%s, 年龄age:%zu, 工号id:%.2zu\n", p->name, p->age, p->id);
 }
 
 void testTeacher()
@@ -95,7 +95,7 @@ void testTeacher()
     printf("Fail to create a hash table!\n");
   }
 
-  // 向哈希表中加入多个教师结构体
+  // 向哈希表中加入多个教师结构体 add teacher
   for (size_t i = 0; i < 10; i++)
   {
     struct Teacher *tec = (struct Teacher *)new_malloc(sizeof(struct Teacher));
@@ -103,18 +103,18 @@ void testTeacher()
     tec->id = 50.0f + rand() % 100;
 
     char name_buffer[100]; // Temporary buffer to format the name
-    sprintf(name_buffer, "教师%zu", i);
+    sprintf(name_buffer, "教师 teacher%zu", i);
 
     tec->name = strdup(name_buffer); // Duplicate the string to assign to tec->name
 
     putHashTable2(ht, tec->name, tec, free_teacher);
   }
 
-  // 根据教师姓名查找教师结构
+  // 根据教师姓名查找教师结构 Search for teacher structure based on teacher name.
   for (size_t i = 0; i < 10; i++)
   {
     char name[32];
-    sprintf(name, "教师%zu", i);
+    sprintf(name, "教师 teacher%zu", i);
     struct Teacher *tec = (struct Teacher *)getHashTable(ht, name);
     show_teacher(tec);
   }
@@ -163,8 +163,8 @@ void freeVec(void *ptr)
 
   if (vec)
   {
-    deleteMotifHitVectorContents(vec); // 释放 hits 数组
-    new_free(vec);                        // 释放 MotifHitVector 结构
+    deleteMotifHitVectorContents(vec); // 释放 hits 数组 release
+    new_free(vec);                     // 释放 MotifHitVector 结构 release
   }
 }
 
@@ -228,7 +228,7 @@ void testMotifVector()
 int main()
 {
 #ifdef DEBUG
-  atexit(show_block); // 在程序结束后显示内存泄漏报告
+  atexit(show_block); // 在程序结束后显示内存泄漏报告 Display memory leak report after program ends.
 #endif
 
   // testStudent();

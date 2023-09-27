@@ -846,6 +846,7 @@ static void fimo_score_each_motif(
 
   ScoreLabelPairVector *binResults = createScoreLabelPairVector();
 
+  // Tips: PMET indexig
   for (motif_index = 0; motif_index < num_motifs; motif_index++) {
 
     MOTIF_T *motif = (MOTIF_T *)arraylst_get(motif_index, motifs);
@@ -918,6 +919,7 @@ static void fimo_score_each_motif(
       exit(EXIT_FAILURE);
     }
 
+    // Tips: pmet indexing
     // Read the FASTA file one sequence at a time.
     while (fasta_reader->go_to_next_sequence(fasta_reader) != false) {
       char* fasta_seq_name = NULL;

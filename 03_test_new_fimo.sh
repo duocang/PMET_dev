@@ -43,7 +43,7 @@ start=$(date +%s)
 chmod a+x scripts/fimo
 
 scripts/fimo                                       \
-    --topn 5                                       \
+    --topk 5                                       \
     --topn 5000                                    \
     --text                                         \
     --no-qvalue                                    \

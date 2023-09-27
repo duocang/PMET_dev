@@ -14,6 +14,11 @@ This is PMET.
 ├── results
 ├── scripts
 ├── src
+│   ├── indexing      # orginal pmet indexing with few changes
+│   ├── indexing_c    # pmet indexing in C, only for functionalites validation no real use
+│   ├── meme-5.5.3    # new fimo with pmet indexing integrated
+│   ├── pmet          # orginal pmet with few changes
+│   └── pmetParallel  # pmet with parallel ability (defalut use for real analysis)
 ├── visualize_pmet_php
 └── readme.md
 ```

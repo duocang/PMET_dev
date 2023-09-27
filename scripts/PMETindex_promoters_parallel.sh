@@ -20,7 +20,7 @@ set -e
 #Take progress file from 1% to 95%
 
 #PEB DEc 2020. Called by run_pmet.php with params
-# -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile 
+# -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile
 
 # fimo threshold is default
 
@@ -201,8 +201,8 @@ print_fluorescent_yellow "     4. Extracting genes coordinates: start should be 
 awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 # 在BED文件格式中，无论是正链（+）还是负链（-），起始位置总是小于终止位置。
 # In the BED file format, the start position is always less than the end position for both positive (+) and negative (-) chains.
-# 这是因为起始和终止位置是指定基因或基因组特性在基因组上的物理位置，而不是表达或翻译的方向。
-# thisIsBecauseTheStartAndEndPositionsSpecifyThePhysicalLocationOfTheGeneOrGenomicFeatureOnTheGenomeRatherThanTheDirectionOfExpressionOrTranslation
+# 起始和终止位置是指定基因上的物理位置，而不是表达或翻译的方向。
+# start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 # starting site < stopped site in bed file
 
 # -------------------------------------------------------------------------------------------

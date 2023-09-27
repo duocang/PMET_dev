@@ -8,7 +8,7 @@
 int main()
 {
 #ifdef DEBUG
-  atexit(show_block); // 在程序结束后显示内存泄漏报告
+  atexit(show_block); // 在程序结束后显示内存泄漏报告 Display memory leak report after program ends.
 #endif
   char *result = paste(5, "-", "Hello", "world", "this", "is", "C", NULL);
   printf("%s\n", result); // Outputs: Hello-world-this-is-C

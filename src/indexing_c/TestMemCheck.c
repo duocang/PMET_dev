@@ -32,12 +32,12 @@ int main()
   int *q;
 
 #ifdef DEBUG
-  atexit(show_block); // 在程序结束后显示内存泄漏报告
+  atexit(show_block); // 在程序结束后显示内存泄漏报告 Display memory leak report after program ends.
 #endif                // DEBUG
-  // 分配内存并不回收，显示内存泄漏报告
+  // 分配内存并不回收，显示内存泄漏报告 Allocate memory and do not reclaim it, show memory leak report
   q = (int *)new_malloc(5);
 
-  // 分配内存并回收，则不显示内存泄漏报告
+  // 分配内存并回收，则不显示内存泄漏报告 Allocate and deallocate memory, no memory leak report will be displayed.
   p = (int *)new_malloc(5);
   new_free(p);
 
