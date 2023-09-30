@@ -152,6 +152,10 @@ gene_input_file=$4
 universefile=$outputdir/universe.txt
 bedfile=$outputdir/genelines.bed
 
+print_white "Genome file                            : "; print_orange $genomefile
+print_white "Annotation file                        : "; print_orange $gff3file
+print_white "Motif meme file                        : "; print_orange $memefile
+
 mkdir -p $outputdir
 
 start=$(date +%s)

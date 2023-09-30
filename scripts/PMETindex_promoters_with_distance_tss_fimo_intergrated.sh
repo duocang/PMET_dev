@@ -130,6 +130,10 @@ memefile=$3
 universefile=$indexingOutputDir/universe.txt
 bedfile=$indexingOutputDir/genelines.bed
 
+print_white "Genome file                            : "; print_orange $genomefile
+print_white "Annotation file                        : "; print_orange $gff3file
+print_white "Motif meme file                        : "; print_orange $memefile
+
 mkdir -p $indexingOutputDir
 
 start=$(date +%s)

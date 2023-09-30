@@ -116,7 +116,9 @@ genomefile=$1
 gff3file=$2
 memefile=$3
 
-
+print_white "Genome file                            : "; print_orange $genomefile
+print_white "Annotation file                        : "; print_orange $gff3file
+print_white "Motif meme file                        : "; print_orange $memefile
 
 
 start=$SECONDS

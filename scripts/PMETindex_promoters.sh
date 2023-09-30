@@ -140,12 +140,17 @@ while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
     esac
 done
 
+
 shift $((OPTIND - 1))
 genomefile=$1
 gff3file=$2
 memefile=$3
 universefile=$indexingOutputDir/universe.txt
 bedfile=$indexingOutputDir/genelines.bed
+
+print_white "Genome file                            : "; print_orange $genomefile
+print_white "Annotation file                        : "; print_orange $gff3file
+print_white "Motif meme file                        : "; print_orange $memefile
 
 mkdir -p $indexingOutputDir
 
