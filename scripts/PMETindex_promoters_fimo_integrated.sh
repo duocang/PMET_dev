@@ -380,17 +380,17 @@ runFimoIndexing () {
     topn=$6
     filename=`basename $memefile .txt`
 
-    $pmetroot/fimo \
-        --no-qvalue \
-        --text \
-        --thresh $fimothresh \
-        --verbosity 1 \
-        --bgfile $indexingOutputDir/promoters.bg \
-        --topn $topn \
-        --topk $maxk \
-        --oc $indexingOutputDir \
-        $memefile \
-        $indexingOutputDir/promoters.fa \
+    $pmetroot/fimo                                \
+        --no-qvalue                               \
+        --text                                    \
+        --thresh $fimothresh                      \
+        --verbosity 1                             \
+        --bgfile $indexingOutputDir/promoters.bg  \
+        --topn $topn                              \
+        --topk $maxk                              \
+        --oc $indexingOutputDir/fimohits          \
+        $memefile                                 \
+        $indexingOutputDir/promoters.fa           \
         $indexingOutputDir/promoter_lengths.txt
 
     # mkdir -p $indexingOutputDir/fimo/$filename
@@ -424,6 +424,8 @@ find $indexingOutputDir/memefiles -name \*.txt \
 #     | parallel --bar --jobs=$threads \
 #         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn; echo" \
 #     | zenity --progress --auto-close --width=500 --title="Processing files" --text="Running Fimo Indexing..." --percentage=0 --auto-kill --no-cancel
+
+mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 print_green "Deleting unnecessary files..."
 
