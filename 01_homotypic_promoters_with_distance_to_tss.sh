@@ -63,7 +63,7 @@ cd ..
 print_fluorescent_yellow "Checking if fimo result (txt files) ready for PMET index\n"
 
 
-res_dir="results/homotypic_promoters_with_distance_to_tss/"
+res_dir="results/01_homotypic_promoters_with_distance_to_tss/"
 
 fimo_dir="${res_dir}fimo"
 mkdir -p $fimo_dir

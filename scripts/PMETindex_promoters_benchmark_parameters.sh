@@ -140,6 +140,7 @@ for promlength in 50 200 500 1000 2500 5000 7500; do
     # -------------------------------------------------------------------------------------------
     # 1. sort annotaion by gene coordinates
     print_fluorescent_yellow "     1. Sorting annotation by gene coordinates"
+    chmod a+x $pmetroot/gff3sort/gff3sort.pl
     $pmetroot/gff3sort/gff3sort.pl $gff3file > $indexingOutputDir/sorted.gff3
 
 

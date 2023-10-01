@@ -162,6 +162,7 @@ print_green "Preparing data for FIMO and PMET index..."
 # -------------------------------------------------------------------------------------------
 # 1. sort annotaion by gene coordinates
 print_fluorescent_yellow "     1. Sorting annotation by gene coordinates"
+chmod a+x $pmetroot/gff3sort/gff3sort.pl
 $pmetroot/gff3sort/gff3sort.pl $gff3file > $indexingOutputDir/sorted.gff3
 
 

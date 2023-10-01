@@ -33,9 +33,10 @@ print_white(){
 }
 
 print_fluorescent_yellow "New fimo is running ..."
-print_fluorescent_yellow "You can view results in 'results/new_fimo_out'"
 
-mkdir -p results/new_fimo_out
+output=results/03_new_fimo_out
+
+mkdir -p $output/fimohits
 start=$(date +%s)
 
 
@@ -49,16 +50,21 @@ scripts/fimo                                       \
     --no-qvalue                                    \
     --thresh 0.05                                  \
     --verbosity 3                                  \
-    --oc results/new_fimo_out                      \
+    --oc $output/fimohits             \
     --bgfile src/meme-5.5.3/fimo_test/promoters.bg \
-    src/meme-5.5.3/fimo_test/memefiles/a.txt       \
+    src/meme-5.5.3/fimo_test/motif_more.meme       \
     src/meme-5.5.3/fimo_test/promoters.fa          \
     src/meme-5.5.3/fimo_test/promoter_lengths.txt
+
+mv $output/fimohits/binomial_thresholds.txt $output/fimohits/
+cp src/meme-5.5.3/fimo_test/universe.txt          $output/
+cp src/meme-5.5.3/fimo_test/promoter_lengths.txt  $output/
+cp src/meme-5.5.3/fimo_test/IC.txt                $output/
 
 end=$(date +%s)
 time_taken=$((end - start))
 print_red "Time taken: $time_taken seconds"
 
-print_fluorescent_yellow "You can view results in 'results/new_fimo_out'"
+print_fluorescent_yellow "You can view results in '$output'"
 
 print_green "done"

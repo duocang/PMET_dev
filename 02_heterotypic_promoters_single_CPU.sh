@@ -36,7 +36,7 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
-output=results/heterotypic_promoters_single_CPU
+output=results/02_heterotypic_promoters_single_CPU
 indexoutput=results/homotypic_promoters
 gene_input_file=data/gene.txt
 

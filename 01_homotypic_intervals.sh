@@ -43,7 +43,9 @@ chmod a+x scripts/cpp_debug_needed/homotypic_intervals.sh
 # check if fimo ready for PMETindex
 print_fluorescent_yellow "Checking if fimo result (txt files) is ready for PMET index"
 
-directory="results/homotypic_intervals/fimo"
+output=results/01_homotypic_intervals
+
+directory=$output/fimo
 mkdir -p $directory
 
 txt_files=$(find "$directory" -name "*.txt")
@@ -55,7 +57,7 @@ else
 
     scripts/cpp_debug_needed/homotypic_intervals.sh  \
     -r scripts                                       \
-    -o results/homotypic_intervals                   \
+    -o $output                                       \
     -n 5000                                          \
     -k 5                                             \
     -f 0.05                                          \
@@ -67,14 +69,14 @@ fi
 ########################## Running pmet indexing ##################################
 print_green "Running pmet index"
 
-mkdir -p results/homotypic_intervals/fimohits
+mkdir -p $output/fimohits
 # run pmet index
 scripts/pmetindex                                       \
-    -f results/homotypic_intervals/fimo                 \
+    -f $output/fimo                 \
     -k 5                                                \
     -n 5000                                             \
-    -p results/homotypic_intervals/promoter_lengths.txt \
-    -o results/homotypic_intervals/
+    -p $output/promoter_lengths.txt \
+    -o $output/
 
 print_green "done"
 print_fluorescent_yellow "\n\nYou many want to run '02_heterotypic_intervals.sh' now..."

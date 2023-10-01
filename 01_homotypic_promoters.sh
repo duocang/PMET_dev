@@ -39,9 +39,8 @@ print_white(){
 # Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
 chmod a+x scripts/gff3sort/gff3sort.pl
-########################## Downloading data #######################################
-# download data
 
+########################## Downloading data #######################################
 cd data
 if [ -f "homotypic_promoters/anno.gff3" ]; then
     echo ""
@@ -62,19 +61,21 @@ cd ..
 # check if fimo ready for PMETindex
 print_fluorescent_yellow "Checking if fimo result (txt files) ready for PMET index\n"
 
-directory="results/homotypic_promoters/fimo"
-mkdir -p $directory
+output=results/01_homotypic_promoters
+
+directory=$output/fimo
+mkdir -p $output/fimo
 
 txt_files=$(find "$directory" -name "*.txt")
 if [ -n "$txt_files" ]; then
-    print_green "Yes, (FIMO result) txt files exist in $directory.\n"
+    print_green "Yes, (FIMO result) txt files exist in $output/fimo.\n"
 else
-    print_red   "   No FIMO result (txt files) found in $directory.\n"
+    print_red   "   No FIMO result (txt files) found in $output/fimo.\n"
     print_green "Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_promoters.sh \
         -r scripts                                  \
-        -o results/homotypic_promoters              \
+        -o $output                                  \
         -i gene_id=                                 \
         -k 5                                        \
         -n 5000                                     \
@@ -84,20 +85,20 @@ else
         -t 4                                        \
         data/homotypic_promoters/genome.fasta       \
         data/homotypic_promoters/anno.gff3          \
-        data/homotypic_promoters/motif.meme
+        data/homotypic_promoters/motif_more.meme
 fi
 
 ########################## Running pmet indexing ##################################
 print_green "Running pmet indexing...\n"
 # run pmet index
-mkdir -p results/homotypic_promoters/fimohits
+mkdir -p $output/fimohits
 start=$(date +%s)
 
-scripts/pmetindex                                       \
-    -f results/homotypic_promoters/fimo                 \
-    -k 5 -n 5000                                        \
-    -p results/homotypic_promoters/promoter_lengths.txt \
-    -o results/homotypic_promoters/
+scripts/pmetindex                   \
+    -f $output/fimo                 \
+    -k 5 -n 5000                    \
+    -p $output/promoter_lengths.txt \
+    -o $output/
 
 end=$(date +%s)
 time_taken=$((end - start))

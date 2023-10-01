@@ -37,7 +37,7 @@ print_white(){
 }
 
 
-output=results/heterotypic_promoters
+output=results/02_heterotypic_promoters
 indexoutput=results/homotypic_promoters
 gene_input_file=data/gene.txt
 
