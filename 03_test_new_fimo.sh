@@ -56,7 +56,7 @@ scripts/fimo                                       \
     src/meme-5.5.3/fimo_test/promoters.fa          \
     src/meme-5.5.3/fimo_test/promoter_lengths.txt
 
-mv $output/fimohits/binomial_thresholds.txt $output/fimohits/
+mv $output/fimohits/binomial_thresholds.txt $output
 cp src/meme-5.5.3/fimo_test/universe.txt          $output/
 cp src/meme-5.5.3/fimo_test/promoter_lengths.txt  $output/
 cp src/meme-5.5.3/fimo_test/IC.txt                $output/
