@@ -855,6 +855,13 @@ static void fimo_score_each_motif(
     char *bare_motif_id2 = get_motif_id2(motif);
     int motif_length = get_motif_length(motif);
 
+    int iii;
+    for (iii = 0; motif_id[iii]; iii++) {
+      if (motif_id[iii] >= 'a' && motif_id[iii] <= 'z') {
+        motif_id[iii] = motif_id[iii] - 'a' + 'A';
+      }
+    }
+
     // Is this a selected motif?
     if (num_selected_motifs > 0 && have_string(bare_motif_id, options.selected_motifs) == false) {
       if (verbosity >= NORMAL_VERBOSE) {
