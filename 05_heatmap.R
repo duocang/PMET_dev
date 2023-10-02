@@ -20,15 +20,15 @@ suppressPackageStartupMessages({
 # if (length(args) != 3) {
 #   stop("You need to provide exactly 3 arguments: method, filename, and pmet.out.")
 # }
-method   <- args[1]
-filename <- args[2]
-pmet.out <- args[3]
+# method   <- args[1]
+# filename <- args[2]
+# pmet.out <- args[3]
 
 
-# method       <- "Overlap"
-# # method       <- "All"
-# filename     <- "results/05_plot/heatmap_old_fimo_plus_pmetindex.png"
-# pmet.out <- "results/04_new_fimo_vs_old_fimo_plus_pmetindex/old_fimo_plus_pmetindex.txt"
+method       <- "Overlap"
+# method       <- "All"
+filename     <- "results/05_plot/heatmap_old_fimo_plus_pmetindex.png"
+pmet.out <- "results/04_new_fimo_vs_old_fimo_plus_pmetindex/old_fimo_plus_pmetindex.txt"
 
 heatmap.func <- function(filename = NULL, method = NULL, pmet.out = NULL, unique.cmbination = TRUE)
 {
@@ -55,7 +55,10 @@ heatmap.func <- function(filename = NULL, method = NULL, pmet.out = NULL, unique
                                               histgram_dir      = histgram.path,
                                               unique_cmbination = TRUE)
 
-
+  if (is.null(pmet.result.processed)) {
+    cat("No meaningfull data left after filtering!\n")
+    return(NULL)
+  }
 
   results   <- pmet.result.processed
   clusters <- names(results$pmet_result) %>% sort()
@@ -121,5 +124,6 @@ heatmap.func <- function(filename = NULL, method = NULL, pmet.out = NULL, unique
   }
   ggsave(filename, p, width = wid, height = hei, dpi = 320, units = "in")
 }
+
 
 heatmap.func(filename, method, pmet.out, TRUE)

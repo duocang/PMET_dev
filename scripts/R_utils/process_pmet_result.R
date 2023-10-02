@@ -154,12 +154,12 @@ PmetHistogramPlot <- function(res           = NULL,
   p <- lapply(clusters, function(clu) {
     res[, c("cluster", "p_adj")] %>% filter(cluster == clu) %>%
       ggplot( aes(x=p_adj, fill=cluster)) +
-        geom_histogram( fill=colors[[clu]], alpha=0.6, position = 'identity') +
-        theme_ipsum() +
-        theme_bw()    +
-        ggtitle(clu)  +
-        labs(fill="")
-    }) %>%
+      geom_histogram( fill=colors[[clu]], alpha=0.6, position = 'identity') +
+      theme_ipsum() +
+      theme_bw()    +
+      ggtitle(clu)  +
+      labs(fill="")
+  }) %>%
     ggarrange(plotlist=.,
               ncol=ncols,
               nrow = ceiling(length(clusters)/ncols))
@@ -199,7 +199,7 @@ ProcessPmetResult <- function(pmet_result       = NULL,
       PmetHistogramPlot(
         res   = pmet_result,
         ncols = 2,
-        histgram_path = file.path(histgram_dir, "histgram_padj_after_filter.png"))
+        histgram_path = file.path(histgram_dir, "histgram_padj_before_filter.png"))
     } # if
 
     ## 2. Full genes of each cluster
@@ -228,7 +228,11 @@ ProcessPmetResult <- function(pmet_result       = NULL,
         filter((cluster == clu & gene_num > gene_num_limt) | cluster != clu) %>%
         arrange(desc(p_adj))
     }
-    # print(table(pmet.filtered$cluster))
+
+    if (length(pmet.filtered$cluster) == 0) {
+      return(NULL)
+    }
+    print(table(pmet.filtered$cluster))
 
     # update clusters every time after filtering
     clusters <- unique(pmet.filtered$cluster) %>% sort()
@@ -247,7 +251,7 @@ ProcessPmetResult <- function(pmet_result       = NULL,
 
       # update clusters every time after filtering
       clusters <- unique(pmet.filtered$cluster) %>% sort()
-      # print(table(pmet.filtered$cluster))
+      print(table(pmet.filtered$cluster))
     }
 
     ## 5. Split pmet resut by cluster
