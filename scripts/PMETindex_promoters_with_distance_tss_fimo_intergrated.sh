@@ -452,6 +452,7 @@ find $indexingOutputDir/memefiles -name \*.txt \
 #     | parallel --bar --jobs=$threads \
 #         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn; echo" \
 #     | zenity --progress --auto-close --width=500 --title="Processing files" --text="Running Fimo Indexing..." --percentage=0 --auto-kill --no-cancel
+mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 print_green "Deleting unnecessary files..."
 
