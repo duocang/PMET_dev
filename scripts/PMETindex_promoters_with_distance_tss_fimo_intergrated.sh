@@ -408,37 +408,37 @@ runFimoIndexing () {
     topn=$6
     filename=`basename $memefile .txt`
 
-    # $pmetroot/fimo \
+    $pmetroot/fimo                               \
+        --no-qvalue                              \
+        --text                                   \
+        --thresh $fimothresh                     \
+        --verbosity 1                            \
+        --bgfile $indexingOutputDir/promoters.bg \
+        --topn $topn                             \
+        --topk $maxk                             \
+        --oc $indexingOutputDir/fimohits         \
+        $memefile                                \
+        $indexingOutputDir/promoters.fa          \
+        $indexingOutputDir/promoter_lengths.txt
+
+    # mkdir -p $indexingOutputDir/fimo/$filename
+
+    # fimo \
     #     --no-qvalue \
     #     --text \
     #     --thresh $fimothresh \
     #     --verbosity 1 \
-    #     --bgfile $indexingOutputDir/promoters.bg \
-    #     --topn $topn \
-    #     --topk $maxk \
-    #     --oc $indexingOutputDir/fimohits \
+    #     --bgfile $indexingOutputDir/promoters.bg\
     #     $memefile \
     #     $indexingOutputDir/promoters.fa \
-    #     $indexingOutputDir/promoter_lengths.txt
-
-    mkdir -p $indexingOutputDir/fimo/$filename
-
-    fimo \
-        --no-qvalue \
-        --text \
-        --thresh $fimothresh \
-        --verbosity 1 \
-        --bgfile $indexingOutputDir/promoters.bg\
-        $memefile \
-        $indexingOutputDir/promoters.fa \
-        > $indexingOutputDir/fimo/$filename/$filename.txt
-    $pmetroot/pmetindex \
-        -f $indexingOutputDir/fimo/$filename \
-        -k $maxk \
-        -n $topn \
-        -o $indexingOutputDir \
-        -p $indexingOutputDir/promoter_lengths.txt > $indexingOutputDir/pmetindex.log
-    # rm -rf $indexingOutputDir/fimo/$filename
+    #     > $indexingOutputDir/fimo/$filename/$filename.txt
+    # $pmetroot/pmetindex \
+    #     -f $indexingOutputDir/fimo/$filename \
+    #     -k $maxk \
+    #     -n $topn \
+    #     -o $indexingOutputDir \
+    #     -p $indexingOutputDir/promoter_lengths.txt > $indexingOutputDir/pmetindex.log
+    # # rm -rf $indexingOutputDir/fimo/$filename
 }
 export -f runFimoIndexing
 
@@ -455,25 +455,23 @@ find $indexingOutputDir/memefiles -name \*.txt \
 
 print_green "Deleting unnecessary files..."
 
-# rm -f $indexingOutputDir/genelines.gff3
-# rm -f $indexingOutputDir/bedgenome.genome
-# rm -f $bedfile
-# rm -f $indexingOutputDir/genome_stripped.fa
-# rm -f $indexingOutputDir/genome_stripped.fa.fai
-# rm -f $indexingOutputDir/promoters.bed
-# rm -f $indexingOutputDir/promoters_rough.fa
-# rm -f $indexingOutputDir/genes_negative.txt
-# rm -f $indexingOutputDir/promoter_length_deleted.txt
-# rm -r $indexingOutputDir/memefiles
-# rm -f $indexingOutputDir/promoters.bg
-# rm -f $indexingOutputDir/promoters.fa
-# rm -f $indexingOutputDir/sorted.gff3
-# rm -f $indexingOutputDir/pmetindex.log
-# rm -f $indexingOutputDir/promoter_lengths_all.txt
-
+rm -f $indexingOutputDir/genelines.gff3
+rm -f $indexingOutputDir/bedgenome.genome
+rm -f $bedfile
+rm -f $indexingOutputDir/genome_stripped.fa
+rm -f $indexingOutputDir/genome_stripped.fa.fai
+rm -f $indexingOutputDir/promoters.bed
+rm -f $indexingOutputDir/promoters_rough.fa
+rm -f $indexingOutputDir/genes_negative.txt
+rm -f $indexingOutputDir/promoter_length_deleted.txt
+rm -r $indexingOutputDir/memefiles
+rm -f $indexingOutputDir/promoters.bg
+rm -f $indexingOutputDir/promoters.fa
+rm -f $indexingOutputDir/sorted.gff3
+rm -f $indexingOutputDir/pmetindex.log
+rm -f $indexingOutputDir/promoter_lengths_all.txt
 
 # touch ${indexingOutputDir}_FLAG
-
 
 end=$(date +%s)
 time_taken=$((end - start))
