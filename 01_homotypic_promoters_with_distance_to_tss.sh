@@ -84,8 +84,8 @@ else
         -n 5000                                     \
         -p 1000                                     \
         -d 1000                                     \
-        -v NoOverlap                                \
-        -u Yes                                      \
+        -v Yes                                      \
+        -u No                                       \
         -t 8                                        \
         data/homotypic_promoters/genome.fasta       \
         data/homotypic_promoters/anno.gff3          \

@@ -294,11 +294,10 @@ fi
 
 # -------------------------------------------------------------------------------------------
 # remove promoter length < 20
-print_fluorescent_yellow "     9.1 Remove promoters with less than 20 base pairs"
-awk '($3 - $2) <  20' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_20.bed
-awk '($3 - $2) >= 20' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+print_fluorescent_yellow "     9.1 Remove promoters with less than 0.8 * promolength base pairs"
+awk -v len=$promlength '($3 - $2) <  0.8 * len' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_80pen.bed
+awk -v len=$promlength '($3 - $2) >= 0.8 * len' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
 mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
-
 
 # -------------------------------------------------------------------------------------------
 # 10. check split promoters. if so, keep the bit closer to the TSS
