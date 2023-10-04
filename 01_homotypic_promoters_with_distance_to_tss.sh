@@ -82,14 +82,14 @@ else
         -i gene_id=                                 \
         -k 5                                        \
         -n 5000                                     \
-        -p 500                                      \
-        -d 500                                      \
+        -p 1000                                     \
+        -d 1000                                     \
         -v NoOverlap                                \
         -u Yes                                      \
         -t 8                                        \
         data/homotypic_promoters/genome.fasta       \
         data/homotypic_promoters/anno.gff3          \
-        data/homotypic_promoters/a.txt
+        data/homotypic_promoters/motif.meme
 fi
 
 # ########################## Running pmet indexing ##################################

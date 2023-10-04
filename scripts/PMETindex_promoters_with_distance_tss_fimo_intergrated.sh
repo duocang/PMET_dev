@@ -227,14 +227,7 @@ bedtools flank \
     > $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
-print_fluorescent_yellow "     8.1 Remove promoters with less than 20 base pairs"
-# remove promoter length < 20
-awk '($3 - $2) >= 20' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
-mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
-awk '($3 - $2) <  20' $indexingOutputDir/promoters.bed > $indexingOutputDir/8_promoters_less_20.bed
-
-# -------------------------------------------------------------------------------------------
-print_fluorescent_yellow "     8.2 Add distance to TSS"
+print_fluorescent_yellow "     8.1 Add distance to TSS"
 # add distance to TSS
 
 awk -v d=$distance '
@@ -246,19 +239,36 @@ NR == FNR && $3 == "chromosome" {
 # 处理promoters.bed文件
 {
     if ($6 == "+") {
-        if (($2 - d <= 1 && $3 -$2 < d) || $3 - d <= 1)
+        if ($3 - d < 20)
         {
             next;
         }
-        $2 = $2 - d;
-        $3 = $3 - d;
+
+        if ($2 -d  < 1)
+        {
+            $2 = 1;
+            $3 = $3 - d;
+        }
+        else
+        {
+            $2 = $2 - d;
+            $3 = $3 - d;
+        }
     } else if ($6 == "-") {
-        if ($2 + d >= max[$1] || ($3-$2<d && $3 + d >= max[$1] ))
+        if ($2 + d + 20 > max[$1])
         {
             next;
         }
-        $2 = $2 + d;
-        $3 = $3 + d;
+        if ($3 + d > max[$1])
+        {
+            $2 = $2 + d;
+            $3 =max[$1];
+        }
+        else
+        {
+            $2 = $2 + d;
+            $3 = $3 + d;
+        }
     }
     printf "%s\t%d\t%d\t%s\t%s\t%s\n", $1, $2, $3, $4, $5, $6;
 }
@@ -266,6 +276,7 @@ NR == FNR && $3 == "chromosome" {
 
 rm $indexingOutputDir/promoters.bed
 cp $indexingOutputDir/promoters_with_distance_to_tss.bed $indexingOutputDir/promoters.bed
+
 
 
 # -------------------------------------------------------------------------------------------
@@ -360,6 +371,8 @@ fi
 # 16. update gene list (no NEGATIVE genes)
 print_fluorescent_yellow "    16. Updating gene list without NEGATIVE genes (universe.txt)";
 cut -d " " -f1  $indexingOutputDir/promoter_lengths.txt > $universefile
+
+awk 'NR==FNR{universe[$1]; next} !($4 in universe)' $universefile $indexingOutputDir/genelines.bed > $indexingOutputDir/16_genes_not_in_universe.bed
 
 
 # -------------------------------------------------------------------------------------------
