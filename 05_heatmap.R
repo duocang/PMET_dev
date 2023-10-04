@@ -64,24 +64,43 @@ heatmap.func <- function(filename = NULL, method = NULL, pmet.out = NULL, unique
   clusters <- names(results$pmet_result) %>% sort()
 
   if (method == "Overlap") {
+    # after filtering, some clusters may be gone and only one cluster is left
+    if (length(clusters) == 1) {
 
-    motifs <- TopMotifsGenerator(pmet.result.processed$motifs, by.cluster = FALSE, exclusive.motifs = TRUE)
-    num.motifs <- length(motifs)
+      p <- MotifPairPlotHomog(results$pmet_result,
+                        results$motifs,
+                        counts            = "p_adj",
+                        exclusive.motifs  = TRUE,
+                        by.cluster        = FALSE,
+                        show.cluster      = FALSE,
+                        legend.title      = "-log10(p.adj)",
+                        nrow_             = ceiling(length(clusters)/2),
+                        ncol_             = 2,
+                        axis.lables       = "",
+                        show.axis.text    = TRUE,
+                        diff.colors       = TRUE,
+                        respective.plot   = TRUE)
+      p <- p[[1]]
 
-    # expend ggplot with genes for hover information
-    dat_list   <- MotifPairGeneDiagonal(pmet.result.processed$pmet_result, motifs, counts = "p_adj")
-    clusters   <- names(dat_list) %>% sort()
+    } else {
+      motifs <- TopMotifsGenerator(pmet.result.processed$motifs, by.cluster = FALSE, exclusive.motifs = TRUE)
+      num.motifs <- length(motifs)
 
-    # merge data into DF[[1]]
-    dat <- dat_list[[1]]
-    # move all non-NA values from other DFs to DF[[1]]
-    for (i in 2:length(dat_list)) {
-      indx                 <- which(!is.na(dat_list[[i]][, "cluster"]))
-      dat[indx,          ] <- dat_list[[i]][indx, ]
-      dat[indx, "cluster"] <- names(dat_list)[i]
+      # expend ggplot with genes for hover information
+      dat_list   <- MotifPairGeneDiagonal(pmet.result.processed$pmet_result, motifs, counts = "p_adj")
+      clusters   <- names(dat_list) %>% sort()
+
+      # merge data into DF[[1]]
+      dat <- dat_list[[1]]
+      # move all non-NA values from other DFs to DF[[1]]
+      for (i in 2:length(dat_list)) {
+        indx                 <- which(!is.na(dat_list[[i]][, "cluster"]))
+        dat[indx,          ] <- dat_list[[i]][indx, ]
+        dat[indx, "cluster"] <- names(dat_list)[i]
+      }
+
+      p <- MotifPairPlotHetero(dat,  "p_adj", motifs, clusters)
     }
-
-    p <- MotifPairPlotHetero(dat,  "p_adj", motifs, clusters)
   } else {
     if (method == "All") {
       respective.plot <- FALSE
