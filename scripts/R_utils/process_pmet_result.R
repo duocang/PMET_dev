@@ -232,7 +232,6 @@ ProcessPmetResult <- function(pmet_result       = NULL,
     if (length(pmet.filtered$cluster) == 0) {
       return(NULL)
     }
-    print(table(pmet.filtered$cluster))
 
     # update clusters every time after filtering
     clusters <- unique(pmet.filtered$cluster) %>% sort()
@@ -251,7 +250,6 @@ ProcessPmetResult <- function(pmet_result       = NULL,
 
       # update clusters every time after filtering
       clusters <- unique(pmet.filtered$cluster) %>% sort()
-      print(table(pmet.filtered$cluster))
     }
 
     ## 5. Split pmet resut by cluster
