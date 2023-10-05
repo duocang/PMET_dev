@@ -639,10 +639,6 @@ static long fimo_score_sequence(
     // Get sequence data
     char *raw_seq = get_sequence_from_data_block(seq_block);
 
-
-
-
-
     if (!options.skip_matched_sequence) {
       set_matched_element_sequence(fwd_match, raw_seq);
     }
@@ -1162,8 +1158,8 @@ int main(int argc, char* argv[]) {
       &num_scanned_sequences,
       &num_scanned_positions,
       options.output_dirname,
-      5000,
-      5,
+      options.topn,
+      options.topk,
       promoterList);
 
   deletePromoterLenList(promoterList);
