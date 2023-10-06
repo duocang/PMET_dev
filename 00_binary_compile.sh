@@ -50,6 +50,8 @@ fi
 
 mkdir -p $currentDir/build
 
+aclocal
+automake
 
 chmod a+x ./configure
 ./configure --prefix=$currentDir/build  --enable-build-libxml2 --enable-build-libxslt
