@@ -14,10 +14,6 @@ add_executable(pmetParallel
   motif.cpp
   motifComparison.cpp
   utils.cpp
-  Output.hpp
-  motif.hpp
-  motifComparison.hpp
-  utils.hpp
 )
 
 # Add performance testing tools

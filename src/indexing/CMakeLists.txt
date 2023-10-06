@@ -18,9 +18,6 @@ add_executable(pmetindex
   cFimoFile.cpp
   cMotifHit.cpp
   fastFileReader.cpp
-  cFimoFile.hpp
-  cMotifHit.hpp
-  fastFileReader.hpp
   # utils.cpp
 )
 
