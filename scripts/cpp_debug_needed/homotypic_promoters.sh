@@ -324,7 +324,7 @@ sed 's/::.*//g' $indexingOutputDir/promoters_rough.fa > $indexingOutputDir/promo
 
 # -------------------------------------------------------------------------------------------
 # 19. promoters.bg from promoters.fa
-print_fluorescent_yellow "    19.  fasta-get-markov estimates a Markov model from promoters.fa. (promoters.bg)"
+print_fluorescent_yellow "    19. fasta-get-markov estimates a Markov model from promoters.fa. (promoters.bg)"
 fasta-get-markov $indexingOutputDir/promoters.fa > $indexingOutputDir/promoters.bg
 
 # -------------------------------------------------------------------------------------------
@@ -369,9 +369,9 @@ export -f runFimoIndexing
 numfiles=$(ls -l $indexingOutputDir/memefiles/*.txt | wc -l)
 print_orange "    $numfiles motifs found"
 
-find $indexingOutputDir/memefiles -name \*.txt \
-    | parallel  --jobs=$threads \
-        "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
+# find $indexingOutputDir/memefiles -name \*.txt \
+#     | parallel --progress  --jobs=$threads \
+#         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
 
 print_green "Deleting unnecessary files..."
 
@@ -390,3 +390,22 @@ print_green "Deleting unnecessary files..."
 # rm $indexingOutputDir/promoters.bg
 # rm $indexingOutputDir/promoters.fa
 # rm $indexingOutputDir/sorted.gff3
+
+# 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
+# Count the number of .txt files in the $indexingOutputDir/fimohits directory
+file_count=$(find "$indexingOutputDir/fimo" -maxdepth 1 -type f -name "*.txt" | wc -l)
+
+
+# 检查文件数量是否等于 meotif的数量 （$numfiles）
+# Check if the number of files equals the number of meotifs ($numfiles)
+if [ "$file_count" -eq "$numfiles" ]; then
+    touch ${indexingOutputDir}_FLAG
+
+    end=$(date +%s)
+    time_taken=$((end - start))
+    print_orange "Time taken: $time_taken seconds"
+
+    print_green "DONE"
+else
+    print_green "Error: there are $file_count fimohits files, it should be $numfiles."
+fi

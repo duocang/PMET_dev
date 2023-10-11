@@ -350,7 +350,7 @@ sed 's/::.*//g' $indexingOutputDir/promoters_rough.fa > $indexingOutputDir/promo
 
 # -------------------------------------------------------------------------------------------
 # 19. promoters.bg from promoters.fa
-print_fluorescent_yellow "    19.  fasta-get-markov estimates a Markov model from promoters.fa. (promoters.bg)"
+print_fluorescent_yellow "    19. fasta-get-markov estimates a Markov model from promoters.fa. (promoters.bg)"
 fasta-get-markov $indexingOutputDir/promoters.fa > $indexingOutputDir/promoters.bg
 
 # -------------------------------------------------------------------------------------------
@@ -429,32 +429,42 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 print_green "Deleting unnecessary files..."
 
-# rm -f $indexingOutputDir/genelines.gff3
-# rm -f $indexingOutputDir/bedgenome.genome
-# rm -f $bedfile
-# rm -f $indexingOutputDir/genome_stripped.fa
-# rm -f $indexingOutputDir/genome_stripped.fa.fai
-# rm -f $indexingOutputDir/promoters.bed
-# rm -f $indexingOutputDir/promoters_rough.fa
-# rm -f $indexingOutputDir/genes_negative.txt
-# rm -f $indexingOutputDir/promoter_length_deleted.txt
-# rm -r $indexingOutputDir/memefiles
-# rm -f $indexingOutputDir/promoters.bg
-# rm -f $indexingOutputDir/promoters.fa
-# rm -f $indexingOutputDir/sorted.gff3
-# rm -f $indexingOutputDir/pmetindex.log
-# rm -f $indexingOutputDir/promoter_lengths_all.txt
+rm -f $indexingOutputDir/genelines.gff3
+rm -f $indexingOutputDir/bedgenome.genome
+rm -f $bedfile
+rm -f $indexingOutputDir/genome_stripped.fa
+rm -f $indexingOutputDir/genome_stripped.fa.fai
+rm -f $indexingOutputDir/promoters.bed
+rm -f $indexingOutputDir/promoters_rough.fa
+rm -f $indexingOutputDir/genes_negative.txt
+rm -f $indexingOutputDir/promoter_length_deleted.txt
+rm -r $indexingOutputDir/memefiles
+rm -f $indexingOutputDir/promoters.bg
+rm -f $indexingOutputDir/promoters.fa
+rm -f $indexingOutputDir/sorted.gff3
+rm -f $indexingOutputDir/pmetindex.log
+rm -f $indexingOutputDir/promoter_lengths_all.txt
+rm -f $indexingOutputDir/promoters_before_filter.bed
 
 
-# touch ${indexingOutputDir}_FLAG
+# 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
+# Count the number of .txt files in the $indexingOutputDir/fimohits directory
+file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
 
+# 检查文件数量是否等于 meotif的数量 （$numfiles）
+# Check if the number of files equals the number of meotifs ($numfiles)
+if [ "$file_count" -eq "$numfiles" ]; then
+    touch ${indexingOutputDir}_FLAG
 
-end=$(date +%s)
-time_taken=$((end - start))
-print_orange "Time taken: $time_taken seconds"
+    end=$(date +%s)
+    time_taken=$((end - start))
+    print_orange "Time taken: $time_taken seconds"
 
+    print_green "DONE"
+else
+    print_green "Error: there are $file_count fimohits files, it should be $numfiles."
+fi
 
-print_green "DONE"
 
 # # next stage needs the following inputs
 

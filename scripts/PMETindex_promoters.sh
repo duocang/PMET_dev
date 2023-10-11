@@ -196,9 +196,9 @@ fi
 # 4. filter invalid genes: start should be smaller than end
 invalidRows=$(awk '$2 >= $3' $bedfile)
 if [[ -n "$invalidRows" ]]; then
-    echo "$invalidRows" > $outputdir/invalid_genelines.bed
+    echo "$invalidRows" > $indexingOutputDir/invalid_genelines.bed
 fi
-# awk '$2 >= $3' $bedfile > $outputdir/invalid_genelines.bed
+# awk '$2 >= $3' $bedfile > $indexingOutputDir/invalid_genelines.bed
 
 print_fluorescent_yellow "     4. Extracting genes coordinates: start should be smaller than end (genelines.bed)"
 awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
@@ -356,7 +356,7 @@ sed 's/::.*//g' $indexingOutputDir/promoters_rough.fa > $indexingOutputDir/promo
 
 # -------------------------------------------------------------------------------------------
 # 19. promoters.bg from promoters.fa
-print_fluorescent_yellow "    19.  fasta-get-markov estimates a Markov model from promoters.fa. (promoters.bg)"
+print_fluorescent_yellow "    19. fasta-get-markov estimates a Markov model from promoters.fa. (promoters.bg)"
 fasta-get-markov $indexingOutputDir/promoters.fa > $indexingOutputDir/promoters.bg
 
 # -------------------------------------------------------------------------------------------
@@ -388,20 +388,20 @@ runFimoIndexing () {
 
     mkdir -p $indexingOutputDir/fimo/$filename
 
-    fimo \
-        --no-qvalue \
-        --text \
-        --thresh $fimothresh \
-        --verbosity 1 \
-        --bgfile $indexingOutputDir/promoters.bg\
-        $memefile \
-        $indexingOutputDir/promoters.fa \
+    fimo                                 \
+        --no-qvalue                      \
+        --text                           \
+        --thresh $fimothresh             \
+        --verbosity 1                    \
+        --bgfile $indexingOutputDir/promoters.bg \
+        $memefile                        \
+        $indexingOutputDir/promoters.fa          \
         > $indexingOutputDir/fimo/$filename/$filename.txt
-    $pmetroot/pmetindex \
+    $pmetroot/pmetindex              \
         -f $indexingOutputDir/fimo/$filename \
-        -k $maxk \
-        -n $topn \
-        -o $indexingOutputDir \
+        -k $maxk                     \
+        -n $topn                     \
+        -o $indexingOutputDir                \
         -p $indexingOutputDir/promoter_lengths.txt > $indexingOutputDir/pmetindex.log
     rm -rf $indexingOutputDir/fimo/$filename
 }
@@ -435,11 +435,25 @@ rm -f $indexingOutputDir/promoters.fa
 rm -f $indexingOutputDir/sorted.gff3
 rm -f $indexingOutputDir/pmetindex.log
 rm -f $indexingOutputDir/promoter_lengths_all.txt
+rm -f $indexingOutputDir/promoters_before_filter.bed
 
+# 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
+# Count the number of .txt files in the $indexingOutputDir/fimohits directory
+file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
 
-touch ${indexingOutputDir}_FLAG
+# 检查文件数量是否等于 meotif的数量 （$numfiles）
+# Check if the number of files equals the number of meotifs ($numfiles)
+if [ "$file_count" -eq "$numfiles" ]; then
+    touch ${indexingOutputDir}_FLAG
 
-print_green "DONE"
+    end=$(date +%s)
+    time_taken=$((end - start))
+    print_orange "Time taken: $time_taken seconds"
+
+    print_green "DONE"
+else
+    print_green "Error: there are $file_count fimohits files, it should be $numfiles."
+fi
 
 # # next stage needs the following inputs
 
