@@ -40,6 +40,37 @@ function error_exit() {
     exit 1
 }
 
+print_red(){
+    RED='\033[0;31m'
+    NC='\033[0m' # No Color
+    printf "${RED}$1${NC}\n"
+}
+
+print_green(){
+    GREEN='\033[0;32m'
+    NC='\033[0m' # No Color
+    printf "${GREEN}$1${NC}\n"
+}
+
+print_orange(){
+    ORANGE='\033[0;33m'
+    NC='\033[0m' # No Color
+    printf "${ORANGE}$1${NC}\n"
+}
+
+print_fluorescent_yellow(){
+    FLUORESCENT_YELLOW='\033[1;33m'
+    NC='\033[0m' # No Color
+    printf "${FLUORESCENT_YELLOW}$1${NC}\n"
+}
+
+print_white(){
+    WHITE='\033[1;37m'
+    NC='\033[0m' # No Color
+    printf "${WHITE}$1${NC}"
+}
+
+
 # set up arguments
 topn=5000
 maxk=5
@@ -62,21 +93,21 @@ fi
 # bring in arguments
 while getopts ":r:o:k:n:f:t:" options; do
     case $options in
-        r) echo "Full path of PMET_index:  $OPTARG" >&2
+        r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
-        o) echo "Output directory for results: $OPTARG" >&2
+        o) print_white "Output directory for results           : "; print_orange "$OPTARG" >&2
         outputdir=$OPTARG;;
-        n) echo "Top n promoter hits to take per motif: $OPTARG" >&2
+        n) print_white "Top n promoter hits to take per motif  : "; print_orange "$OPTARG" >&2
         topn=$OPTARG;;
-        k) echo "Top k motif hits within each promoter: $OPTARG" >&2
+        k) print_white "Top k motif hits within each promoter  : "; print_orange "$OPTARG" >&2
         maxk=$OPTARG;;
-        f) echo "Fimo threshold: $OPTARG" >&2
+        f) print_white "Fimo threshold                         : "; print_orange "$OPTARG" >&2
         fimothresh=$OPTARG;;
-        t) echo "Number of threads: $OPTARG" >&2
+        t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
         threads=$OPTARG;;
-        \?) echo "Invalid option: -$OPTARG" >&2
+        \?) print_red "Invalid option: -$OPTARG" >&2
         exit 1;;
-        :)  echo "Option -$OPTARG requires an argument." >&2
+        :)  print_red "Option -$OPTARG requires an argument." >&2
         exit 1;;
     esac
 done
@@ -86,10 +117,13 @@ shift $((OPTIND - 1))
 genomefile=$1
 memefile=$2
 
+print_white "Genomic interval file                  : "; print_orange $genomefile
+print_white "Motif meme file                        : "; print_orange $memefile
+
 [ ! -d $outputdir ] && mkdir $outputdir
 # cd $outputdir
 
-echo "Preparing sequences...";
+print_green "Preparing sequences...";
 
 # final pmet binary requires the universe file. Need to create this if validation scrip didnt.
 # In promoters version, this is initially all genes in gff3 file. This version is used to add UTRs if
@@ -119,7 +153,7 @@ fasta-get-markov $genomefile > $outputdir/genome.bg
 # FIMO barfs ALL the output. that's not good. time for individual FIMOs
 # on individual MEME-friendly motif files too
 
-echo "Processing motifs...";
+print_green "Processing motifs...";
 
 ### Make motif  files from user's meme file
 [ ! -d $outputdir/memefiles ] && mkdir $outputdir/memefiles
@@ -140,7 +174,8 @@ python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
 shopt -s nullglob # prevent loop produncing '*.txt'
 
 numfiles=$(ls -l $outputdir/memefiles/*.txt | wc -l)
-echo $numfiles" found"
+print_orange "$numfiles motifs found"
+
 n=0
 # paralellise this loop
 for memefile in $outputdir/memefiles/*.txt; do
@@ -148,12 +183,12 @@ for memefile in $outputdir/memefiles/*.txt; do
     fimofile=`basename $memefile`
     echo $fimofile
 
-    fimo    --text \
-            --thresh $fimothresh \
-            --verbosity 1 \
+    fimo    --text                        \
+            --thresh $fimothresh          \
+            --verbosity 1                 \
             --bgfile $outputdir/genome.bg \
-            $memefile \
-            $genomefile \
+            $memefile                     \
+            $genomefile                   \
             > $outputdir/fimo/$fimofile &
     [ `expr $n % $threads` -eq 0 ] && wait
 done
@@ -162,7 +197,6 @@ done
 # rm -r $outputdir/memefiles
 # rm $outputdir/genome.bg
 
-exit 0;
 
 # next stage needs the following inputs
 

@@ -39,20 +39,20 @@ print_white(){
 # Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_intervals.sh
 
+output=results/01_homotypic_intervals
+
 ################################ Running FIMO #####################################
 # check if fimo ready for PMETindex
-print_fluorescent_yellow "Checking if fimo result (txt files) is ready for PMET index"
-
-output=results/01_homotypic_intervals
+print_fluorescent_yellow "Checking if fimo result (txt files) is ready in $output"
 
 directory=$output/fimo
 mkdir -p $directory
 
 txt_files=$(find "$directory" -name "*.txt")
 if [ -n "$txt_files" ]; then
-    print_green "   Yes, FIMO result (txt files) exist in $directory.\n\n"
+    print_green "Yes, FIMO result exist in $directory.\n"
 else
-    print_red   "   No, no FIMO result (txt files) exist in $directory.\n\n"
+    print_red   "No FIMO result exist in $directory."
     print_green "Running fimo...\n"
 
     scripts/cpp_debug_needed/homotypic_intervals.sh  \
@@ -71,10 +71,10 @@ print_green "Running pmet index"
 
 mkdir -p $output/fimohits
 # run pmet index
-scripts/pmetindex                                       \
+scripts/pmetindex                   \
     -f $output/fimo                 \
-    -k 5                                                \
-    -n 5000                                             \
+    -k 5                            \
+    -n 5000                         \
     -p $output/promoter_lengths.txt \
     -o $output/
 
