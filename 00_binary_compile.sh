@@ -89,10 +89,10 @@ if [ "$answer" == "Y" ] || [ "$answer" == "y" ]; then
 
     print_fluorescent_yellow "Compiling... It takes minutes."
 
-    rm scripts/pmetindex
-    rm scripts/pmetParallel
-    rm scripts/pmet
-    rm scripts/fimo
+    rm -f scripts/pmetindex
+    rm -f scripts/pmetParallel
+    rm -f scripts/pmet
+    rm -f scripts/fimo
 
     ############################# 2.1 fimo with pmet index
     print_orange "2.1 Compiling FIMO with PMET homotopic (index) integtated..."
