@@ -39,7 +39,7 @@ print_white(){
 
 output=results/02_heterotypic_intervals
 indexoutput=results/01_homotypic_intervals
-gene_input_file=data/01_homotypic_intervals/intervals.txt
+gene_input_file=data/homotypic_intervals/intervals.txt
 
 # # remove genes not present in promoter_lengths.txt
 # awk -F"\t" '{print $1"\t"}' indexoutput/promoter_lengths.txt > indexoutput/temp_genes_list.txt
