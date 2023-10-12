@@ -4,12 +4,17 @@ This is PMET.
 
 ```shell
 .
+├── 00_binary_compile.sh
 ├── 01_homotypic_intervals.sh
 ├── 01_homotypic_promoters.sh
+├── 01_homotypic_promoters_with_distance_to_tss.sh
 ├── 02_heterotypic_intervals.sh
 ├── 02_heterotypic_promoters.sh
 ├── 02_heterotypic_promoters_single_CPU.sh
 ├── 03_test_new_fimo.sh
+├── 04_new_fimo_vs_old_fimo_plus_index.sh
+├── 05_heatmap.R
+├── LICENSE.md
 ├── data
 ├── results
 ├── scripts
@@ -25,6 +30,19 @@ This is PMET.
 
 ![](https://raw.githubusercontent.com/duocang/images/master/PicGo/202307202339573.png)
 
+## Quick install
+
+The purpose of this script is to
+
+1. assign execute permissions to all users for bash and perl files
+2. compile binaries needed by Shiny app
+3. install python package
+
+```bash
+chmod a+x 00_binary_compile.sh
+bash 00_binary_compile.sh
+```
+
 ## Compile PMET homotypic and PMET heterotypic
 
 Both are writen in C++, source code can be found in `src/indexing` and `src/pmetParallel`.
@@ -35,33 +53,33 @@ If necessary, it is possible to compile `PMET index` and pmet in different OS.
 
 ```bash
 chmod a+x 00_binary_compile.sh
-
 bash 00_binary_compile.sh
 ```
-
-
 
 After running the bash, all needed binary tools will be put in the `scripts` folder.
 
 ## 1. TEST PMET
 
+#### 1.1 Promoters
+
 ```bash
 chmod a+x 01_homotypic_promoters.sh
 chmod a+x 02_heterotypic_promoters.sh
-```
 
-### 1.1 search and filter homotypic motifs matches in all promoters
-
-```bash
 bash 01_homotypic_promoters.sh
-# This can take a long time.
-```
-
-### 1.2 search heterotypic motifs matching in all promoters
-
-```bash
 bash 02_heterotypic_promoters.sh
 ```
+
+#### 1.2 Genomic intervals
+
+```bash
+chmod a+x 01_homotypic_intervals.sh
+chmod a+x 02_heterotypic_intervals.sh
+
+bash 01_homotypic_intervals.sh
+bash 02_heterotypic_intervals.sh
+```
+
 
 
 ## 2. TEST new FIMO
@@ -90,30 +108,21 @@ An additional consideration is the potential to divide the meme files (motifs) i
 In contrast, `NEW FIMO` circumvents this issue entirely.
 
 
-## Install GNU Parallel
 
-GNU Parallel helps `PMET index` (FIMO and `PMET index`) to run in parallel mode.
+## 3. Tools needed
+
+**3.1 Install GNU Parallel**
+
+GNU Parallel helps PMET index (FIMO and PMET index) to run in parallel mode.
 
 ```bash
-sudo apt-get update
 sudo apt-get install parallel
+
+# Put GNU Parallel silent
+parallel --citation
 ```
 
-Put GNU Parallel silent:
-
-```bash
- # Run once
- parallel --citation
-```
-
-## Install zentiy
-
-```bash
-sudo apt-get update
-sudo apt-get install zenity
-```
-
-## Install The MEME Suite (FIMO and fasta-get-markov)
+**3.2 Install The MEME Suite (FIMO and fasta-get-markov)**
 
 ```bash
 # cd a folder you want to put the software
@@ -134,7 +143,7 @@ Add following into bash profile file.
 export PATH=$HOME/meme/bin:$HOME/meme/libexec/meme-5.5.2:$PATH
 ```
 
-## Install samtools
+**3.3 Install samtools**
 
 Install from conda or mamba:
 
@@ -155,14 +164,11 @@ make
 make install
 
 # Add following into bash profile file or .zshrc (if zsh used).
-
 # assuming you put samtools-1.17 folder under your home folder
 export PATH=$HOME/samtools/bin:$PATH
 ```
 
-## Install bedtools
-
-It is recommended to install bedtools via apt/yum or conda.
+**3. 4 Install bedtools**
 
 ```bash
 conda install -c bioconda bedtools
@@ -171,16 +177,13 @@ conda install -c bioconda bedtools
 or
 
 ```bash
-conda install bedtools
-
 # Debian/Ubuntu
 apt-get install bedtools
-
 # Fedora/Centos
 yum install BEDTools
 ```
 
-It is possible to compile the bedtools by running the following commands.
+or
 
 ```bash
 wget https://github.com/arq5x/bedtools2/releases/download/v2.29.1/bedtools-2.29.1.tar.gz
@@ -189,7 +192,7 @@ cd bedtools2
 make
 ```
 
-## Python libraries
+## 4. Python libraries
 
 ```bash
 pip install numpy
