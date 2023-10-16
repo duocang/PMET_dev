@@ -59,7 +59,8 @@ echo -e "\n\n"
 print_middle "The purpose of this script is to                                      \n"
 print_middle "  1. assign execute permissions to all users for bash and perl files    "
 print_middle "  2. compile binaries needed by Shiny app                               "
-print_middle "  3. install python package                                           \n"
+print_middle "  3. install python package                                             "
+print_middle "  4. check needed tools                                               \n"
 print_middle "                                                                      \n"
 
 if [ -d .git ]; then
@@ -195,6 +196,31 @@ else
     print_orange "No python packages installed"
 fi
 
+################################ 4. check needed tools #################################
+print_green "\n7. Checking the existence of GNU Parallel, bedtools, samtools and MEME Suite "
+# List of tools to check
+tools=("parallel" "bedtools" "samtools" "fimo")
+
+# Assume all tools are installed until one is not found
+all_tools_found=true
+
+# Iterate over each tool and check if it is installed
+for tool in "${tools[@]}"; do
+    if ! command -v $tool &> /dev/null
+    then
+        print_red "$tool could not be found"
+        all_tools_found=false
+        # Optionally exit or continue to check other tools
+        # exit 1
+    fi
+done
+
+# If all tools were found, print a positive message
+if $all_tools_found; then
+    print_green "All tools were found!"
+else
+    print_red "Please install them and rerun the script"
+fi
 
 print_green "\nDONE"
 
