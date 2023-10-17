@@ -177,9 +177,9 @@ $pmetroot/gff3sort/gff3sort.pl $gff3file > $indexingOutputDir/sorted.gff3
 print_fluorescent_yellow "     2. Extracting gene line from annoitation"
 # grep -P '\mRNA\t' $indexingOutputDir/sorted.gff3 > $indexingOutputDir/mRNAlines.gff3
 if [[ "$(uname)" == "Linux" ]]; then
-    grep -P '\mRNA\t' $indexingOutputDir/sorted.gff3 > $indexingOutputDir/mRNAlines.gff3
+    grep -P "\t${element}\t" $indexingOutputDir/sorted.gff3 > $indexingOutputDir/mRNAlines.gff3
 elif [[ "$(uname)" == "Darwin" ]]; then
-    grep '\mRNA\t' $indexingOutputDir/sorted.gff3 > $indexingOutputDir/mRNAlines.gff3
+    grep    "\t${element}\t" $indexingOutputDir/sorted.gff3 > $indexingOutputDir/mRNAlines.gff3
 else
     print_red "Unsupported operating system."
 fi

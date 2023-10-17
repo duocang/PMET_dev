@@ -41,6 +41,8 @@ find . -type f \( -name "*.sh" -o -name "*.pl" \) -exec chmod a+x {} \;
 
 
 ################################ 1. input parameters ####################################
+threads=24
+
 # homotypic
 genomic_element=mRNA
 delete_temp=no
@@ -82,7 +84,7 @@ scripts/PMETindex_mRNA.sh                             \
     -p 1000                                           \
     -v NoOverlap                                      \
     -u Yes                                            \
-    -t 8                                              \
+    -t $threads                                       \
     -d $delete_temp                                   \
     data/homotypic_promoters/genome.fasta             \
     data/homotypic_promoters/anno.gff3                \
@@ -124,7 +126,7 @@ if [[ -f "$homotypic_output/universe.txt" ]]; then
         -c $homotypic_output/IC.txt                  \
         -f $homotypic_output/fimohits                \
         -o $heterotypic_output                       \
-        -t 8 > $heterotypic_output/pmet.log
+        -t $threads > $heterotypic_output/pmet.log
 
     rm $heterotypic_output/new_genes_temp.txt
     # merge pmet result
