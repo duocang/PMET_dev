@@ -1,5 +1,7 @@
 #!/bin/bash
 
+start_time=$SECONDS
+
 function error_exit() {
     echo "ERROR: $1" >&2
     usage
@@ -37,43 +39,35 @@ print_white(){
 }
 
 
+gene_input_file=data/gene.txt
 
-id=gene_cortex_epidermis_pericycle
-gene_input_file=data/genes/$id.txt
-
-output=results/02_heterotypic_mRNA/Franco-Zorrilla_et_al_2014/02_heterotypic_promoters_$id
-indexoutput=results/01_homotypic_mRNA/Franco-Zorrilla_et_al_2014/01_homotypic_index
-
-
-
->$output/new_genes.txt
-
-
-while IFS=$'\r\n' read -r line; do
-    line=$(echo -n "$line")
-    IFS=' ' read -ra parts <<< "$line"
-    cluster="${parts[0]}"
-    gene="${parts[1]}"
-    printf "%s.%d\n" "$line" "1"  >> $output/new_genes.txt
-
-    awk -v pattern="^${gene}\\." -v clus="$cluster" '$0 ~ pattern {print clus, $0}' "$indexoutput/universe_isoform.txt" >> "$output/new_genes.txt"
-done < "$gene_input_file"
-
-
-
-
-
+output=results/02_heterotypic_mRNA
+indexoutput=results/01_homotypic_mRNA
 
 
 # ---------------------------- gene name to transcript name ----------------------
 
 if [[ -f "$indexoutput/universe.txt" ]]; then
-    print_green "Searching for heterotypic motif hits..."
     mkdir -p $output
+
+    print_green "Preparing transcripts ID in all clusters..."
+
+    >$output/new_genes.txt
+    while IFS=$'\r\n' read -r line; do
+        line=$(echo -n "$line")
+        IFS=' ' read -ra parts <<< "$line"
+        cluster="${parts[0]}"
+        gene="${parts[1]}"
+        printf "%s.%d\n" "$line" "1"  >> $output/new_genes.txt
+
+        awk -v pattern="^${gene}." -v clus="$cluster" '$0 ~ pattern {print clus, $0}' "$indexoutput/universe_isoform.txt" >> "$output/new_genes.txt"
+    done < "$gene_input_file"
 
     # remove genes not present in pre-computed pmet index
     grep -Ff $indexoutput/universe.txt $output/new_genes.txt > $output/new_genes_temp.txt
     rm $output/new_genes.txt
+
+    print_green "Searching for heterotypic motif hits..."
 
     scripts/pmetParallel\
         -d .                                    \
@@ -95,3 +89,13 @@ else
     print_red "Nothing found in $indexoutput.\n"
     print_fluorescent_yellow "Please run 01_homotypic_promoters.sh first."
 fi
+
+
+end_time=$SECONDS
+elapsed_time=$((end_time - start_time))
+days=$((elapsed_time/86400))
+hours=$(( (elapsed_time%86400)/3600 ))
+minutes=$(( (elapsed_time%3600)/60 ))
+seconds=$((elapsed_time%60))
+
+echo "Time taken: $days day $hours hour $minutes minute $seconds second"

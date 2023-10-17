@@ -349,7 +349,8 @@ fasta-get-markov $indexingOutputDir/mRNA.fa > $indexingOutputDir/mRNA.bg
 # 20. individual motif files from user's meme file
 print_fluorescent_yellow "    20. Spliting motifs into individual meme files (folder memefiles)"
 [ ! -d $indexingOutputDir/memefiles ] && mkdir $indexingOutputDir/memefiles
-python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
+# python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
+python3 $pmetroot/parse_memefile_batches.py $memefile $indexingOutputDir/memefiles/ $threads
 
 # -------------------------------------------------------------------------------------------
 # 21. IC.txt
@@ -359,7 +360,6 @@ python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
     $indexingOutputDir/IC.txt
 
 # -------------------------------- Run fimo and pmetindex --------------------------
-[ ! -d $indexingOutputDir/fimo     ] && mkdir $indexingOutputDir/fimo
 [ ! -d $indexingOutputDir/fimohits ] && mkdir $indexingOutputDir/fimohits
 
 print_green "Running FIMO and PMET index..."
@@ -406,13 +406,14 @@ runFimoIndexing () {
 }
 export -f runFimoIndexing
 
-numfiles=$(ls -l $indexingOutputDir/memefiles/*.txt | wc -l)
-print_orange "    $numfiles motifs found"
+
+nummotifs=$(grep -c '^MOTIF' "$memefile")
+print_orange "    $nummotifs motifs found"
+
 
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
-
 
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
@@ -427,19 +428,18 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 
 # ----------------------- Deleting unnecessary files ----------------------
-print_green "Deleting unnecessary files...\n\n"
-
+# print_green "Deleting unnecessary files...\n\n"
 # rm -f $indexingOutputDir/mRNAlines.gff3
 # rm -f $indexingOutputDir/bedgenome.genome
-# rm -f $bedfile
 # rm -f $indexingOutputDir/genome_stripped.fa
 # rm -f $indexingOutputDir/genome_stripped.fa.fai
-# rm -f $indexingOutputDir/promoters.bed
 # rm -f $indexingOutputDir/mRNA_rought.fa
+# rm -f $indexingOutputDir/mRNA.bg
+# rm -f $bedfile
+# rm -f $indexingOutputDir/promoters.bed
 # rm -f $indexingOutputDir/mRNA_negative.txt
 # rm -f $indexingOutputDir/promoter_length_deleted.txt
 # rm -r $indexingOutputDir/memefiles
-# rm -f $indexingOutputDir/mRNA.bg
 # rm -f $indexingOutputDir/mRNA.fa
 # rm -f $indexingOutputDir/sorted.gff3
 # rm -f $indexingOutputDir/pmetindex.log
@@ -450,18 +450,21 @@ print_green "Deleting unnecessary files...\n\n"
 # Count the number of .txt files in the $indexingOutputDir/fimohits directory
 file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
 
-# 检查文件数量是否等于 meotif的数量 （$numfiles）
-# Check if the number of files equals the number of meotifs ($numfiles)
-if [ "$file_count" -eq "$numfiles" ]; then
-    touch ${indexingOutputDir}_FLAG
+# 检查文件数量是否等于 meotif的数量 （$nummotifs）
+# Check if the number of files equals the number of meotifs ($nummotifs)
+if [ "$file_count" -eq "$nummotifs" ]; then
 
-    end=$(date +%s)
-    time_taken=$((end - start))
-    print_orange "Time taken: $time_taken seconds"
+    end=$SECONDS
+    elapsed_time=$((end - start))
+    days=$((elapsed_time/86400))
+    hours=$(( (elapsed_time%86400)/3600 ))
+    minutes=$(( (elapsed_time%3600)/60 ))
+    seconds=$((elapsed_time%60))
+    print_orange "Time take: $days day $hours hour $minutes minute $seconds seconds"
 
     print_green "DONE"
 else
-    print_red "\nError: there are $file_count fimohits files, it should be $numfiles."
+    print_red "\nError: there are $file_count fimohits files, it should be $nummotifs."
 fi
 
 # # next stage needs the following inputs

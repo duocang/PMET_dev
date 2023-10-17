@@ -61,32 +61,26 @@ cd ..
 # check if fimo ready for PMETindex
 print_fluorescent_yellow "Checking if fimo result (txt files) ready for PMET index\n"
 
-output=results/01_homotypic_mRNA/Franco-Zorrilla_et_al_2014/01_homotypic_index
+output=results/01_homotypic_mRNA
+mkdir -p $output/fimohits
 
-directory=$output/fimo
-mkdir -p $output/fimo
 
-txt_files=$(find "$directory" -name "*.txt")
-if [ -n "$txt_files" ]; then
-    print_green "Yes, (FIMO result) txt files exist in $output/fimo.\n"
-else
-    print_red   "   No FIMO result (txt files) found in $output/fimo.\n"
-    print_green "Running fimo...\n"
+print_green "Running fimo...\n"
 
-    scripts/PMETindex_mRNA.sh                             \
-        -r scripts                                        \
-        -o $output                                        \
-        -i ID=transcript:                                 \
-        -k 5                                              \
-        -n 5000                                           \
-        -p 1000                                           \
-        -v NoOverlap                                      \
-        -u Yes                                            \
-        -t 8                                              \
-        data/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa  \
-        data/Arabidopsis_thaliana.TAIR10.56.gff3          \
-        data/motifs/meme_Franco-Zorrilla_et_al_2014/ArabidopsisPBM_20140210.meme
-fi
+scripts/PMETindex_mRNA.sh                             \
+    -r scripts                                        \
+    -o $output                                        \
+    -i ID=transcript:                                 \
+    -k 5                                              \
+    -n 5000                                           \
+    -p 1000                                           \
+    -v NoOverlap                                      \
+    -u Yes                                            \
+    -t 8                                              \
+    data/homotypic_promoters/genome.fasta             \
+    data/homotypic_promoters/anno.gff3                \
+    data/Franco-Zorrilla_et_al_2014.meme
+
 
 # ########################## Running pmet indexing ##################################
 # print_green "Running pmet indexing...\n"
