@@ -44,12 +44,11 @@ find . -type f \( -name "*.sh" -o -name "*.pl" \) -exec chmod a+x {} \;
 # homotypic
 genomic_element=mRNA
 delete_temp=no
-homotypic_output=results/01_homotypic_mRNA
+homotypic_output=results/mRNA/01_homotypic
 
 # heterotypic
 gene_input_file=data/gene.txt
-heterotypic_output=results/02_heterotypic_mRNA
-homotypic_output=results/01_homotypic_mRNA
+heterotypic_output=results/mRNA/02_heterotypic
 ################################ input parameters ####################################
 
 
