@@ -88,6 +88,8 @@ topn=5000
 maxk=5
 promlength=1000
 fimothresh=0.05
+element=mRNA
+delete=yes
 overlap="AllowOverlap"
 utr="No"
 gff3id='transcript:'
@@ -111,7 +113,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
+while getopts ":r:i:o:n:k:p:f:g:v:u:e:t:d:" options; do
     case $options in
         r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -131,8 +133,12 @@ while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
         overlap=$OPTARG;;
         u) print_white "Include 5' UTR sequence?               : "; print_orange "$OPTARG" >&2
         utr=$OPTARG;;
+        e) print_white "Genomic element                        : "; print_orange "$OPTARG" >&2
+        element=$OPTARG;;
         t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
         threads=$OPTARG;;
+        d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
+        delete=$OPTARG;;
         \?) print_red  "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  print_red "Option -$OPTARG requires an argument." >&2
@@ -325,10 +331,6 @@ awk -F'.' '$NF != 1' $universefile > $indexingOutputDir/universe_isoform.txt
 # -------------------------------------------------------------------------------------------
 # 17. create promoters fasta
 print_fluorescent_yellow "    17. Creating mRNA FASTA file (mRNA_rought.fa)";
-# bedtools getfasta -fi \
-#     $indexingOutputDir/genome_stripped.fa \
-#     -bed $indexingOutputDir/promoters.bed \
-#     -s -fo $indexingOutputDir/mRNA_rought.fa
 bedtools getfasta \
         -fi  $indexingOutputDir/genome_stripped.fa \
         -bed $indexingOutputDir/mRNAlines.bed      \
@@ -411,7 +413,6 @@ export -f runFimoIndexing
 nummotifs=$(grep -c '^MOTIF' "$memefile")
 print_orange "    $nummotifs motifs found"
 
-
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
@@ -428,25 +429,30 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 # done
 
 
-# ----------------------- Deleting unnecessary files ----------------------
-# print_green "Deleting unnecessary files...\n\n"
-# rm -f $indexingOutputDir/mRNAlines.gff3
-# rm -f $indexingOutputDir/bedgenome.genome
-# rm -f $indexingOutputDir/genome_stripped.fa
-# rm -f $indexingOutputDir/genome_stripped.fa.fai
-# rm -f $indexingOutputDir/mRNA_rought.fa
-# rm -f $indexingOutputDir/mRNA.bg
-# rm -f $bedfile
-# rm -f $indexingOutputDir/promoters.bed
-# rm -f $indexingOutputDir/mRNA_negative.txt
-# rm -f $indexingOutputDir/promoter_length_deleted.txt
-# rm -r $indexingOutputDir/memefiles
-# rm -f $indexingOutputDir/mRNA.fa
-# rm -f $indexingOutputDir/sorted.gff3
-# rm -f $indexingOutputDir/pmetindex.log
-# rm -f $indexingOutputDir/promoter_lengths_all.txt
-# rm -f $indexingOutputDir/promoters_before_filter.bed
+# -------------------------------------------------------------------------------------------
+# Deleting unnecessary files
+if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then
+    print_green "Deleting unnecessary files...\n\n"
+    rm -f $indexingOutputDir/bedgenome.genome
+    rm -f $indexingOutputDir/genome_stripped.fa
+    rm -f $indexingOutputDir/genome_stripped.fa.fai
+    mr -f $indexingOutputDir/memefiles
+    rm -f $indexingOutputDir/mRNA_rought.fa
+    rm -f $indexingOutputDir/mRNA.bg
+    rm -f $indexingOutputDir/mRNAlines.gff3
+    rm -f $bedfile
+    rm -f $indexingOutputDir/promoter_length_deleted.txt
+    rm -r $indexingOutputDir/memefiles
+    rm -f $indexingOutputDir/mRNA.fa
+    rm -f $indexingOutputDir/sorted.gff3
+    rm -f $indexingOutputDir/pmetindex.log
+    rm -f $indexingOutputDir/promoter_lengths_all.txt
+    rm -f $indexingOutputDir/promoters_before_filter.bed
+fi
 
+# -------------------------------------------------------------------------------------------
+# Checking results
+print_green "Checking results...\n\n"
 # 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
 # Count the number of .txt files in the $indexingOutputDir/fimohits directory
 file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
@@ -454,7 +460,6 @@ file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt
 # 检查文件数量是否等于 meotif的数量 （$nummotifs）
 # Check if the number of files equals the number of meotifs ($nummotifs)
 if [ "$file_count" -eq "$nummotifs" ]; then
-
     end=$SECONDS
     elapsed_time=$((end - start))
     days=$((elapsed_time/86400))
