@@ -346,18 +346,19 @@ print_fluorescent_yellow "    19. fasta-get-markov estimates a Markov model from
 fasta-get-markov $indexingOutputDir/mRNA.fa > $indexingOutputDir/mRNA.bg
 
 # -------------------------------------------------------------------------------------------
-# 20. individual motif files from user's meme file
-print_fluorescent_yellow "    20. Spliting motifs into individual meme files (folder memefiles)"
+# 20. IC.txt
+print_fluorescent_yellow "    20. Generating information content (IC.txt)"
 [ ! -d $indexingOutputDir/memefiles ] && mkdir $indexingOutputDir/memefiles
-# python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
-python3 $pmetroot/parse_memefile_batches.py $memefile $indexingOutputDir/memefiles/ $threads
-
-# -------------------------------------------------------------------------------------------
-# 21. IC.txt
-print_fluorescent_yellow "    21. Generating information content (IC.txt)"
+python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
 python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
     $indexingOutputDir/memefiles/ \
     $indexingOutputDir/IC.txt
+rm -rf $indexingOutputDir/memefiles/*
+
+# -------------------------------------------------------------------------------------------
+# 21. individual motif files from user's meme file
+print_fluorescent_yellow "    21. Spliting motifs into individual meme files (folder memefiles)"
+python3 $pmetroot/parse_memefile_batches.py $memefile $indexingOutputDir/memefiles/ $threads
 
 # -------------------------------- Run fimo and pmetindex --------------------------
 [ ! -d $indexingOutputDir/fimohits ] && mkdir $indexingOutputDir/fimohits
