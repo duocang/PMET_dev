@@ -173,8 +173,8 @@ python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
 
 shopt -s nullglob # prevent loop produncing '*.txt'
 
-numfiles=$(ls -l $outputdir/memefiles/*.txt | wc -l)
-print_orange "$numfiles motifs found"
+nummotifs=$(grep -c '^MOTIF' "$memefile")
+print_orange "    $nummotifs motifs found"
 
 n=0
 # paralellise this loop

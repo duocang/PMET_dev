@@ -357,7 +357,8 @@ fasta-get-markov $indexingOutputDir/promoters.fa > $indexingOutputDir/promoters.
 # 20. individual motif files from user's meme file
 print_fluorescent_yellow "    20. Spliting motifs into individual meme files (folder memefiles)"
 [ ! -d $indexingOutputDir/memefiles ] && mkdir $indexingOutputDir/memefiles
-python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
+# python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
+python3 $pmetroot/parse_memefile_batches.py $memefile $indexingOutputDir/memefiles/ $threads
 
 # -------------------------------------------------------------------------------------------
 # 21. IC.txt
@@ -414,8 +415,8 @@ runFimoIndexing () {
 }
 export -f runFimoIndexing
 
-numfiles=$(ls -l $indexingOutputDir/memefiles/*.txt | wc -l)
-print_orange "    $numfiles motifs found"
+nummotifs=$(grep -c '^MOTIF' "$memefile")
+print_orange "    $nummotifs motifs found"
 
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
@@ -451,18 +452,20 @@ rm -f $indexingOutputDir/promoters_before_filter.bed
 # Count the number of .txt files in the $indexingOutputDir/fimohits directory
 file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
 
-# 检查文件数量是否等于 meotif的数量 （$numfiles）
-# Check if the number of files equals the number of meotifs ($numfiles)
-if [ "$file_count" -eq "$numfiles" ]; then
+# 检查文件数量是否等于 meotif的数量 （$nummotifs）
+# Check if the number of files equals the number of meotifs ($nummotifs)
+if [ "$file_count" -eq "$nummotifs" ]; then
     touch ${indexingOutputDir}_FLAG
 
-    end=$(date +%s)
-    time_taken=$((end - start))
-    print_orange "Time taken: $time_taken seconds"
-
-    print_green "DONE"
+    end=$SECONDS
+    elapsed_time=$((end - start))
+    days=$((elapsed_time/86400))
+    hours=$(( (elapsed_time%86400)/3600 ))
+    minutes=$(( (elapsed_time%3600)/60 ))
+    seconds=$((elapsed_time%60))
+    print_orange "Time take: $days day $hours hour $minutes minute $seconds seconds"
 else
-    print_green "Error: there are $file_count fimohits files, it should be $numfiles."
+    print_green "Error: there are $file_count fimohits files, it should be $nummotifs."
 fi
 
 
