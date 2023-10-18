@@ -434,9 +434,9 @@ if [ "$file_count" -eq "$nummotifs" ]; then
     hours=$(( (elapsed_time%86400)/3600 ))
     minutes=$(( (elapsed_time%3600)/60 ))
     seconds=$((elapsed_time%60))
-    print_orange "Time take: $days day $hours hour $minutes minute $seconds seconds"
+    print_orange "      Time take: $days day $hours hour $minutes minute $seconds seconds"
 
-    print_green "DONE"
+    print_green "DONE: homotypic search"
 else
     print_red "\nError: there are $file_count fimohits files, it should be $nummotifs."
 fi

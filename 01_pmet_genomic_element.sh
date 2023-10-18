@@ -121,7 +121,7 @@ if [[ -f "$homotypic_output/universe.txt" ]]; then
     # remove genes not present in pre-computed pmet index
     grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
 
-    print_green "Searching for heterotypic motif hits..."
+    print_green "\n\nSearching for heterotypic motif hits...\n"
 
     scripts/pmetParallel                             \
         -d .                                         \
@@ -139,13 +139,18 @@ if [[ -f "$homotypic_output/universe.txt" ]]; then
     cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
     rm $heterotypic_output/temp*.txt
 
+    # remove genes not present in pre-computed pmet index
+    grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
+
     end_time=$SECONDS
     elapsed_time=$((end_time - start_time))
     days=$((elapsed_time/86400))
     hours=$(( (elapsed_time%86400)/3600 ))
     minutes=$(( (elapsed_time%3600)/60 ))
     seconds=$((elapsed_time%60))
-    print_green "Time taken: $days day $hours hour $minutes minute $seconds second"
+    print_orange "      Time taken: $days day $hours hour $minutes minute $seconds second\n"
 else
     print_red "Nothing found in $homotypic_output.\n"
 fi
+
+print_green "DONE: heterotypic search"
