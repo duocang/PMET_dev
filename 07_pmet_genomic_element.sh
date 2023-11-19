@@ -44,7 +44,7 @@ start_time=$SECONDS
 
 ################################ 1. input parameters ####################################
 threads=24
-ret_dir=results/genomic_element
+ret_dir=results/07_genomic_element
 
 # homotypic
 topn=5000
