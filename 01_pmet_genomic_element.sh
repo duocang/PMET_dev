@@ -40,6 +40,8 @@ print_white(){
 find . -type f \( -name "*.sh" -o -name "*.pl" \) -exec chmod a+x {} \;
 
 
+start_time=$SECONDS
+
 ################################ 1. input parameters ####################################
 threads=24
 ret_dir=results/genomic_element
@@ -50,12 +52,19 @@ maxk=5
 length=1000
 genomic_element=three_prime_UTR
 gff3id='Parent=transcript:'
-delete_temp=no
-homotypic_output=$ret_dir/01_homotypic
+# genomic_element=five_prime_UTR
+# gff3id='Parent=transcript:'
+# genomic_element=mRNA
+# gff3id='ID=transcript:'
+
+
+
+delete_temp=yes
+homotypic_output=$ret_dir/01_homotypic_$genomic_element
 
 # heterotypic
 gene_input_file=data/gene.txt
-heterotypic_output=$ret_dir/02_heterotypic
+heterotypic_output=$ret_dir/02_heterotypic_$genomic_element
 ################################ input parameters ####################################
 
 
@@ -79,7 +88,7 @@ cd ..
 ############################## 3. Running homotypic #################################
 print_green "Running homotypic searching...\n"
 
-scripts/PMETindex_mRNA.sh                   \
+scripts/PMETindex_genomic_element.sh        \
     -r scripts                              \
     -o $homotypic_output                    \
     -e $genomic_element                     \

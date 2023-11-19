@@ -192,7 +192,6 @@ python3 $pmetroot/parse_mRNAlines.py $gff3id $indexingOutputDir/genelines.gff3 $
 
 # -------------------------------------------------------------------------------------------
 # 4. filter invalid genes: start should be smaller than end
-
 invalidRows=$(awk '$2 >= $3' $bedfile)
 if [[ -n "$invalidRows" ]]; then
     echo "$invalidRows" > $indexingOutputDir/invalid_mRNAlines.bed
@@ -225,7 +224,7 @@ awk '/^>/ { if (NR!=1) print ""; printf "%s\n",$0; next;} \
 print_fluorescent_yellow "     7. Promoter lengths from genelines.bed (mRNA_lengths_all.txt)"
 awk '{print $4 "\t" ($3 - $2)}' $indexingOutputDir/genelines.bed \
     > $indexingOutputDir/promoter_lengths_all.txt
-
+cp $indexingOutputDir/promoter_lengths_all.txt $indexingOutputDir/7_promoter_lengths_all.txt
 
 
 # -------------------------------------------------------------------------------------------
@@ -255,7 +254,7 @@ END {
 
 rm -rf $indexingOutputDir/promoter_lengths_all.txt
 mv $indexingOutputDir/promoter_lengths_max.txt $indexingOutputDir/promoter_lengths_all.txt
-
+cp $indexingOutputDir/promoter_lengths_all.txt $indexingOutputDir/8_promoter_lengths_all.txt
 
 # -------------------------------------------------------------------------------------------
 # 9. filters out the rows with NEGATIVE lengths
@@ -270,7 +269,7 @@ while read -r gene length; do
         echo "$gene $length" >> $indexingOutputDir/promoter_lengths_deleted.txt
     fi
 done < $indexingOutputDir/promoter_lengths_all.txt
-
+cp $indexingOutputDir/promoter_lengths.txt $indexingOutputDir/9_promoter_lengths.txt
 
 # -------------------------------------------------------------------------------------------
 # 10. find NEGATIVE genes
@@ -279,6 +278,7 @@ if [ -f "$indexingOutputDir/promoter_lengths_deleted.txt" ]; then
     cut -d " " \
         -f1  $indexingOutputDir/promoter_lengths_deleted.txt \
         > $indexingOutputDir/promoter_negative.txt
+    cp $indexingOutputDir/promoter_negative.txt $indexingOutputDir/10_promoter_negative.txt
 else
     print_fluorescent_yellow "    10. (skipped) Finding genes with NEGATIVE promoter lengths (promoter_negative.txt)"
 fi
@@ -297,6 +297,26 @@ awk 'NR==FNR{genes[$1]=1; next} genes[$4]'     \
     $indexingOutputDir/genelines.bed           \
     > $indexingOutputDir/matched_promoterlines.bed
 
+
+# some isoform can be duplicated
+# keep one with longger sequence
+awk '{
+        diff = $3 - $2
+        if (!max[$4] || diff > max_diff[$4]) {
+            max[$4] = $0
+            max_diff[$4] = diff
+        }
+    }
+    END {
+        for (isoform in max) {
+            print max[isoform]
+        }
+    }' $indexingOutputDir/matched_promoterlines.bed > $indexingOutputDir/11_matched_promoterlines.bed
+
+    sort -k4,4 $indexingOutputDir/11_matched_promoterlines.bed > $indexingOutputDir/11_matched_promoterlines_sorted.bed
+
+    rm $indexingOutputDir/matched_promoterlines.bed
+    mv $indexingOutputDir/11_matched_promoterlines_sorted.bed $indexingOutputDir/matched_promoterlines.bed
 
 # -------------------------------------------------------------------------------------------
 # 13. convert isoform name to it gene
@@ -328,6 +348,10 @@ bedtools getfasta \
 # 15. replace the id of each seq with gene names
 print_fluorescent_yellow "    15. Replacing the id of each sequences' with gene names (promoter.fa)"
 sed 's/::.*//g' $indexingOutputDir/promoter_rought.fa > $indexingOutputDir/promoter.fa
+
+# check if any duplicated id
+grep "^>" $indexingOutputDir/promoter.fa > $indexingOutputDir/ids.txt
+sort $indexingOutputDir/ids.txt | uniq -d > $indexingOutputDir/duplicate_ids.txt
 
 # -------------------------------------------------------------------------------------------
 # 16. promoter.bg from promoter.fa
@@ -388,34 +412,42 @@ find $indexingOutputDir/memefiles -name \*.txt \
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 
-# # -------------------------------- Transcript to gene --------------------------
-# print_fluorescent_yellow "\n\nChangingg transcript names to gene names...\n";
+# -------------------------------- Transcript to gene --------------------------
+print_fluorescent_yellow "\n\nChangingg transcript names to gene names...\n";
 
-# for file in "$indexingOutputDir"/fimohits/*.txt; do
-#     awk 'BEGIN {FS=OFS="\t"} {sub(/\.[0-9]+$/, "", $2)} 1' "$file" > "${file}.tmp"
-#     mv "${file}.tmp" "$file"
-# done
+for file in "$indexingOutputDir"/fimohits/*.txt; do
+    awk 'BEGIN {FS=OFS="\t"} {sub(/\.[0-9]+$/, "", $2)} 1' "$file" > "${file}.tmp"
+    mv "${file}.tmp" "$file"
+done
 
 
 # -------------------------------------------------------------------------------------------
 # Deleting unnecessary files
 if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then
     print_green "Deleting unnecessary files...\n\n"
-    rm -f $indexingOutputDir/bedgenome.genome
-    rm -f $indexingOutputDir/genome_stripped.fa
-    rm -f $indexingOutputDir/genome_stripped.fa.fai
-    mr -f $indexingOutputDir/memefiles
-    rm -f $indexingOutputDir/promoter_rought.fa
-    rm -f $indexingOutputDir/promoter.bg
-    rm -f $indexingOutputDir/genelines.gff3
-    rm -f $bedfile
-    rm -f $indexingOutputDir/promoter_length_deleted.txt
-    rm -r $indexingOutputDir/memefiles
-    rm -f $indexingOutputDir/promoter.fa
-    rm -f $indexingOutputDir/sorted.gff3
-    rm -f $indexingOutputDir/pmetindex.log
-    rm -f $indexingOutputDir/promoter_lengths_all.txt
-    rm -f $indexingOutputDir/promoters_before_filter.bed
+    rm -rf $indexingOutputDir/7_promoter_lengths_all.txt
+    rm -rf $indexingOutputDir/8_promoter_lengths_all.txt
+    rm -rf $indexingOutputDir/9_promoter_lengths.txt
+    rm -rf $indexingOutputDir/11_matched_promoterlines.bed
+    rm -rf $indexingOutputDir/bedgenome.genome
+    rm -rf $indexingOutputDir/cleaned_matched_promoterlines.bed
+    rm -rf $indexingOutputDir/genome_stripped.fa
+    rm -rf $indexingOutputDir/genome_stripped.fa.fai
+    rm -rf $indexingOutputDir/invalid_mRNAlines.bed
+    rm -rf $indexingOutputDir/matched_promoterlines.bed
+    rm -rf $indexingOutputDir/memefiles
+    rm -rf $indexingOutputDir/promoter_rought.fa
+    rm -rf $indexingOutputDir/promoter.bg
+    rm -rf $indexingOutputDir/genelines.gff3
+    rm -rf $bedfile
+    rm -rf $indexingOutputDir/promoter_length_deleted.txt
+    rm -rf $indexingOutputDir/promoter.fa
+    rm -rf $indexingOutputDir/sorted.gff3
+    rm -rf $indexingOutputDir/pmetindex.log
+    rm -rf $indexingOutputDir/promoter_lengths_all.txt
+    rm -rf $indexingOutputDir/promoters_before_filter.bed
+    rm -rf $indexingOutputDir/duplicate_ids.txt
+    rm -rf $indexingOutputDir/ids.txt
 fi
 
 # -------------------------------------------------------------------------------------------
