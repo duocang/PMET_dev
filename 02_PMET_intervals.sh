@@ -40,47 +40,92 @@ print_white(){
 chmod a+x scripts/cpp_debug_needed/homotypic_intervals.sh
 
 ##################################### Parameters #######################################
-indexOutput=results/02_PMET_intervals/homotypic
+# tool
+toolDir=scripts
+HOMOTYPIC=$toolDir/cpp_debug_needed/homotypic_intervals.sh
+HETEROTYPIC=$toolDir/pmetParallel
 
-output=results/02_PMET_intervals/heterotypic
+chmod a+x $HOMOTYPIC
+chmod a+x $HETEROTYPIC
+
+threads=24
+res_dir=results/02_PMET_intervals
+
+# homotypic
+gff3id="gene_id="
+noOverlap="NoOverlap"
+utr="No"
+topn=5000
+maxk=5
+length=1000
+fimothresh=0.05
+distance=1000
+gff3id="gene_id="
+delete_temp=yes
+
+
+# data
+genome=data/homotypic_intervals/intervals.fa
+meme=data/homotypic_intervals/motif_more.meme
+
+# output
+homotypic_output=$res_dir/01_homotypic
+
+
+# heterotypic
+task=gene
 gene_input_file=data/homotypic_intervals/intervals.txt
+heterotypic_output=$res_dir/02_heterotypic
+icthresh=4
+
+mkdir -p $homotypic_output
+mkdir -p $heterotypic_output
+
 
 ##################################### Running FIMO #####################################
 print_green "Running fimo...\n"
 
-scripts/cpp_debug_needed/homotypic_intervals.sh  \
-    -r scripts                                   \
-    -o $indexOutput                              \
-    -n 5000                                      \
-    -k 5                                         \
-    -f 0.05                                      \
-    -t 8                                         \
-    data/homotypic_intervals/intervals.fa        \
-    data/homotypic_intervals/motif_more.meme
+$HOMOTYPIC               \
+    -r $toolDir          \
+    -o $homotypic_output \
+    -k $maxk             \
+    -n $topn             \
+    -f $fimothresh       \
+    -t $threads          \
+    $genome              \
+    $meme
 
 
 
 ################################### Heterotypic #####################################
 
 # # remove genes not present in promoter_lengths.txt
-# awk -F"\t" '{print $1"\t"}' indexOutput/promoter_lengths.txt > indexOutput/temp_genes_list.txt
-# cat indexOutput/temp_genes_list.txt | while read line; do
+# awk -F"\t" '{print $1"\t"}' homotypic_output/promoter_lengths.txt > homotypic_output/temp_genes_list.txt
+# cat homotypic_output/temp_genes_list.txt | while read line; do
 #     grep $line $gene_input_file
 # done > genes/temp_${task}.txt
-# rm indexOutput/temp_genes_list.txt
+# rm homotypic_output/temp_genes_list.txt
 
 print_green "Searching for heterotypic motif hits..."
 mkdir -p $output
-scripts/pmetParallel                        \
-    -d .                                    \
-    -g $gene_input_file                     \
-    -i 4                                    \
-    -p $indexOutput/promoter_lengths.txt    \
-    -b $indexOutput/binomial_thresholds.txt \
-    -c $indexOutput/IC.txt                  \
-    -f $indexOutput/fimohits                \
-    -o $output                              \
-    -t 1
+$HETEROTYPIC                                     \
+    -d .                                         \
+    -g $gene_input_file                          \
+    -i $icthresh                                 \
+    -p $homotypic_output/promoter_lengths.txt    \
+    -b $homotypic_output/binomial_thresholds.txt \
+    -c $homotypic_output/IC.txt                  \
+    -f $homotypic_output/fimohits                \
+    -o $heterotypic_output                       \
+    -t $threads
 
-cat $output/*.txt > $output/motif_output.txt
-rm $output/temp*.txt
+cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+rm $heterotypic_output/temp*.txt
+
+
+##################################### Heatmap ##################################
+
+Rscript 05_heatmap.R                     \
+    Overlap                              \
+    $heterotypic_output/heatmap.png      \
+    $heterotypic_output/motif_output.txt

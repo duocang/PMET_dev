@@ -39,7 +39,53 @@ print_white(){
 # Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
 chmod a+x scripts/gff3sort/gff3sort.pl
-########################## Downloading data #######################################
+
+
+
+################################ 1. input parameters ###################################
+# tool
+toolDir=scripts
+HOMOTYPIC=$toolDir/PMETindex_promoters_with_distance_tss_fimo_intergrated.sh
+HETEROTYPIC=$toolDir/pmetParallel
+
+chmod a+x $HOMOTYPIC
+chmod a+x $HETEROTYPIC
+
+threads=24
+res_dir=results/07_homotypic_promoters_with_distance_to_tss
+
+# homotypic
+gff3id="gene_id="
+noOverlap="NoOverlap"
+utr="No"
+topn=5000
+maxk=5
+length=300
+fimothresh=0.05
+gap=100
+promlengthlimit=300
+gff3id="gene_id="
+delete_temp=yes
+
+# data
+genome=data/homotypic_promoters/genome.fasta
+anno=data/homotypic_promoters/anno.gff3
+meme=data/Franco-Zorrilla_et_al_2014.meme
+
+# output
+homotypic_output=$res_dir/01_homotypic
+
+
+# heterotypic
+task=gene
+gene_input_file=data/$task.txt
+heterotypic_output=$res_dir/02_heterotypic
+icthresh=4
+
+mkdir -p $homotypic_output
+mkdir -p $heterotypic_output
+
+################################ 2. Downloading data #######################################
 # download data
 
 cd data
@@ -58,55 +104,53 @@ else
 fi
 cd ..
 
-################################ Running FIMO ###################################
-# check if fimo ready for PMETindex
-print_fluorescent_yellow "Checking if fimo result (txt files) ready for PMET index\n"
+################################ Running homotypic ###################################
+print_green "Running fimo...\n"
+
+$HOMOTYPIC                \
+    -r $toolDir           \
+    -o $homotypic_output  \
+    -i $gff3id            \
+    -k $maxk              \
+    -n $topn              \
+    -p $length            \
+    -g $gap               \
+    -l $promlengthlimit   \
+    -v $noOverlap         \
+    -u $utr               \
+    -f $fimothresh       \
+    -t $threads           \
+    -d $delete_temp       \
+    $genome               \
+    $anno                 \
+    $meme
 
 
-res_dir="results/01_homotypic_promoters_with_distance_to_tss/"
+# ########################## Running heterotypic ##################################
+print_green "\n\nSearching for heterotypic motif hits..."
 
-fimo_dir="${res_dir}fimo"
-mkdir -p $fimo_dir
+# remove genes not present in pre-computed pmet index
+grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
 
-txt_files=$(find "$fimo_dir" -name "*.txt")
-if [ -n "$txt_files" ]; then
-    print_green "Yes, (FIMO result) txt files exist in $fimo_dir.\n"
-else
-    print_red   "   No FIMO result (txt files) found in $fimo_dir.\n"
-    print_green "Running fimo...\n"
+$HETEROTYPIC                                     \
+    -d .                                         \
+    -g $gene_input_file"temp"                    \
+    -i $icthresh                                 \
+    -p $homotypic_output/promoter_lengths.txt    \
+    -b $homotypic_output/binomial_thresholds.txt \
+    -c $homotypic_output/IC.txt                  \
+    -f $homotypic_output/fimohits                \
+    -o $heterotypic_output                       \
+    -t $threads
 
-    chmod a+x scripts/PMETindex_promoters_with_distance_tss_fimo_intergrated.sh
-    scripts/PMETindex_promoters_with_distance_tss_fimo_intergrated.sh \
-        -r scripts                                  \
-        -o $res_dir                                 \
-        -i gene_id=                                 \
-        -k 5                                        \
-        -n 5000                                     \
-        -p 1000                                     \
-        -d 1000                                     \
-        -l 80                                       \
-        -v Yes                                      \
-        -u No                                       \
-        -t 8                                        \
-        data/homotypic_promoters/genome.fasta       \
-        data/homotypic_promoters/anno.gff3          \
-        data/homotypic_promoters/motif.meme
-fi
+cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+rm $heterotypic_output/temp*.txt
+rm $gene_input_file"temp"
 
-# ########################## Running pmet indexing ##################################
-# print_green "Running pmet indexing...\n"
-# # run pmet index
-# mkdir -p results/homotypic_promoters/fimohits
-# start=$(date +%s)
 
-# scripts/pmetindex                                       \
-#     -f results/homotypic_promoters/fimo                 \
-#     -k 5 -n 5000                                        \
-#     -p results/homotypic_promoters/promoter_lengths.txt \
-#     -o results/homotypic_promoters/
+##################################### Heatmap ##################################
 
-# end=$(date +%s)
-# time_taken=$((end - start))
-# print_red "Time taken: $time_taken seconds"
-
-# print_fluorescent_yellow "\n\nYou many want to run '02_heterotypic_promoters.sh' now..."
+Rscript 05_heatmap.R                     \
+    Overlap                              \
+    $heterotypic_output/heatmap.png      \
+    $heterotypic_output/motif_output.txt

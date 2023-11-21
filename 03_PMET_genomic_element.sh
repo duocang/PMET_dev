@@ -42,30 +42,59 @@ find . -type f \( -name "*.sh" -o -name "*.pl" \) -exec chmod a+x {} \;
 
 start_time=$SECONDS
 
-################################ 1. input parameters ####################################
+################################ 1. input parameters ###################################
+# tool
+toolDir=scripts
+HOMOTYPIC=$toolDir/PMETindex_genomic_element.sh
+HETEROTYPIC=$toolDir/pmetParallel
+
+chmod a+x $HOMOTYPIC
+chmod a+x $HETEROTYPIC
+
 threads=24
-ret_dir=results/03_PMET_genomic_element
+res_dir=results/03_PMET_genomic_element
+
 
 # homotypic
+noOverlap="NoOverlap"
+utr="Yes"
 topn=5000
 maxk=5
 length=1000
-genomic_element=three_prime_UTR
-gff3id='Parent=transcript:'
-# genomic_element=five_prime_UTR
-# gff3id='Parent=transcript:'
-# genomic_element=mRNA
-# gff3id='ID=transcript:'
-
-
-
+fimothresh=0.05
+distance=1000
+gff3id="gene_id="
 delete_temp=yes
-homotypic_output=$ret_dir/01_homotypic_$genomic_element
+
+# data
+genome=data/homotypic_promoters/genome.fasta
+anno=data/homotypic_promoters/anno.gff3
+meme=data/Franco-Zorrilla_et_al_2014.meme
+
+# genomic element
+echo -e "Select the genomic element:\n    1. Three Prime UTR\n    2. Five Prime UTR\n    3. mRNA"
+read -p "Enter your choice (1/2/3): " choice
+case $choice in
+    1) genomic_element="three_prime_UTR"; gff3id='Parent=transcript:' ;;
+    2) genomic_element="five_prime_UTR"; gff3id='Parent=transcript:' ;;
+    3) genomic_element="mRNA"; gff3id='ID=transcript:' ;;
+    *) echo "Invalid choice. Please enter 1, 2, or 3."; exit 1 ;;
+esac
+print_fluorescent_yellow "You selected: $genomic_element"
+print_fluorescent_yellow "GFF3 ID format: $gff3id"
+
+# output
+homotypic_output=$res_dir/01_homotypic_$genomic_element
+
 
 # heterotypic
-gene_input_file=data/gene.txt
-heterotypic_output=$ret_dir/02_heterotypic_$genomic_element
-################################ input parameters ####################################
+task=gene
+gene_file=data/$task.txt
+heterotypic_output=$res_dir/02_heterotypic_$genomic_element
+icthresh=4
+
+mkdir -p $homotypic_output
+mkdir -p $heterotypic_output
 
 
 
@@ -88,78 +117,65 @@ cd ..
 ############################## 3. Running homotypic #################################
 print_green "Running homotypic searching...\n"
 
-scripts/PMETindex_genomic_element.sh        \
-    -r scripts                              \
-    -o $homotypic_output                    \
-    -e $genomic_element                     \
-    -i $gff3id                              \
-    -k $maxk                                \
-    -n $topn                                \
-    -p $length                              \
-    -v NoOverlap                            \
-    -u Yes                                  \
-    -t $threads                             \
-    -d $delete_temp                         \
-    data/homotypic_promoters/genome.fasta   \
-    data/homotypic_promoters/anno.gff3      \
-    data/Franco-Zorrilla_et_al_2014.meme
+$HOMOTYPIC               \
+    -r $toolDir          \
+    -o $homotypic_output \
+    -e $genomic_element  \
+    -i $gff3id           \
+    -k $maxk             \
+    -n $topn             \
+    -p $length           \
+    -v $noOverlap        \
+    -u $utr              \
+    -f $fimothresh       \
+    -t $threads          \
+    -d $delete_temp      \
+    $genome              \
+    $anno                \
+    $meme
 
 
 ############################ 4. Running heterotypic ###############################
-# gene name to transcript name
-if [[ -f "$homotypic_output/universe.txt" ]]; then
-    mkdir -p $heterotypic_output
-    # print_green "Preparing transcripts ID in all clusters..."
-    # >$heterotypic_output/new_genes.txt
-    # while IFS=$'\r\n' read -r line; do
-    #     line=$(echo -n "$line")
-    #     IFS=' ' read -ra parts <<< "$line"
-    #     cluster="${parts[0]}"
-    #     gene="${parts[1]}"
-    #     printf "%s.%d\n" "$line" "1"  >> $heterotypic_output/new_genes.txt
+print_green "\n\nSearching for heterotypic motif hits...\n"
 
-    #     awk -v pattern="^${gene}." \
-    #         -v clus="$cluster" '$0 ~ pattern {print clus, $0}' "$homotypic_output/universe_isoform.txt" \
-    #         >> "$heterotypic_output/new_genes.txt"
-    # done < "$gene_input_file"
+# remove genes not present in pre-computed pmet index
+grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
 
-    # # remove genes not present in pre-computed pmet index
-    # grep -Ff $homotypic_output/universe.txt $heterotypic_output/new_genes.txt > $heterotypic_output/new_genes_temp.txt
-    # rm $heterotypic_output/new_genes.txt
 
-    # remove genes not present in pre-computed pmet index
-    grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
+$HETEROTYPIC                                     \
+    -d .                                         \
+    -g $heterotypic_output/new_genes_temp.txt    \
+    -i $icthresh                                 \
+    -p $homotypic_output/promoter_lengths.txt    \
+    -b $homotypic_output/binomial_thresholds.txt \
+    -c $homotypic_output/IC.txt                  \
+    -f $homotypic_output/fimohits                \
+    -o $heterotypic_output                       \
+    -t $threads > $heterotypic_output/pmet.log
 
-    print_green "\n\nSearching for heterotypic motif hits...\n"
+rm $heterotypic_output/new_genes_temp.txt
+# merge pmet result
+cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+rm $heterotypic_output/temp*.txt
 
-    scripts/pmetParallel                             \
-        -d .                                         \
-        -g $heterotypic_output/new_genes_temp.txt    \
-        -i 4                                         \
-        -p $homotypic_output/promoter_lengths.txt    \
-        -b $homotypic_output/binomial_thresholds.txt \
-        -c $homotypic_output/IC.txt                  \
-        -f $homotypic_output/fimohits                \
-        -o $heterotypic_output                       \
-        -t $threads > $heterotypic_output/pmet.log
+# remove genes not present in pre-computed pmet index
+grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
 
-    rm $heterotypic_output/new_genes_temp.txt
-    # merge pmet result
-    cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
-    rm $heterotypic_output/temp*.txt
+end_time=$SECONDS
+elapsed_time=$((end_time - start_time))
+days=$((elapsed_time/86400))
+hours=$(( (elapsed_time%86400)/3600 ))
+minutes=$(( (elapsed_time%3600)/60 ))
+seconds=$((elapsed_time%60))
+print_orange "      Time taken: $days day $hours hour $minutes minute $seconds second\n"
 
-    # remove genes not present in pre-computed pmet index
-    grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
-
-    end_time=$SECONDS
-    elapsed_time=$((end_time - start_time))
-    days=$((elapsed_time/86400))
-    hours=$(( (elapsed_time%86400)/3600 ))
-    minutes=$(( (elapsed_time%3600)/60 ))
-    seconds=$((elapsed_time%60))
-    print_orange "      Time taken: $days day $hours hour $minutes minute $seconds second\n"
-else
-    print_red "Nothing found in $homotypic_output.\n"
-fi
 
 print_green "DONE: heterotypic search"
+
+
+##################################### Heatmap ##################################
+
+Rscript 05_heatmap.R                     \
+    Overlap                              \
+    $heterotypic_output/heatmap.png      \
+    $heterotypic_output/motif_output.txt

@@ -52,44 +52,62 @@ cd ..
 
 
 ################################# Parameters #######################################
+# tool
+toolDir=scripts
+HOMOTYPIC=$toolDir/PMETindex_promoters_benchmark_parameters.sh
+HETEROTYPIC=$toolDir/pmetParallel
+
+chmod a+x $HOMOTYPIC
+chmod a+x $HETEROTYPIC
+
+threads=24
+res_dir=results/06_PMET_promoter_benchmark_parameters
+
 # Homotypic
-genome=data/homotypic_promoters/genome.fasta
-anno=data/homotypic_promoters/anno.gff3
-meme=data/homotypic_promoters/motif.meme
-
-
+gff3id="gene_id="
+noOverlap="NoOverlap"
+utr="Yes"
 topnRangeStr="2500-5000"
 maxkRangeStr="5-6"
 promlengthRangeStr="1000-1500"
 
-indexOutput=results/06_PMET_promoter_benchmark_parameters/homotypic
-mkdir -p $indexOutput
+# data
+genome=data/homotypic_promoters/genome.fasta
+anno=data/homotypic_promoters/anno.gff3
+meme=data/homotypic_promoters/motif.meme
+
+# output
+homotypic_output=$res_dir/01_homotypic
+
 
 # Heterotypic
 task=gene_cell_identities
 gene_file=data/$task.txt
 fimothresh=005
+icthresh=4
 
-output=results/06_PMET_promoter_benchmark_parameters/heterotypic
-logDir=results/06_PMET_promoter_benchmark_parameters/logs
-mkdir -p $output
+heterotypic_output=$res_dir/02_heterotypic
+logDir=$res_dir/logs
+
+mkdir -p $homotypic_output
+mkdir -p $heterotypic_output
 mkdir -p $logDir
 
-ncpu=16
+
 ################################## Homotypic #######################################
-chmod a+x scripts/PMETindex_promoters_benchmark_parameters.sh
-scripts/PMETindex_promoters_benchmark_parameters.sh \
-    -r scripts                                      \
-    -o $indexOutput                                 \
-    -i gene_id=                                     \
-    -v NoOverlap                                    \
-    -u Yes                                          \
-    -t $ncpu                                        \
-    -n $topnRangeStr                                \
-    -k $maxkRangeStr                                \
-    -p $promlengthRangeStr                          \
-    $genome                                         \
-    $anno                                           \
+chmod a+x $HOMOTYPIC
+$HOMOTYPIC                 \
+    -r $toolDir            \
+    -o $homotypic_output   \
+    -i $gff3id             \
+    -v $noOverlap          \
+    -u $utr                \
+    -t $threads            \
+    -n $topnRangeStr       \
+    -k $maxkRangeStr       \
+    -p $promlengthRangeStr \
+    $genome                \
+    $anno                  \
     $meme
 
 
@@ -116,32 +134,37 @@ for promlength in ${promlengthRange[@]}; do
             print_fluorescent_yellow "        maxk      : $maxk"
             print_fluorescent_yellow "        topn      : $topn"
             print_fluorescent_yellow "        fimothresh: $fimothresh"
-            print_green              "    Searching for heterotypic motifs pairs with ${ncpu} CPUS..."
+            print_green              "    Searching for heterotypic motifs pairs with ${threads} CPUS..."
 
-            indexOutputTemp=$indexOutput/fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}
-            outputTemp=$output/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}
+            indexOutput=$homotypic_output/fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}
+            output=$heterotypic_output/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}
 
-            mkdir -p $outputTemp
+            mkdir -p $output
 
             # remove genes not present in pre-computed pmet index
-            grep -Ff $indexOutputTemp/universe.txt $gene_file > $outputTemp/available_genes.txt
+            grep -Ff $indexOutput/universe.txt $gene_file > $output/available_genes.txt
 
-            scripts/pmetParallel                             \
-                -d .                                         \
-                -g $outputTemp/available_genes.txt           \
-                -i 4                                         \
-                -p $indexOutputTemp/promoter_lengths.txt     \
-                -b $indexOutputTemp/binomial_thresholds.txt  \
-                -c $indexOutputTemp/IC.txt                   \
-                -f $indexOutputTemp/fimohits                 \
-                -o $outputTemp                               \
-                -t $ncpu > $logDir/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}.log 2>&1
+            $HETEROTYPIC                                 \
+                -d .                                     \
+                -g $output/available_genes.txt           \
+                -i $icthresh                             \
+                -p $indexOutput/promoter_lengths.txt     \
+                -b $indexOutput/binomial_thresholds.txt  \
+                -c $indexOutput/IC.txt                   \
+                -f $indexOutput/fimohits                 \
+                -o $output                               \
+                -t $threads > $logDir/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}.log 2>&1
 
-            rm  $outputTemp/available_genes.txt
-            cat $outputTemp/*.txt > $outputTemp/motif_output.txt
-            rm  $outputTemp/temp*.txt
+            rm  $output/available_genes.txt
+            cat $output/*.txt > $output/motif_output.txt
+            rm  $output/temp*.txt
 
-            grep -Ff $indexOutputTemp/universe.txt $gene_file > $outputTemp/available_genes.txt
+            Rscript 05_heatmap.R         \
+                Overlap                  \
+                $output/heatmap.png      \
+                $output/motif_output.txt
+
+            grep -Ff $indexOutput/universe.txt $gene_file > $output/available_genes.txt
         done
     done
 done

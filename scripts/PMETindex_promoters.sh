@@ -94,6 +94,7 @@ gff3id='gene_id'
 pmetroot="scripts"
 threads=4
 icthreshold=24
+delete=yes
 
 # set up empty variables
 
@@ -111,7 +112,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
+while getopts ":r:i:o:n:k:p:f:g:v:u:t:d:" options; do
     case $options in
         r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -133,6 +134,8 @@ while getopts ":r:i:o:n:k:p:f:g:v:u:t:" options; do
         utr=$OPTARG;;
         t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
         threads=$OPTARG;;
+        d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
+        delete=$OPTARG;;
         \?) print_red  "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  print_red "Option -$OPTARG requires an argument." >&2
@@ -413,29 +416,29 @@ print_orange "    $nummotifs motifs found"
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
-# find $indexingOutputDir/memefiles -name "*.txt" \
-#     | parallel --bar --jobs=$threads \
-#         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn; echo" \
-#     | zenity --progress --auto-close --width=500 --title="Processing files" --text="Running Fimo Indexing..." --percentage=0 --auto-kill --no-cancel
 
 print_green "Deleting unnecessary files..."
 
-rm -f $indexingOutputDir/genelines.gff3
-rm -f $indexingOutputDir/bedgenome.genome
-rm -f $bedfile
-rm -f $indexingOutputDir/genome_stripped.fa
-rm -f $indexingOutputDir/genome_stripped.fa.fai
-rm -f $indexingOutputDir/promoters.bed
-rm -f $indexingOutputDir/promoters_rough.fa
-rm -f $indexingOutputDir/genes_negative.txt
-rm -f $indexingOutputDir/promoter_length_deleted.txt
-rm -r $indexingOutputDir/memefiles
-rm -f $indexingOutputDir/promoters.bg
-rm -f $indexingOutputDir/promoters.fa
-rm -f $indexingOutputDir/sorted.gff3
-rm -f $indexingOutputDir/pmetindex.log
-rm -f $indexingOutputDir/promoter_lengths_all.txt
-rm -f $indexingOutputDir/promoters_before_filter.bed
+# Deleting unnecessary files
+if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then
+    print_green "Deleting unnecessary files...\n\n"
+    rm -rf $indexingOutputDir/bedgenome.genome
+    rm -rf $indexingOutputDir/genome_stripped.fa
+    rm -rf $indexingOutputDir/genome_stripped.fa.fai
+    rm -rf $indexingOutputDir/invalid_mRNAlines.bed
+    rm -rf $indexingOutputDir/matched_promoterlines.bed
+    rm -rf $indexingOutputDir/memefiles
+    rm -rf $indexingOutputDir/promoter_rought.fa
+    rm -rf $indexingOutputDir/promoter.bg
+    rm -rf $indexingOutputDir/genelines.gff3
+    rm -rf $bedfile
+    rm -rf $indexingOutputDir/promoter_length_deleted.txt
+    rm -rf $indexingOutputDir/promoter.fa
+    rm -rf $indexingOutputDir/sorted.gff3
+    rm -rf $indexingOutputDir/pmetindex.log
+    rm -rf $indexingOutputDir/promoter_lengths_all.txt
+    rm -rf $indexingOutputDir/promoters_before_filter.bed
+fi
 
 # 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
 # Count the number of .txt files in the $indexingOutputDir/fimohits directory
@@ -444,7 +447,6 @@ file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt
 # 检查文件数量是否等于 meotif的数量 （$nummotifs）
 # Check if the number of files equals the number of meotifs ($nummotifs)
 if [ "$file_count" -eq "$nummotifs" ]; then
-    touch ${indexingOutputDir}_FLAG
 
     end=$SECONDS
     elapsed_time=$((end - start))

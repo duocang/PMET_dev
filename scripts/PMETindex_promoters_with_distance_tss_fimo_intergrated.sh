@@ -60,7 +60,7 @@ print_white(){
 
 print_fluorescent_yellow "
 The purpose of this script is to study the distribution of
-homotypic motif hits in promoters at different distances
+homotypic motif hits in promoters wtit different gaps
 from the TSS.\n\n"
 
 
@@ -75,6 +75,7 @@ gff3id='gene_id'
 pmetroot="scripts"
 threads=4
 icthreshold=24
+delete=yes
 
 # set up empty variables
 
@@ -92,7 +93,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:d:l:f:g:v:u:t:" options; do
+while getopts ":r:i:o:n:k:p:g:l:f:v:u:t:d:" options; do
     case $options in
         r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -106,8 +107,8 @@ while getopts ":r:i:o:n:k:p:d:l:f:g:v:u:t:" options; do
         maxk=$OPTARG;;
         p) print_white "Promoter length                        : "; print_orange "$OPTARG" >&2
         promlength=$OPTARG;;
-        d) print_white "Distance to TSS                        : "; print_orange "$OPTARG" >&2
-        distance=$OPTARG;;
+        g) print_white "Gap to TSS                             : "; print_orange "$OPTARG" >&2
+        gap=$OPTARG;;
         l) print_white "Promoter length limit (percentage)     : "; print_orange "$OPTARG" >&2
         promlengthlimit=$OPTARG;;
         f) print_white "Fimo threshold                         : "; print_orange "$OPTARG" >&2
@@ -118,6 +119,8 @@ while getopts ":r:i:o:n:k:p:d:l:f:g:v:u:t:" options; do
         utr=$OPTARG;;
         t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
         threads=$OPTARG;;
+        d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
+        delete=$OPTARG;;
         \?) print_red  "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  print_red "Option -$OPTARG requires an argument." >&2
@@ -184,15 +187,13 @@ invalidRows=$(awk '$2 >= $3' $bedfile)
 if [[ -n "$invalidRows" ]]; then
     echo "$invalidRows" > $outputdir/invalid_genelines.bed
 fi
-# awk '$2 >= $3' $bedfile > $outputdir/invalid_genelines.bed
-
 print_fluorescent_yellow "     4.  Extracting genes coordinates: start should be smaller than end (genelines.bed)"
-awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 # 在BED文件格式中，无论是正链（+）还是负链（-），起始位置总是小于终止位置。
 # In the BED file format, the start position is always less than the end position for both positive (+) and negative (-) chains.
 # 起始和终止位置是指定基因上的物理位置，而不是表达或翻译的方向。
 # start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 # starting site < stopped site in bed file
+awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 
 
 # -------------------------------------------------------------------------------------------
@@ -227,58 +228,20 @@ bedtools flank \
     -r 0 -s -i $bedfile \
     -g $indexingOutputDir/bedgenome.genome \
     > $indexingOutputDir/promoters.bed
+cp $indexingOutputDir/promoters.bed $indexingOutputDir/8_promoters.bed
+
 
 # -------------------------------------------------------------------------------------------
-print_fluorescent_yellow "     8.1 Add distance to TSS"
-# add distance to TSS
-
-awk -v d=$distance '
-# 先读取chromosome_lines.gff3文件来创建染色体的最大长度数组
-NR == FNR && $3 == "chromosome" {
-    max[$1] = $5;
-    next;
-}
-# 处理promoters.bed文件
-{
-    if ($6 == "+") {
-        if ($3 - d < 20)
-        {
-            next;
-        }
-
-        if ($2 -d  < 1)
-        {
-            $2 = 1;
-            $3 = $3 - d;
-        }
-        else
-        {
-            $2 = $2 - d;
-            $3 = $3 - d;
-        }
-    } else if ($6 == "-") {
-        if ($2 + d + 20 > max[$1])
-        {
-            next;
-        }
-        if ($3 + d > max[$1])
-        {
-            $2 = $2 + d;
-            $3 =max[$1];
-        }
-        else
-        {
-            $2 = $2 + d;
-            $3 = $3 + d;
-        }
-    }
-    printf "%s\t%d\t%d\t%s\t%s\t%s\n", $1, $2, $3, $4, $5, $6;
-}
-' $indexingOutputDir/chromosome_lines.gff3 $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_with_distance_to_tss.bed
+print_fluorescent_yellow "     8.1 Add gap to TSS"
+python3                                        \
+    $pmetroot/promoter_add_gap.py              \
+    $gap                                       \
+    $indexingOutputDir/chromosome_lines.gff3   \
+    $indexingOutputDir/promoters.bed           \
+    > $indexingOutputDir/promoters_gap_tss.bed
 
 rm $indexingOutputDir/promoters.bed
-cp $indexingOutputDir/promoters_with_distance_to_tss.bed $indexingOutputDir/promoters.bed
-
+cp $indexingOutputDir/promoters_gap_tss.bed $indexingOutputDir/promoters.bed
 
 
 # -------------------------------------------------------------------------------------------
@@ -289,20 +252,18 @@ if [ $overlap == 'NoOverlap' ]; then
 	bedtools subtract \
         -a $indexingOutputDir/promoters.bed \
         -b $bedfile > $indexingOutputDir/promoters2.bed
+
+    cp $indexingOutputDir/promoters2.bed $indexingOutputDir/9_promoters.bed
 	mv $indexingOutputDir/promoters2.bed $indexingOutputDir/promoters.bed
 else
     print_fluorescent_yellow "     9.  (skipped) Removing overlapping promoter chunks (promoters.bed)"
 fi
 
-# -------------------------------------------------------------------------------------------
-# remove promoter length < 20
-print_fluorescent_yellow "     9.1 Remove promoters with less than 0.8 * promolength base pairs"
-awk -v len=$promlength '($3 - $2) <  promlengthlimit / 100 * len' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_${promlengthlimit}pen.bed
-awk -v len=$promlength '($3 - $2) >= promlengthlimit / 100 * len' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
-mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 10. check split promoters. if so, keep the bit closer to the TSS
+# # check if any duplication
+# cut -f4 $indexingOutputDir/promoters.bed | sort | uniq -d
 print_fluorescent_yellow "    10.  Checking split promoter (if so):  keep the bit closer to the TSS (promoters.bed)"
 python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 
@@ -330,10 +291,10 @@ awk '{print $4 "\t" ($3 - $2)}' $indexingOutputDir/promoters.bed \
 
 # -------------------------------------------------------------------------------------------
 # 13. filters out the rows with NEGATIVE lengths
-print_fluorescent_yellow "    13.  Filtering out the rows of promoter_lengths_all.txt with NEGATIVE lengths"
+print_fluorescent_yellow "    13.  Filtering out the rows of promoter_lengths_all.txt with lesl than $promlengthlimit lengths"
 while read -r gene length; do
     # Check if the length is a positive number
-    if (( length >= 0 )); then
+    if (( length >= $promlengthlimit )); then
         # Append rows with positive length to the output file
         echo "$gene $length" >> $indexingOutputDir/promoter_lengths.txt
     else
@@ -345,18 +306,18 @@ done < $indexingOutputDir/promoter_lengths_all.txt
 # -------------------------------------------------------------------------------------------
 # 14. find NEGATIVE genes
 if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
-    print_fluorescent_yellow "    14.  Finding genes with NEGATIVE promoter lengths (genes_negative.txt)"
+    print_fluorescent_yellow "    14.  Finding genes with short promoter lengths (genes_negative.txt)"
     cut -d " " \
         -f1  $indexingOutputDir/promoter_length_deleted.txt \
         > $indexingOutputDir/genes_negative.txt
 else
-    print_fluorescent_yellow "    14.  (skipped) Finding genes with NEGATIVE promoter lengths (genes_negative.txt)"
+    print_fluorescent_yellow "    14.  (skipped) Finding genes with short promoter lengths (genes_negative.txt)"
 fi
 
 # -------------------------------------------------------------------------------------------
 # 15. filter promoter annotation with negative length
 if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
-    print_fluorescent_yellow "    15.  Removing promoter with negative length (promoters.bed)"
+    print_fluorescent_yellow "    15.  Removing promoter with short length (promoters.bed)"
     grep -v -w -f \
         $indexingOutputDir/genes_negative.txt \
         $indexingOutputDir/promoters.bed \
@@ -436,7 +397,6 @@ runFimoIndexing () {
         $indexingOutputDir/promoter_lengths.txt
 
     # mkdir -p $indexingOutputDir/fimo/$filename
-
     # fimo \
     #     --no-qvalue \
     #     --text \
@@ -456,44 +416,68 @@ runFimoIndexing () {
 }
 export -f runFimoIndexing
 
-numfiles=$(ls -l $indexingOutputDir/memefiles/*.txt | wc -l)
-print_orange "    $numfiles motifs found"
+nummotifs=$(grep -c '^MOTIF' "$memefile")
+print_orange "    $nummotifs motifs found"
 
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
-# find $indexingOutputDir/memefiles -name "*.txt" \
-#     | parallel --bar --jobs=$threads \
-#         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn; echo" \
-#     | zenity --progress --auto-close --width=500 --title="Processing files" --text="Running Fimo Indexing..." --percentage=0 --auto-kill --no-cancel
+
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
-print_green "Deleting unnecessary files..."
 
-rm -f $indexingOutputDir/genelines.gff3
-rm -f $indexingOutputDir/bedgenome.genome
-rm -f $bedfile
-rm -f $indexingOutputDir/genome_stripped.fa
-rm -f $indexingOutputDir/genome_stripped.fa.fai
-rm -f $indexingOutputDir/promoters.bed
-rm -f $indexingOutputDir/promoters_rough.fa
-rm -f $indexingOutputDir/genes_negative.txt
-rm -f $indexingOutputDir/promoter_length_deleted.txt
-rm -r $indexingOutputDir/memefiles
-rm -f $indexingOutputDir/promoters.bg
-rm -f $indexingOutputDir/promoters.fa
-rm -f $indexingOutputDir/sorted.gff3
-rm -f $indexingOutputDir/pmetindex.log
-rm -f $indexingOutputDir/promoter_lengths_all.txt
-
+# Deleting unnecessary files
+if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then
+    print_green "Deleting unnecessary files...\n\n"
+    rm -rf $indexingOutputDir/9_promoters.bed
+    rm -rf $indexingOutputDir/8_promoters.bed
+    rm -rf $indexingOutputDir/16_genes_not_in_universe.bed
+    rm -rf $indexingOutputDir/chromosome_lines.gff3
+    rm -rf $indexingOutputDir/fimo
+    rm -rf $indexingOutputDir/bedgenome.genome
+    rm -rf $indexingOutputDir/genome_stripped.fa
+    rm -rf $indexingOutputDir/genome_stripped.fa.fai
+    rm -rf $indexingOutputDir/genes_negative.txt
+    rm -rf $indexingOutputDir/invalid_mRNAlines.bed
+    rm -rf $indexingOutputDir/matched_promoterlines.bed
+    rm -rf $indexingOutputDir/memefiles
+    rm -rf $indexingOutputDir/promoter_rough.fa
+    rm -rf $indexingOutputDir/promoter.bg
+    rm -rf $indexingOutputDir/promoter.fa
+    rm -rf $indexingOutputDir/genelines.gff3
+    rm -rf $indexingOutputDir/promoters_gap_tss.bed
+    rm -rf $bedfile
+    rm -rf $indexingOutputDir/promoter_length_deleted.txt
+    rm -rf $indexingOutputDir/promoter.fa
+    rm -rf $indexingOutputDir/sorted.gff3
+    rm -rf $indexingOutputDir/pmetindex.log
+    rm -rf $indexingOutputDir/promoter_lengths_all.txt
+    rm -rf $indexingOutputDir/promoters_before_filter.bed
+fi
 # touch ${indexingOutputDir}_FLAG
 
-end=$(date +%s)
-time_taken=$((end - start))
-print_orange "Time taken: $time_taken seconds"
+# -------------------------------------------------------------------------------------------
+# Checking results
+print_green "Checking results...\n\n"
+# 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
+# Count the number of .txt files in the $indexingOutputDir/fimohits directory
+file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
 
+# 检查文件数量是否等于 meotif的数量 （$nummotifs）
+# Check if the number of files equals the number of meotifs ($nummotifs)
+if [ "$file_count" -eq "$nummotifs" ]; then
+    end=$(date +%s)
+    elapsed_time=$((end - start))
+    days=$((elapsed_time/86400))
+    hours=$(( (elapsed_time%86400)/3600 ))
+    minutes=$(( (elapsed_time%3600)/60 ))
+    seconds=$((elapsed_time%60))
+    print_orange "      Time take: $days day $hours hour $minutes minute $seconds seconds"
 
-print_green "DONE"
+    print_green "DONE: homotypic search"
+else
+    print_red "\nError: there are $file_count fimohits files, it should be $nummotifs."
+fi
 
 # # next stage needs the following inputs
 

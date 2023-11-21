@@ -59,56 +59,93 @@ cd ..
 
 
 ########################## Parameters #######################################
-print_green "Searching for homotypic motif hits..."
-indexoutput=results/01_PMET_promoter/homotypic
+# tool
+toolDir=scripts
+HOMOTYPIC=$toolDir/PMETindex_promoters.sh
+HETEROTYPIC=$toolDir/pmetParallel
 
+chmod a+x $HOMOTYPIC
+chmod a+x $HETEROTYPIC
+
+threads=24
+res_dir=results/01_PMET_promoter
+
+# homotypic
+gff3id="gene_id="
+noOverlap="NoOverlap"
+utr="No"
+topn=5000
+maxk=5
+length=1000
+fimothresh=0.05
+distance=1000
+gff3id="gene_id="
+delete_temp=yes
+
+# data
 genome=data/homotypic_promoters/genome.fasta
 anno=data/homotypic_promoters/anno.gff3
-meme=data/homotypic_promoters/motif.meme
+meme=data/Franco-Zorrilla_et_al_2014.meme
+
+# output
+homotypic_output=$res_dir/01_homotypic
 
 
-output=results/01_PMET_promoter/heterotypic
-gene_input_file=data/gene.txt
+# heterotypic
+task=gene
+gene_input_file=data/$task.txt
+heterotypic_output=$res_dir/02_heterotypic
+icthresh=4
 
-################################ Running FIMO ###################################
-directory=$indexoutput/fimo
-mkdir -p $indexoutput/fimo
+mkdir -p $homotypic_output
+mkdir -p $heterotypic_output
 
-scripts/PMETindex_promoters.sh                  \
-    -r scripts                                  \
-    -o $indexoutput                             \
-    -i gene_id=                                 \
-    -k 5                                        \
-    -n 5000                                     \
-    -p 1000                                     \
-    -v NoOverlap                                \
-    -u Yes                                      \
-    -t 8                                        \
-    $genome                                     \
-    $anno                                       \
+
+################################ Running homotypic ###################################
+print_green "Searching for homotypic motif hits..."
+$HOMOTYPIC               \
+    -r $toolDir          \
+    -o $homotypic_output \
+    -i $gff3id           \
+    -k $maxk             \
+    -n $topn             \
+    -p $length           \
+    -v $noOverlap        \
+    -u $utr              \
+    -f $fimothresh       \
+    -t $threads          \
+    -d $delete_temp      \
+    $genome              \
+    $anno                \
     $meme
 
-
-rm -rf $indexoutput/fimo
+rm -rf $homotypic_output/fimo
 
 ##################################### Heterotypic ##################################
 print_green "\n\nSearching for heterotypic motif hits..."
-mkdir -p $output
 
 # remove genes not present in pre-computed pmet index
-grep -Ff $indexoutput/universe.txt $gene_input_file > $gene_input_file"temp"
+grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
 
-scripts/pmetParallel                        \
-    -d .                                    \
-    -g $gene_input_file"temp"               \
-    -i 4                                    \
-    -p $indexoutput/promoter_lengths.txt    \
-    -b $indexoutput/binomial_thresholds.txt \
-    -c $indexoutput/IC.txt                  \
-    -f $indexoutput/fimohits                \
-    -o $output                              \
-    -t 2
+$HETEROTYPIC                                     \
+    -d .                                         \
+    -g $gene_input_file"temp"                    \
+    -i $icthresh                                 \
+    -p $homotypic_output/promoter_lengths.txt    \
+    -b $homotypic_output/binomial_thresholds.txt \
+    -c $homotypic_output/IC.txt                  \
+    -f $homotypic_output/fimohits                \
+    -o $heterotypic_output                       \
+    -t $threads
 
-cat $output/*.txt > $output/motif_output.txt
-rm $output/temp*.txt
+cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+rm $heterotypic_output/temp*.txt
 rm $gene_input_file"temp"
+
+
+##################################### Heatmap ##################################
+
+Rscript 05_heatmap.R                     \
+    Overlap                              \
+    $heterotypic_output/heatmap.png      \
+    $heterotypic_output/motif_output.txt

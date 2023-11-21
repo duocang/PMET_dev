@@ -52,7 +52,7 @@ def extractMatrixfromMeme(memefile,motif_length):
     #all the reformatting
     for j in range(0,mat.shape[0]):
         thing = mat[j]
-   #     newthing = thing.replace(" ","")
+        # newthing = thing.replace(" ","")
         newthing=thing
         newthing = newthing.replace("\n","")
         newthing = newthing.split()
@@ -93,46 +93,46 @@ def calculateIC(meme_as_matrix):
 if __name__ == "__main__":
     #memefiles = os.listdir((args.pathToIndex+'/memefiles'))
     args = get_args()
-    
+
     if (args.folderpath!=''):
         memefolder=args.folderpath
     else:
         memefolder='memefiles'
-        
+
     memefiles = os.listdir((memefolder))
     # remove (invisible) dot files from list
     memefiles = [f for f in memefiles if not f[0] == '.']
-    
+
     IC_data=np.empty((len(memefiles),1),dtype="object")
-    
-    
-  #  IC_dict={}
+
+
+    # IC_dict={}
     mf_count=0
     # GC_content={}
     for file in memefiles:
         #print(file)
         # read in the file
-      #  print(file)
+        # print(file)
         with open(memefolder + '/'+file) as w:
             k = np.asarray(w.readlines())
         # calculate length and extarct meme matrix
         mot_length=getMotifLength(k)
         meme=extractMatrixfromMeme(k,mot_length)
         IC=calculateIC(meme)
-        
+
         icLine=file
         for i in range(0, mot_length):
             icLine=icLine + ' ' + str(IC[i])
         IC_data[mf_count]=icLine.replace('.txt','')
         mf_count=mf_count+1
-        
+
         # save each IC list in dictionary
-   #     IC_dict[file.replace('.txt','')]=IC
+        # IC_dict[file.replace('.txt','')]=IC
         # calculate GC content
         # mean_base=np.mean(meme, axis=0)
         # GC_content[file.replace('.txt','')]=mean_base[1]+mean_base[2]
 
-#    with open(memefolder + '/ICdict.pickle', 'wb') as handle:
- #       pickle.dump(IC_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # with open(memefolder + '/ICdict.pickle', 'wb') as handle:
+    # pickle.dump(IC_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
     df=pd.DataFrame(IC_data)
     df.to_csv(args.outfile,mode='a',sep='\t',header=False,index=False)

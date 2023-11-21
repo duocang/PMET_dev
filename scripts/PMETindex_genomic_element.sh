@@ -196,15 +196,13 @@ invalidRows=$(awk '$2 >= $3' $bedfile)
 if [[ -n "$invalidRows" ]]; then
     echo "$invalidRows" > $indexingOutputDir/invalid_mRNAlines.bed
 fi
-# awk '$2 >= $3' $bedfile > $indexingOutputDir/invalid_mRNAlines.bed
-
 print_fluorescent_yellow "     4. Extracting genes coordinates: start should be smaller than end (genelines.bed)"
-awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 # 在BED文件格式中，无论是正链（+）还是负链（-），起始位置总是小于终止位置。
 # In the BED file format, the start position is always less than the end position for both positive (+) and negative (-) chains.
 # 起始和终止位置是指定基因上的物理位置，而不是表达或翻译的方向。
 # start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 # starting site < stopped site in bed file
+awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 
 
 # -------------------------------------------------------------------------------------------
@@ -256,6 +254,9 @@ rm -rf $indexingOutputDir/promoter_lengths_all.txt
 mv $indexingOutputDir/promoter_lengths_max.txt $indexingOutputDir/promoter_lengths_all.txt
 cp $indexingOutputDir/promoter_lengths_all.txt $indexingOutputDir/8_promoter_lengths_all.txt
 
+# # check if any duplication
+# cut -f1 $indexingOutputDir/8_promoter_lengths_all.txt | sort | uniq -d
+
 # -------------------------------------------------------------------------------------------
 # 9. filters out the rows with NEGATIVE lengths
 print_fluorescent_yellow "     9. Filtering out the rows of mRNA_lengths_all.txt with NEGATIVE lengths (promoter_lengths.txt)"
@@ -292,31 +293,11 @@ cut -d " " -f1  $indexingOutputDir/promoter_lengths.txt > $universefile
 # -------------------------------------------------------------------------------------------
 # 12. filter promoter annotation with negative length
 print_fluorescent_yellow "    12. Extracting bed coordinates with longest length (genelines.bed)"
-awk 'NR==FNR{genes[$1]=1; next} genes[$4]'     \
-    $universefile                              \
-    $indexingOutputDir/genelines.bed           \
+awk 'NR==FNR{genes[$1]=1; next} genes[$4]'         \
+    $universefile                                  \
+    $bedfile                                       \
     > $indexingOutputDir/matched_promoterlines.bed
 
-
-# some isoform can be duplicated
-# keep one with longger sequence
-awk '{
-        diff = $3 - $2
-        if (!max[$4] || diff > max_diff[$4]) {
-            max[$4] = $0
-            max_diff[$4] = diff
-        }
-    }
-    END {
-        for (isoform in max) {
-            print max[isoform]
-        }
-    }' $indexingOutputDir/matched_promoterlines.bed > $indexingOutputDir/11_matched_promoterlines.bed
-
-    sort -k4,4 $indexingOutputDir/11_matched_promoterlines.bed > $indexingOutputDir/11_matched_promoterlines_sorted.bed
-
-    rm $indexingOutputDir/matched_promoterlines.bed
-    mv $indexingOutputDir/11_matched_promoterlines_sorted.bed $indexingOutputDir/matched_promoterlines.bed
 
 # -------------------------------------------------------------------------------------------
 # 13. convert isoform name to it gene
@@ -352,6 +333,11 @@ sed 's/::.*//g' $indexingOutputDir/promoter_rought.fa > $indexingOutputDir/promo
 # check if any duplicated id
 grep "^>" $indexingOutputDir/promoter.fa > $indexingOutputDir/ids.txt
 sort $indexingOutputDir/ids.txt | uniq -d > $indexingOutputDir/duplicate_ids.txt
+if [ ! -s $indexingOutputDir/duplicate_ids.txt ]; then
+    rm -rf $indexingOutputDir/ids.txt
+    rm -rf $indexingOutputDir/duplicate_ids.txt
+fi
+
 
 # -------------------------------------------------------------------------------------------
 # 16. promoter.bg from promoter.fa
@@ -410,15 +396,6 @@ find $indexingOutputDir/memefiles -name \*.txt \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
 
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
-
-
-# -------------------------------- Transcript to gene --------------------------
-print_fluorescent_yellow "\n\nChangingg transcript names to gene names...\n";
-
-for file in "$indexingOutputDir"/fimohits/*.txt; do
-    awk 'BEGIN {FS=OFS="\t"} {sub(/\.[0-9]+$/, "", $2)} 1' "$file" > "${file}.tmp"
-    mv "${file}.tmp" "$file"
-done
 
 
 # -------------------------------------------------------------------------------------------

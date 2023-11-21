@@ -60,10 +60,14 @@ scripts/pmet                                \
 
 # rm $gene_input_file"temp"
 
+Rscript 05_heatmap.R         \
+    Overlap                  \
+    $output/heatmap.png      \
+    $output/motif_output.txt
 
 
 
-
+##################################### pmetParallel ##################################
 print_green "Searching for heterotypic motif hits with single CPU..."
 outputTemp=$output/parallel
 mkdir -p $outputTemp
@@ -85,3 +89,10 @@ scripts/pmetParallel                        \
 cat $outputTemp/*.txt > $outputTemp/motif_output.txt
 rm $outputTemp/temp*.txt
 rm $gene_input_file"temp"
+
+
+
+Rscript 05_heatmap.R             \
+    Overlap                      \
+    $outputTemp/heatmap.png      \
+    $outputTemp/motif_output.txt
