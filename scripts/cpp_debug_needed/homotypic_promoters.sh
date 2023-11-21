@@ -369,27 +369,25 @@ export -f runFimoIndexing
 numfiles=$(ls -l $indexingOutputDir/memefiles/*.txt | wc -l)
 print_orange "    $numfiles motifs found"
 
-# find $indexingOutputDir/memefiles -name \*.txt \
-#     | parallel --progress  --jobs=$threads \
-#         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
+find $indexingOutputDir/memefiles -name \*.txt \
+    | parallel --progress  --jobs=$threads \
+        "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
 
 print_green "Deleting unnecessary files..."
 
-# rm $indexingOutputDir/genelines.gff3
-# rm $indexingOutputDir/bedgenome.genome
-# rm $bedfile
-# rm $indexingOutputDir/genome_stripped.fa
-# rm $indexingOutputDir/genome_stripped.fa.fai
-# rm $indexingOutputDir/promoters.bed
-# rm $indexingOutputDir/promoters_rough.fa
-# if [ -f "$indexingOutputDir/promoter_length_deleted.txt" ]; then
-#     rm $indexingOutputDir/genes_negative.txt
-#     rm $indexingOutputDir/promoter_length_deleted.txt
-# fi
-# rm -r $indexingOutputDir/memefiles
-# rm $indexingOutputDir/promoters.bg
-# rm $indexingOutputDir/promoters.fa
-# rm $indexingOutputDir/sorted.gff3
+rm -rf $indexingOutputDir/genelines.gff3
+rm -rf $indexingOutputDir/bedgenome.genome
+rm -rf $bedfile
+rm -rf $indexingOutputDir/genome_stripped.fa
+rm -rf $indexingOutputDir/genome_stripped.fa.fai
+rm -rf $indexingOutputDir/promoters.bed
+rm -rf $indexingOutputDir/promoters_rough.fa
+rm -rf $indexingOutputDir/genes_negative.txt
+rm -rf $indexingOutputDir/promoter_length_deleted.txt
+rm -rf $indexingOutputDir/memefiles
+rm -rf $indexingOutputDir/promoters.bg
+rm -rf $indexingOutputDir/promoters.fa
+rm -rf $indexingOutputDir/sorted.gff3
 
 # 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
 # Count the number of .txt files in the $indexingOutputDir/fimohits directory
@@ -399,7 +397,7 @@ file_count=$(find "$indexingOutputDir/fimo" -maxdepth 1 -type f -name "*.txt" | 
 # 检查文件数量是否等于 meotif的数量 （$numfiles）
 # Check if the number of files equals the number of meotifs ($numfiles)
 if [ "$file_count" -eq "$numfiles" ]; then
-    touch ${indexingOutputDir}_FLAG
+    # touch ${indexingOutputDir}_FLAG
 
     end=$(date +%s)
     time_taken=$((end - start))

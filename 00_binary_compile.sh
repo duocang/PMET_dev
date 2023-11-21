@@ -69,7 +69,7 @@ fi
 
 ############################ 1. assign execute permissions #############################
 
-print_green "\n1. Would you like to assign execute permissions to all users for bash and perl files? [Y/n]: "
+print_green_no_br "\n1. Would you like to assign execute permissions to all users for bash and perl files? [Y/n]: "
 read -p "" answer
 answer=${answer:-Y} # Default to 'Y' if no input provided
 

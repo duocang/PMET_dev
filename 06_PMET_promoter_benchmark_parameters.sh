@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# cd src/meme-5.5.3
-
 print_red(){
     RED='\033[0;31m'
     NC='\033[0m' # No Color
@@ -32,31 +30,15 @@ print_white(){
     printf "${WHITE}$1${NC}"
 }
 
-################################ 1. input parameters ####################################
-chmod a+x scripts/PMETindex_promoters_benchmark_parameters.sh
-
-# homotypic
-ncpu=16
-indexOutput=results/06_benchmark_parameters/homotypic_output
-
-genome=data/homotypic_promoters/genome.fasta
-anno=data/homotypic_promoters/anno.gff3
-meme=data/Franco-Zorrilla_et_al_2014.meme
-
-# heterotypic
-fimothresh=005
-task=gene_cell_identities
-gene_file=data/$task.txt
-
-output=results/06_benchmark_parameters/heterotypic_output
-
-########################## 2. Downloading data #######################################
+########################## Downloading data #######################################
 cd data
 if [ -f "homotypic_promoters/anno.gff3" ]; then
-    print_green "Genome and annotation are ready!"
+    echo ""
 else
-    print_fluorescent_yellow "Downloading genome and annotation...\n"
+    print_green "Downloading genome and annotation...\n"
     mkdir -p data/homotypic_promoters
+
+    chmod a+x ./fetch_data.sh
     bash ./fetch_data.sh
     mv anno.gff3 homotypic_promoters/
     mv genome.fasta homotypic_promoters/
@@ -65,11 +47,37 @@ else
 fi
 cd ..
 
-start=$(date +%s)
 
-############################## 3. Running homotypic #################################
+
+
+
+################################# Parameters #######################################
+# Homotypic
+genome=data/homotypic_promoters/genome.fasta
+anno=data/homotypic_promoters/anno.gff3
+meme=data/homotypic_promoters/motif.meme
+
+
+topnRangeStr="2500-5000"
+maxkRangeStr="5-6"
+promlengthRangeStr="1000-1500"
+
+indexOutput=results/06_PMET_promoter_benchmark_parameters/homotypic
 mkdir -p $indexOutput
 
+# Heterotypic
+task=gene_cell_identities
+gene_file=data/$task.txt
+fimothresh=005
+
+output=results/06_PMET_promoter_benchmark_parameters/heterotypic
+logDir=results/06_PMET_promoter_benchmark_parameters/logs
+mkdir -p $output
+mkdir -p $logDir
+
+ncpu=16
+################################## Homotypic #######################################
+chmod a+x scripts/PMETindex_promoters_benchmark_parameters.sh
 scripts/PMETindex_promoters_benchmark_parameters.sh \
     -r scripts                                      \
     -o $indexOutput                                 \
@@ -77,21 +85,30 @@ scripts/PMETindex_promoters_benchmark_parameters.sh \
     -v NoOverlap                                    \
     -u Yes                                          \
     -t $ncpu                                        \
-    -n "5000"                                       \
-    -k "1-2-3-4-5-6-7-8-9"                          \
-    -p "50-200-500-1000-1500-2500-5000"             \
+    -n $topnRangeStr                                \
+    -k $maxkRangeStr                                \
+    -p $promlengthRangeStr                          \
     $genome                                         \
     $anno                                           \
     $meme
 
 
-############################ 4. Running heterotypic ###############################
 
-mkdir -p $output/logs
 
-for promlength in 50 200 500 1000 1500 2500 5000; do
-    for maxk in 1 2 3 4 5 6 7 8 9; do
-        for topn in 5000; do
+################################## Heterotypic #######################################
+# 定义函数以将逗号分隔的字符串转换为数组
+string_to_array() {
+    local IFS='-' # 设置字段分隔符为逗号
+    read -ra arr <<< "$1" # 读取字符串并分割到数组
+    echo "${arr[@]}" # 返回数组
+}
+topnRange=($(string_to_array "$topnRangeStr"))
+maxkRange=($(string_to_array "$maxkRangeStr"))
+promlengthRange=($(string_to_array "$promlengthRangeStr"))
+
+for promlength in ${promlengthRange[@]}; do
+    for maxk in ${maxkRange[@]}; do
+        for topn in ${topnRange[@]}; do
 
             print_orange             "    parameters:"
             print_fluorescent_yellow "        genes     : $gene_file"
@@ -99,7 +116,7 @@ for promlength in 50 200 500 1000 1500 2500 5000; do
             print_fluorescent_yellow "        maxk      : $maxk"
             print_fluorescent_yellow "        topn      : $topn"
             print_fluorescent_yellow "        fimothresh: $fimothresh"
-            print_red                "    Searching for heterotypic motifs pairs with ${ncpu} CPUS..."
+            print_green              "    Searching for heterotypic motifs pairs with ${ncpu} CPUS..."
 
             indexOutputTemp=$indexOutput/fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}
             outputTemp=$output/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}
@@ -118,7 +135,7 @@ for promlength in 50 200 500 1000 1500 2500 5000; do
                 -c $indexOutputTemp/IC.txt                   \
                 -f $indexOutputTemp/fimohits                 \
                 -o $outputTemp                               \
-                -t $ncpu > $output/logs/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}.log 2>&1
+                -t $ncpu > $logDir/${task}_fimoThresh${fimothresh}_promLength${promlength}_maxK${maxk}_topN${topn}.log 2>&1
 
             rm  $outputTemp/available_genes.txt
             cat $outputTemp/*.txt > $outputTemp/motif_output.txt
@@ -128,5 +145,3 @@ for promlength in 50 200 500 1000 1500 2500 5000; do
         done
     done
 done
-
-print_green("DONE")

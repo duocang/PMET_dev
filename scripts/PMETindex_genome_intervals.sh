@@ -108,7 +108,7 @@ echo "Preparing sequences...";
 universefile=$outputdir/universe.txt
 
 if [[ ! -f "$universefile" || ! -f "$outputdir/promoter_lengths.txt" ]]; then
-	
+
 	# should have been done by consistency checker
 	# *** ADD THE DEPUPLICATION OF THE FASTA FILE HERE ****
 	python3 $pmetroot/deduplicate.py $genomefile $outputdir/no_duplicates.fa
@@ -116,7 +116,7 @@ if [[ ! -f "$universefile" || ! -f "$outputdir/promoter_lengths.txt" ]]; then
 	# generate the promoter lengths file from the fasta file
 	python3 $pmetroot/parse_promoter_lengths_from_fasta.py $outputdir/no_duplicates.fa $outputdir/promoter_lengths.txt
 	rm -f $outputdir/no_duplicates.fa
-	
+
   cut -f 1  $outputdir/promoter_lengths.txt > $universefile
 fi
 
@@ -163,7 +163,7 @@ for memefile in $outputdir/memefiles/*.txt; do
     sleep 0.1
     bfid=`basename $memefile`
     fimofile=$bfid
-    
+
     /usr/local/meme/bin/fimo --text --thresh $fimothresh --verbosity 1 --bgfile $outputdir/genome.bg $memefile $genomefile > $outputdir/fimo/$fimofile
 
 done
@@ -171,7 +171,7 @@ done
 ################
 rm -r $outputdir/memefiles
 rm $outputdir/genome.bg
- 
+
 duration=$(( SECONDS - start ))
 echo $duration" secs"
 

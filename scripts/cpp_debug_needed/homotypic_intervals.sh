@@ -143,7 +143,6 @@ if [[ ! -f "$universefile" || ! -f "$outputdir/promoter_lengths.txt" ]]; then
     python3 $pmetroot/parse_promoter_lengths_from_fasta.py \
             $outputdir/no_duplicates.fa \
             $outputdir/promoter_lengths.txt
-    # rm -f $outputdir/no_duplicates.fa
 
     cut -f 1  $outputdir/promoter_lengths.txt > $universefile
 fi
@@ -159,12 +158,12 @@ print_green "Processing motifs...";
 [ ! -d $outputdir/memefiles ] && mkdir $outputdir/memefiles
 
 python3 $pmetroot/parse_memefile.py \
-        $memefile \
+        $memefile                   \
         $outputdir/memefiles/
 
 ### creates IC.txt tsv file from, motif files
 python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
-        $outputdir/memefiles/ \
+        $outputdir/memefiles/                      \
         $outputdir/IC.txt
 
 ### Create a fimo hits file form each motif file
@@ -176,31 +175,39 @@ shopt -s nullglob # prevent loop produncing '*.txt'
 nummotifs=$(grep -c '^MOTIF' "$memefile")
 print_orange "    $nummotifs motifs found"
 
+print_green "Running fimo..."
 n=0
 # paralellise this loop
 for memefile in $outputdir/memefiles/*.txt; do
     let n=$n+1
     fimofile=`basename $memefile`
-    echo $fimofile
+    echo "    $fimofile"
 
-    fimo    --text                        \
-            --thresh $fimothresh          \
-            --verbosity 1                 \
-            --bgfile $outputdir/genome.bg \
-            $memefile                     \
-            $genomefile                   \
-            > $outputdir/fimo/$fimofile &
+    fimo                              \
+        --no-qvalue                   \
+        --text                        \
+        --thresh $fimothresh          \
+        --verbosity 1                 \
+        --bgfile $outputdir/genome.bg \
+        $memefile                     \
+        $genomefile                   \
+        > $outputdir/fimo/$fimofile &
     [ `expr $n % $threads` -eq 0 ] && wait
 done
 
-# echo "Delete unnecessary files"
-# rm -r $outputdir/memefiles
-# rm $outputdir/genome.bg
+print_green "Running pmet index..."
+mkdir -p $outputdir/fimohits
+# run pmet index
+scripts/pmetindex                      \
+    -f $outputdir/fimo                 \
+    -k 5                               \
+    -n 5000                            \
+    -p $outputdir/promoter_lengths.txt \
+    -o $outputdir
 
 
-# next stage needs the following inputs
-
-#   promoter_lengths.txt        made by parse_promoter_lengths.py from .bed file
-#   bimnomial_thresholds.txt    made by PMETindex
-#   IC.txt                      made by calculateICfrommeme.py from meme file
-#   gene input file             supplied by user
+print_green "Delete unnecessary files..."
+rm -rf $outputdir/memefiles
+rm -rf $outputdir/genome.bg
+rm -rf $outputdir/fimo
+rm -rf $outputdir/no_duplicates.fa

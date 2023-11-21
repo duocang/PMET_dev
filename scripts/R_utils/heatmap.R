@@ -1,23 +1,34 @@
-heatmap.func <- function(filename = NULL, method = NULL, pmet.out = NULL, unique.cmbination = TRUE)
+heatmap.func <- function(filename = NULL,
+                         method = NULL,
+                         pmet.out = NULL,
+                         p.adj.threshold = 0.05,
+                         p.adj.method = "Adjusted p-value (Bonf)",
+                         draw.histgram = TRUE,
+                         unique.cmbination = TRUE)
 {
-
-  histgram.path <- filename %>%
+  if (draw.histgram) {
+    histgram.path <- filename %>%
     tools::file_path_sans_ext() %>%
     stringr::str_replace("heatmap_", "histogram_")
+  } else {
+    histgram.path <- NULL
+  }
 
   pmet.result <- data.table::fread(pmet.out,
     select = c(
-      "Cluster", "Motif 1", "Motif 2",
+      "Cluster",
+      "Motif 1",
+      "Motif 2",
       "Number of genes in cluster with both motifs",
-      "Adjusted p-value (BH)", "Genes"
+      p.adj.method,
+      "Genes"
     ), verbose = FALSE) %>%
     setNames(c("cluster", "motif1", "motif2", "gene_num", "p_adj", "genes")) %>%
-    # dplyr::filter(gene_num > 0) %>%
     arrange(desc(p_adj)) %>%
     mutate(`motif_pair` = paste0(motif1, "^^", motif2))
 
   pmet.result.processed <- ProcessPmetResult( pmet_result       = pmet.result,
-                                              p_adj_limt        = 0.05,
+                                              p_adj_limt        = p.adj.threshold,
                                               gene_portion      = 0.05,
                                               topn              = 20,
                                               histgram_dir      = histgram.path,
