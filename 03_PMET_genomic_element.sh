@@ -89,7 +89,7 @@ homotypic_output=$res_dir/01_homotypic_$genomic_element
 
 # heterotypic
 task=gene
-gene_file=data/$task.txt
+gene_input_file=data/$task.txt
 heterotypic_output=$res_dir/02_heterotypic_$genomic_element
 icthresh=4
 

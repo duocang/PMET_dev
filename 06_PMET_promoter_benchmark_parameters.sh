@@ -82,7 +82,7 @@ homotypic_output=$res_dir/01_homotypic
 
 # Heterotypic
 task=gene_cell_identities
-gene_file=data/$task.txt
+gene_input_file=data/$task.txt
 fimothresh=005
 icthresh=4
 
@@ -129,7 +129,7 @@ for promlength in ${promlengthRange[@]}; do
         for topn in ${topnRange[@]}; do
 
             print_orange             "    parameters:"
-            print_fluorescent_yellow "        genes     : $gene_file"
+            print_fluorescent_yellow "        genes     : $gene_input_file"
             print_fluorescent_yellow "        promlength: $promlength"
             print_fluorescent_yellow "        maxk      : $maxk"
             print_fluorescent_yellow "        topn      : $topn"
@@ -142,7 +142,7 @@ for promlength in ${promlengthRange[@]}; do
             mkdir -p $output
 
             # remove genes not present in pre-computed pmet index
-            grep -Ff $indexOutput/universe.txt $gene_file > $output/available_genes.txt
+            grep -Ff $indexOutput/universe.txt $gene_input_file > $output/available_genes.txt
 
             $HETEROTYPIC                                 \
                 -d .                                     \
@@ -164,7 +164,7 @@ for promlength in ${promlengthRange[@]}; do
                 $output/heatmap.png      \
                 $output/motif_output.txt
 
-            grep -Ff $indexOutput/universe.txt $gene_file > $output/available_genes.txt
+            grep -Ff $indexOutput/universe.txt $gene_input_file > $output/available_genes.txt
         done
     done
 done
