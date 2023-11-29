@@ -415,7 +415,7 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 if [ "$element" = "mRNA" ]; then
     print_fluorescent_yellow "        (only for mRNA) Merging and filtering fimo hits out of multiple mRNA fragments"
-    Rscript scripts/parse_mRNA_multiple_fragments.r         \
+    Rscript $pmetroot/parse_mRNA_multiple_fragments.r         \
         $indexingOutputDir/binomial_thresholds.txt \
         $indexingOutputDir/fimohits \
         $indexingOutputDir/fimohits_
