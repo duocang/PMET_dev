@@ -1,30 +1,6 @@
 #!/bin/bash
 set -e
 
-# called when user selects Promoters on web UI
-# Takes as inputs from web page : fasta file , gff3 file, meme file, gene clusters file
-# gfff3 identifier, N, k, promoter length, overlap included?, utr included?, [fimo threshold]
-
-#This version requires outputdir, the 3 input files will be put there
-
-
-# ICdict.pickle file, binomial_thresholds.txt file
-# a directory called fimohits contaning files called motifname.txt fo reach mtoif in meme file input
-
-# This is all the input needed by pmet tool, along with genes list file (clusters) that user will provide via web UI
-
-
-
-# 22.1.18 Charlotte Rich
-# last edit: 7.2.18 - removed the make 1 big fimohits files
-#Edited by PEB June 2020. Will be called by run_pmet_min.php to create inputs for call to pmet binary
-#Take progress file from 1% to 95%
-
-#PEB DEc 2020. Called by run_pmet.php with params
-# -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile
-
-# fimo threshold is default
-
 function usage () {
     cat >&2 <<EOF
 USAGE: PMETindexgenome [options] <genome> <gff3> <memefile>
@@ -89,6 +65,7 @@ maxk=5
 promlength=1000
 fimothresh=0.05
 element=mRNA
+mrnaFull=No
 delete=yes
 overlap="AllowOverlap"
 utr="No"
@@ -113,7 +90,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:f:g:v:u:e:t:d:" options; do
+while getopts ":r:i:o:n:k:p:f:v:u:e:m:t:d:" options; do
     case $options in
         r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -135,6 +112,8 @@ while getopts ":r:i:o:n:k:p:f:g:v:u:e:t:d:" options; do
         utr=$OPTARG;;
         e) print_white "Genomic element                        : "; print_orange "$OPTARG" >&2
         element=$OPTARG;;
+        m) print_white "Include complete mRNA (5' and 3' UTR)? : "; print_orange "$OPTARG" >&2
+        mrnaFull=$OPTARG;;
         t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
         threads=$OPTARG;;
         d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
@@ -228,7 +207,7 @@ rm -rf $indexingOutputDir/cleaned.bed
 rm -rf $indexingOutputDir/genelines.
 
 
-if [ "$element" = "mRNA" ]; then
+if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
     print_fluorescent_yellow "        (only for mRNA) Removing overlap with 3' UTR and 5' UTR"
     for i in 3 5; do
         if [ "$i" -eq 3 ]; then
@@ -364,7 +343,7 @@ print_fluorescent_yellow "    13. Generating information content (IC.txt)"
 [ ! -d $indexingOutputDir/memefiles ] && mkdir $indexingOutputDir/memefiles
 python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
 python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
-    $indexingOutputDir/memefiles/ \
+    $indexingOutputDir/memefiles/                  \
     $indexingOutputDir/IC.txt
 rm -rf $indexingOutputDir/memefiles/*
 
@@ -413,11 +392,33 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 
 
-if [ "$element" = "mRNA" ]; then
+if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
     print_fluorescent_yellow "        (only for mRNA) Merging and filtering fimo hits out of multiple mRNA fragments"
-    Rscript $pmetroot/parse_mRNA_multiple_fragments.r         \
-        $indexingOutputDir/binomial_thresholds.txt \
-        $indexingOutputDir/fimohits \
+
+    awk '{
+        sub(/^__/, "", $1);
+        sub(/__[0-9]+$/, "", $1);
+        print $1 "\t" $2;
+    }' $indexingOutputDir/promoter_lengths.txt > $indexingOutputDir/promoter_lengths_modified.txt
+
+    awk '{
+    sum[$1] += $2; # 对于每个基因，累加第二列的值
+    }
+    END {
+        for (gene in sum) {
+            print gene "\t" sum[gene]; # 打印每个基因及其对应的总和
+        }
+    }' $indexingOutputDir/promoter_lengths_modified.txt > $indexingOutputDir/promoter_lengths_summed.txt
+
+    rm -rf $indexingOutputDir/promoter_lengths.txt
+    mv $indexingOutputDir/promoter_lengths_summed.txt $indexingOutputDir/promoter_lengths.txt
+
+    rm -rf $indexingOutputDir/promoter_lengths_summed.txt
+    rm -rf $indexingOutputDir/promoter_lengths_modified.txt
+
+    Rscript $pmetroot/parse_mRNA_multiple_fragments.r \
+        $indexingOutputDir/binomial_thresholds.txt    \
+        $indexingOutputDir/fimohits                   \
         $indexingOutputDir/fimohits_
 
     rm -rf $indexingOutputDir/fimohits

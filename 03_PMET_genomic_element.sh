@@ -66,6 +66,9 @@ distance=1000
 gff3id="gene_id="
 delete_temp=yes
 
+mrnaFull=No
+
+
 # data
 genome=data/homotypic_promoters/genome.fasta
 anno=data/homotypic_promoters/anno.gff3
@@ -93,9 +96,12 @@ gene_input_file=data/$task.txt
 heterotypic_output=$res_dir/02_heterotypic_$genomic_element
 icthresh=4
 
+# plot output
+plot_output=$res_dir/plot
+
 mkdir -p $homotypic_output
 mkdir -p $heterotypic_output
-
+mkdir -p $plot_output
 
 
 ########################## 2. Downloading data #######################################
@@ -121,6 +127,7 @@ $HOMOTYPIC               \
     -r $toolDir          \
     -o $homotypic_output \
     -e $genomic_element  \
+    -m $mrnaFull         \
     -i $gff3id           \
     -k $maxk             \
     -n $topn             \
@@ -172,10 +179,40 @@ print_orange "      Time taken: $days day $hours hour $minutes minute $seconds s
 
 print_green "DONE: heterotypic search"
 
-
 ##################################### Heatmap ##################################
+print_green "\n\nCreating heatmap...\n"
 
-Rscript 05_heatmap.R                     \
+Rscript 05_heatmap.R                        \
+    All                                  \
+    $plot_output/heatmap.png             \
+    $heterotypic_output/motif_output.txt \
+    15                                    \
+    3                                    \
+    6                                    \
+    FALSE
+
+Rscript 05_heatmap.R                           \
+    Overlap                                 \
+    $plot_output/heatmap_overlap_unique.png \
+    $heterotypic_output/motif_output.txt    \
+    15                                       \
+    3                                       \
+    6                                       \
+    TRUE
+
+Rscript 05_heatmap.R                        \
     Overlap                              \
-    $heterotypic_output/heatmap.png      \
-    $heterotypic_output/motif_output.txt
+    $plot_output/heatmap_overlap.png     \
+    $heterotypic_output/motif_output.txt \
+    15                                    \
+    3                                    \
+    6                                    \
+    FALSE
+
+# method
+# filename
+# pmet.out
+# topn
+# histgram_ncol
+# histgram_width
+# unique_cmbination
