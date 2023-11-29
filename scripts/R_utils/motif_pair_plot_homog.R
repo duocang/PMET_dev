@@ -120,8 +120,8 @@ MotifPairPlotHomog <- function( pmet.split       = NULL,
           axis.title.y = element_blank(),
           axis.text.x  = element_text(angle = 90, size = font_size),
           axis.text.y  = element_text(size = font_size),
-          legend.text  = element_text(size = 18),
-          legend.title = element_text(size = 20)
+          legend.text  = element_text(size = font_size),
+          legend.title = element_text(size = font_size)
         )
     }
     return(p.list)
@@ -143,8 +143,8 @@ MotifPairPlotHomog <- function( pmet.split       = NULL,
           # axis.title.y = element_blank(),
           axis.text.x  = element_text(angle = 90, size = font_size),
           axis.text.y  = element_text(size = font_size),
-          legend.text  = element_text(size = 15),
-          legend.title = element_text(size = 15)
+          legend.text  = element_text(size = font_size),
+          legend.title = element_text(size = font_size)
         )
     })
 

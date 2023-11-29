@@ -139,16 +139,19 @@ DiscardSharedItems <- function(motifs_list) {
   return(motifs_list)
 }
 
-PmetHistogramPlot <- function(res           = NULL,
-                              ncols         = 2,
-                              histgram_path = "histgram_padj_before_filter.png") {
+PmetHistogramPlot <- function(res            = NULL,
+                              ncols          = NULL,
+                              histgram_width = 6,
+                              histgram_path  = "histgram_padj_before_filter.png") {
 
   clusters <- unique(res$cluster) %>% sort()
 
   colors <- COLORS[1:length(clusters)]
   names(colors) <- clusters
 
-  ncols <- ifelse(length(clusters) > 1, 2, 1)
+  if (is.null(ncols)) {
+    ncols <- ifelse(length(clusters) > 1, 2, 1)
+  }
 
   p <- lapply(clusters, function(clu) {
     res[, c("cluster", "p_adj")] %>% filter(cluster == clu) %>%
@@ -167,8 +170,8 @@ PmetHistogramPlot <- function(res           = NULL,
          p,
          dpi = 300,
          units="in",
-         width = 10,
-         height = 3 * ceiling(length(clusters)/ncols))
+         width  = histgram_width,
+         height = (histgram_width / 3 ) * ceiling(length(clusters)/ncols))
 
   return(p)
 }
@@ -185,6 +188,8 @@ ProcessPmetResult <- function(pmet_result       = NULL,
                               gene_portion      = 0.05,
                               topn              = 40,
                               histgram_dir      = NULL,
+                              histgram_ncol     = 2,
+                              histgram_width    = 6,
                               unique_cmbination = TRUE) {
   suppressMessages({
 
@@ -196,9 +201,10 @@ ProcessPmetResult <- function(pmet_result       = NULL,
     ### 3.1 Histogram of p_adj
     if (!is.null(histgram_dir)) {
       PmetHistogramPlot(
-        res   = pmet_result,
-        ncols = 2,
-        histgram_path = file.path(histgram_dir, "histgram_padj_before_filter.png"))
+        res            = pmet_result,
+        ncols          = histgram_ncol,
+        histgram_width = histgram_width,
+        histgram_path  = file.path(histgram_dir, "histgram_padj_before_filter.png"))
     } # if
 
     ## 2. Full genes of each cluster
@@ -238,9 +244,10 @@ ProcessPmetResult <- function(pmet_result       = NULL,
     ### 3.1 Histogram of p_adj
     if (!is.null(histgram_dir)) {
       PmetHistogramPlot(
-        res   = pmet.filtered,
-        ncols = 2,
-        histgram_path = file.path(histgram_dir, "histgram_padj_after_filter.png"))
+        res            = pmet.filtered,
+        ncols          = histgram_ncol,
+        histgram_width = histgram_width,
+        histgram_path  = file.path(histgram_dir, "histgram_padj_after_filter.png"))
     } # if
 
     ## 4. find and remove motif pairs are not unique in different clusters

@@ -144,8 +144,39 @@ rm $gene_input_file"temp"
 
 
 ##################################### Heatmap ##################################
+print_green "\n\nCreating heatmap...\n"
+
+Rscript 05_heatmap.R                     \
+    All                                  \
+    $plot_output/heatmap.png             \
+    $heterotypic_output/motif_output.txt \
+    5                                    \
+    3                                    \
+    6                                    \
+    FALSE
+
+Rscript 05_heatmap.R                        \
+    Overlap                                 \
+    $plot_output/heatmap_overlap_unique.png \
+    $heterotypic_output/motif_output.txt    \
+    5                                       \
+    3                                       \
+    6                                       \
+    TRUE
 
 Rscript 05_heatmap.R                     \
     Overlap                              \
-    $heterotypic_output/heatmap.png      \
-    $heterotypic_output/motif_output.txt
+    $plot_output/heatmap_overlap.png     \
+    $heterotypic_output/motif_output.txt \
+    5                                    \
+    3                                    \
+    6                                    \
+    FALSE
+
+# method
+# filename
+# pmet.out
+# topn
+# histgram_ncol
+# histgram_width
+# unique_cmbination
