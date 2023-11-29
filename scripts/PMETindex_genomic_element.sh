@@ -444,7 +444,7 @@ if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]
     rm -rf $indexingOutputDir/modified_bedfile.bed
     rm -rf $indexingOutputDir/promoter.bg
     rm -rf $indexingOutputDir/promoter.fa
-    rm -rf $indexingOutputDir/promoter_lengths.txt
+    # rm -rf $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoter_rought.fa
     rm -rf $indexingOutputDir/sorted.gff3
     rm -rf $indexingOutputDir/three_prime_UTR.bed
