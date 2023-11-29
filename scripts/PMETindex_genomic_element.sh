@@ -152,7 +152,7 @@ genomefile=$1
 gff3file=$2
 memefile=$3
 universefile=$indexingOutputDir/universe.txt
-bedfile=$indexingOutputDir/genelines.bed
+bedfile=$indexingOutputDir/${element}.bed
 
 print_white "Genome file                            : "; print_orange $genomefile
 print_white "Annotation file                        : "; print_orange $gff3file
@@ -164,13 +164,10 @@ start=$SECONDS
 
 print_green "Preparing data for FIMO and PMET index..."
 
-
 # -------------------------------------------------------------------------------------------
 # 1. sort annotaion by gene coordinates
 print_fluorescent_yellow "     1. Sorting annotation by gene coordinates"
-chmod a+x $pmetroot/gff3sort/gff3sort.pl
 $pmetroot/gff3sort/gff3sort.pl $gff3file > $indexingOutputDir/sorted.gff3
-
 
 # -------------------------------------------------------------------------------------------
 # 2. extract gene line from annoitation
@@ -187,14 +184,13 @@ fi
 # -------------------------------------------------------------------------------------------
 # 3. extract chromosome , start, end, gene ('gene_id' for input) ...
 print_fluorescent_yellow "     3. Extracting chromosome, start, end, gene..."
-
 python3 $pmetroot/parse_mRNAlines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
 
 # -------------------------------------------------------------------------------------------
 # 4. filter invalid genes: start should be smaller than end
 invalidRows=$(awk '$2 >= $3' $bedfile)
 if [[ -n "$invalidRows" ]]; then
-    echo "$invalidRows" > $indexingOutputDir/invalid_mRNAlines.bed
+    echo "$invalidRows" > $indexingOutputDir/invalid_lines.bed
 fi
 print_fluorescent_yellow "     4. Extracting genes coordinates: start should be smaller than end (genelines.bed)"
 # 在BED文件格式中，无论是正链（+）还是负链（-），起始位置总是小于终止位置。
@@ -204,130 +200,149 @@ print_fluorescent_yellow "     4. Extracting genes coordinates: start should be 
 # starting site < stopped site in bed file
 awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 
+# -------------------------------------------------------------------------------------------
+# 5. convert isoform name to it gene
+print_fluorescent_yellow "     5. Converting isoform name to its gene (cleaned.bed)"
+awk -v OFS="\t" '{split($4, arr, "."); $4 = arr[1]; print $0}' $bedfile > $indexingOutputDir/cleaned.bed
 
 # -------------------------------------------------------------------------------------------
-# 5. list of all genes found
-print_fluorescent_yellow "     5. Extracting genes names: complete list of all genes found (universe.txt)"
+# 6. find longest genes (it was isoforms before removing .x)
+print_fluorescent_yellow "     6. Finding longest isoform"
+awk '
+{
+    len = $3 - $2;
+    if (!($4 in maxLen) || len > maxLen[$4]) {
+        maxLen[$4] = len;  # 更新最大长度
+        maxLine[$4] = $0;  # 保留整行内容
+    }
+}
+END {
+    for (id in maxLine) {
+        printf "%s\n", maxLine[id];
+    }
+}' $indexingOutputDir/cleaned.bed > $indexingOutputDir/cleaned_longest.bed
+
+sort -k4,4 $indexingOutputDir/cleaned_longest.bed > $bedfile
+rm -rf $indexingOutputDir/cleaned_longest.bed
+rm -rf $indexingOutputDir/cleaned.bed
+rm -rf $indexingOutputDir/genelines.
+
+
+if [ "$element" = "mRNA" ]; then
+    print_fluorescent_yellow "        (only for mRNA) Removing overlap with 3' UTR and 5' UTR"
+    for i in 3 5; do
+        if [ "$i" -eq 3 ]; then
+            item="three_prime_UTR"
+            gff3id="Parent=transcript:"
+        else
+            item="five_prime_UTR"
+            gff3id="Parent=transcript:"
+        fi
+        # 2. extract gene line from annoitation
+        if [[ "$(uname)" == "Linux" ]]; then
+            grep -P "\t${item}\t" $indexingOutputDir/sorted.gff3 > $indexingOutputDir/${item}.gff3
+        elif [[ "$(uname)" == "Darwin" ]]; then
+            grep    "\t${item}\t" $indexingOutputDir/sorted.gff3 > $indexingOutputDir/${item}.gff3
+        fi
+        # 3. extract chromosome , start, end, gene ('gene_id' for input) ...
+        python3 $pmetroot/parse_mRNAlines.py $gff3id $indexingOutputDir/${item}.gff3 $indexingOutputDir/${item}.bed
+        # 4. filter invalid genes: start should be smaller than end
+        awk '$2 <  $3' $indexingOutputDir/${item}.bed > temp.bed && mv temp.bed $indexingOutputDir/${item}.bed
+        # 5. convert isoform name to it gene
+        awk -v OFS="\t" '{split($4, arr, "."); $4 = arr[1]; print $0}' $indexingOutputDir/${item}.bed > $indexingOutputDir/${item}_cleaned.bed
+        # 6. find longest genes (it was isoforms before removing .x)
+        awk '
+        {
+            len = $3 - $2;
+            if (!($4 in maxLen) || len > maxLen[$4]) {
+                maxLen[$4] = len;  # 更新最大长度
+                maxLine[$4] = $0;  # 保留整行内容
+            }
+        }
+        END {
+            for (id in maxLine) {
+                printf "%s\n", maxLine[id];
+            }
+        }' $indexingOutputDir/${item}_cleaned.bed > $indexingOutputDir/${item}_cleaned_longest.bed
+        sort -k4,4 $indexingOutputDir/${item}_cleaned_longest.bed > $indexingOutputDir/${item}.bed
+        rm -rf $indexingOutputDir/${item}_cleaned_longest.bed
+        rm -rf $indexingOutputDir/${item}_cleaned.bed
+        rm -rf $indexingOutputDir/${item}.gff3
+
+        bedtools subtract -a  $bedfile -b $indexingOutputDir/${item}.bed > $indexingOutputDir/non_overlapping.bed
+    done
+
+    cp $bedfile $indexingOutputDir/with_overlapping.bed
+
+    bedtools subtract                             \
+        -a $bedfile                               \
+        -b $indexingOutputDir/three_prime_UTR.bed \
+        > $indexingOutputDir/temp.bed
+    bedtools subtract                             \
+        -a $indexingOutputDir/temp.bed            \
+        -b $indexingOutputDir/five_prime_UTR.bed  \
+        > $indexingOutputDir/non_overlapping.bed
+
+    rm -rf $indexingOutputDir/temp.bed
+    rm -rf $bedfile
+    mv $indexingOutputDir/non_overlapping.bed $bedfile
+
+    print_fluorescent_yellow "        (only for mRNA) Makiing fragments of mRNA to be an independent mRNA"
+    # mRNA can be divided by removing 3' and 5'
+    cut -f4 $bedfile | sort | uniq -d > $indexingOutputDir/id_duplicated.txt
+    awk '{
+        if (seen[$4]++ == 0) {
+            # 如果是第一次看到这个基因名称，不做改变
+            print $0;
+        } else {
+            # 对于重复的基因名称，在名称前加 "__"，后面加 "__" 和一个序号
+            print $1 "\t" $2 "\t" $3 "\t" "__" $4 "__" seen[$4] "\t" $5 "\t" $6;
+        }
+    }' "$bedfile" >  $indexingOutputDir/modified_bedfile.bed
+
+    awk '$3 - $2 >= 30' $indexingOutputDir/modified_bedfile.bed > $indexingOutputDir/filtered_bedfile.bed
+
+
+    sort -k4,4 $indexingOutputDir/filtered_bedfile.bed \
+        > $indexingOutputDir/sorted_filtered_bedfile.bed
+
+    rm -rf $bedfile
+    mv $indexingOutputDir/sorted_filtered_bedfile.bed $bedfile
+fi
+
+
+
+# -------------------------------------------------------------------------------------------
+# 7. list of all genes found
+print_fluorescent_yellow "     7. Extracting all genes found (universe.txt)"
 cut -f 4 $bedfile > $universefile
 
 # -------------------------------------------------------------------------------------------
-# 6. strip the potential FASTA line breaks. creates genome_stripped.fa
-print_fluorescent_yellow "     6. Removing potential FASTA line breaks (genome_stripped.fa)"
+# 8. promoter lenfths from promoters.bed
+print_fluorescent_yellow "     8. Promoter lengths from genelines.bed"
+awk '{print $4 "\t" ($3 - $2)}' $bedfile      \
+    > $indexingOutputDir/promoter_lengths.txt
+
+# -------------------------------------------------------------------------------------------
+# 9. strip the potential FASTA line breaks. creates genome_stripped.fa
+print_fluorescent_yellow "     9. Removing potential FASTA line breaks (genome_stripped.fa)"
 awk '/^>/ { if (NR!=1) print ""; printf "%s\n",$0; next;} \
     { printf "%s",$0;} \
     END { print ""; }'  $genomefile > $indexingOutputDir/genome_stripped.fa
 
-# -------------------------------------------------------------------------------------------
-# 7. promoter lenfths from promoters.bed
-print_fluorescent_yellow "     7. Promoter lengths from genelines.bed (mRNA_lengths_all.txt)"
-awk '{print $4 "\t" ($3 - $2)}' $indexingOutputDir/genelines.bed \
-    > $indexingOutputDir/promoter_lengths_all.txt
-cp $indexingOutputDir/promoter_lengths_all.txt $indexingOutputDir/7_promoter_lengths_all.txt
-
 
 # -------------------------------------------------------------------------------------------
-# 8. promoter lenfths from promoters.bed
-print_fluorescent_yellow "     8. mRNA isoform with longest lengths from genelines.bed (promoter_lengths_max.txt)"
-# one gene has several isoforms. We select the mRNA with longest sequence.
-awk '
-BEGIN { FS=OFS="\t" }
-{
-    gene = $1
-    sub(/\..*$/, "", gene)
-    if (gene in max_length) {
-        if ($2 > max_length[gene]) {
-            max_length[gene] = $2
-            isoform[gene] = $1
-        }
-    } else {
-        max_length[gene] = $2
-        isoform[gene] = $1
-    }
-}
-END {
-    for (gene in isoform) {
-        print isoform[gene], max_length[gene]
-    }
-}' $indexingOutputDir/promoter_lengths_all.txt | sort > $indexingOutputDir/promoter_lengths_max.txt
-
-rm -rf $indexingOutputDir/promoter_lengths_all.txt
-mv $indexingOutputDir/promoter_lengths_max.txt $indexingOutputDir/promoter_lengths_all.txt
-cp $indexingOutputDir/promoter_lengths_all.txt $indexingOutputDir/8_promoter_lengths_all.txt
-
-# # check if any duplication
-# cut -f1 $indexingOutputDir/8_promoter_lengths_all.txt | sort | uniq -d
-
-# -------------------------------------------------------------------------------------------
-# 9. filters out the rows with NEGATIVE lengths
-print_fluorescent_yellow "     9. Filtering out the rows of mRNA_lengths_all.txt with NEGATIVE lengths (promoter_lengths.txt)"
-while read -r gene length; do
-    # Check if the length is a positive number
-    if (( length >= 0 )); then
-        # Append rows with positive length to the output file
-        echo "$gene $length" >> $indexingOutputDir/promoter_lengths.txt
-    else
-        # Append rows with negative length to the deleted file
-        echo "$gene $length" >> $indexingOutputDir/promoter_lengths_deleted.txt
-    fi
-done < $indexingOutputDir/promoter_lengths_all.txt
-cp $indexingOutputDir/promoter_lengths.txt $indexingOutputDir/9_promoter_lengths.txt
-
-# -------------------------------------------------------------------------------------------
-# 10. find NEGATIVE genes
-if [ -f "$indexingOutputDir/promoter_lengths_deleted.txt" ]; then
-    print_fluorescent_yellow "    10. Finding genes with NEGATIVE promoter lengths (promoter_negative.txt)"
-    cut -d " " \
-        -f1  $indexingOutputDir/promoter_lengths_deleted.txt \
-        > $indexingOutputDir/promoter_negative.txt
-    cp $indexingOutputDir/promoter_negative.txt $indexingOutputDir/10_promoter_negative.txt
-else
-    print_fluorescent_yellow "    10. (skipped) Finding genes with NEGATIVE promoter lengths (promoter_negative.txt)"
-fi
-
-# -------------------------------------------------------------------------------------------
-# 11. update gene list (no NEGATIVE genes)
-print_fluorescent_yellow "    11. Updating gene list without NEGATIVE genes (universe.txt)";
-cut -d " " -f1  $indexingOutputDir/promoter_lengths.txt > $universefile
-
-
-# -------------------------------------------------------------------------------------------
-# 12. filter promoter annotation with negative length
-print_fluorescent_yellow "    12. Extracting bed coordinates with longest length (genelines.bed)"
-awk 'NR==FNR{genes[$1]=1; next} genes[$4]'         \
-    $universefile                                  \
-    $bedfile                                       \
-    > $indexingOutputDir/matched_promoterlines.bed
-
-
-# -------------------------------------------------------------------------------------------
-# 13. convert isoform name to it gene
-print_fluorescent_yellow "    13. Converting isoform name to its gene (cleaned_matched_promoterlines.bed)"
-awk -v OFS="\t" '{split($4, arr, "."); $4 = arr[1]; print $0}' \
-    $indexingOutputDir/matched_promoterlines.bed \
-    > $indexingOutputDir/cleaned_matched_promoterlines.bed
-
-awk '{split($1, arr, "."); $1 = arr[1]; print $0}'    \
-    $indexingOutputDir/promoter_lengths.txt           \
-    > $indexingOutputDir/cleaned_promoter_lengths.txt
-rm $indexingOutputDir/promoter_lengths.txt
-mv $indexingOutputDir/cleaned_promoter_lengths.txt $indexingOutputDir/promoter_lengths.txt
-
-awk -F'.' '{print $1}' $universefile > "${universefile}_cleaned"
-rm -rf $universefile
-mv "${universefile}_cleaned" $universefile
-
-# -------------------------------------------------------------------------------------------
-# 14. create promoters fasta
-print_fluorescent_yellow "    14. Creating mRNA FASTA file (promoter_rought.fa)";
+# 10. create promoters fasta
+print_fluorescent_yellow "    10. Creating mRNA FASTA file (promoter_rought.fa)";
 bedtools getfasta \
-        -fi  $indexingOutputDir/genome_stripped.fa                \
-        -bed $indexingOutputDir/cleaned_matched_promoterlines.bed \
-        -fo  $indexingOutputDir/promoter_rought.fa                \
+        -fi  $indexingOutputDir/genome_stripped.fa \
+        -bed $bedfile                              \
+        -fo  $indexingOutputDir/promoter_rought.fa \
         -name -s
 
 # -------------------------------------------------------------------------------------------
-# 15. replace the id of each seq with gene names
-print_fluorescent_yellow "    15. Replacing the id of each sequences' with gene names (promoter.fa)"
+# 11. replace the id of each seq with gene names
+print_fluorescent_yellow "    11. Replacing the id of each sequences' with gene names (promoter.fa)"
 sed 's/::.*//g' $indexingOutputDir/promoter_rought.fa > $indexingOutputDir/promoter.fa
 
 # check if any duplicated id
@@ -338,15 +353,14 @@ if [ ! -s $indexingOutputDir/duplicate_ids.txt ]; then
     rm -rf $indexingOutputDir/duplicate_ids.txt
 fi
 
-
 # -------------------------------------------------------------------------------------------
-# 16. promoter.bg from promoter.fa
-print_fluorescent_yellow "    16. fasta-get-markov estimates a Markov model from promoter.fa. (promoter.bg)"
+# 12. promoter.bg from promoter.fa
+print_fluorescent_yellow "    12. fasta-get-markov estimates a Markov model from promoter.fa. (promoter.bg)"
 fasta-get-markov $indexingOutputDir/promoter.fa > $indexingOutputDir/promoter.bg
 
 # -------------------------------------------------------------------------------------------
-# 17. IC.txt
-print_fluorescent_yellow "    17. Generating information content (IC.txt)"
+# 13. IC.txt
+print_fluorescent_yellow "    13. Generating information content (IC.txt)"
 [ ! -d $indexingOutputDir/memefiles ] && mkdir $indexingOutputDir/memefiles
 python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
 python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
@@ -355,8 +369,8 @@ python3 $pmetroot/calculateICfrommeme_IC_to_csv.py \
 rm -rf $indexingOutputDir/memefiles/*
 
 # -------------------------------------------------------------------------------------------
-# 18. individual motif files from user's meme file
-print_fluorescent_yellow "    18. Spliting motifs into individual meme files (folder memefiles)"
+# 14. individual motif files from user's meme file
+print_fluorescent_yellow "    14. Spliting motifs into individual meme files (folder memefiles)"
 python3 $pmetroot/parse_memefile_batches.py $memefile $indexingOutputDir/memefiles/ $threads
 
 # -------------------------------- Run fimo and pmetindex --------------------------
@@ -398,33 +412,44 @@ find $indexingOutputDir/memefiles -name \*.txt \
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 
+
+if [ "$element" = "mRNA" ]; then
+    print_fluorescent_yellow "        (only for mRNA) Merging and filtering fimo hits out of multiple mRNA fragments"
+    Rscript scripts/parse_mRNA_multiple_fragments.r         \
+        $indexingOutputDir/binomial_thresholds.txt \
+        $indexingOutputDir/fimohits \
+        $indexingOutputDir/fimohits_
+
+    rm -rf $indexingOutputDir/fimohits
+    mv $indexingOutputDir/fimohits_ $indexingOutputDir/fimohits
+fi
+
+
 # -------------------------------------------------------------------------------------------
 # Deleting unnecessary files
 if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then
     print_green "Deleting unnecessary files...\n\n"
-    rm -rf $indexingOutputDir/7_promoter_lengths_all.txt
-    rm -rf $indexingOutputDir/8_promoter_lengths_all.txt
-    rm -rf $indexingOutputDir/9_promoter_lengths.txt
-    rm -rf $indexingOutputDir/11_matched_promoterlines.bed
-    rm -rf $indexingOutputDir/bedgenome.genome
-    rm -rf $indexingOutputDir/cleaned_matched_promoterlines.bed
+    # rm -rf $indexingOutputDir/IC.txt
+    # rm -rf $indexingOutputDir/binomial_thresholds.txt
+    rm -rf $indexingOutputDir/filtered_bedfile.bed
+    # rm -rf $indexingOutputDir/fimohits
+    rm -rf $indexingOutputDir/fimohits_
+    rm -rf $indexingOutputDir/five_prime_UTR.bed
+    rm -rf $indexingOutputDir/genelines.gff3
     rm -rf $indexingOutputDir/genome_stripped.fa
     rm -rf $indexingOutputDir/genome_stripped.fa.fai
-    rm -rf $indexingOutputDir/invalid_mRNAlines.bed
-    rm -rf $indexingOutputDir/matched_promoterlines.bed
-    rm -rf $indexingOutputDir/memefiles
-    rm -rf $indexingOutputDir/promoter_rought.fa
+    rm -rf $indexingOutputDir/id_duplicated.txt
+    rm -rf $indexingOutputDir/mRNA.bed
+    # rm -rf $indexingOutputDir/memefiles
+    rm -rf $indexingOutputDir/modified_bedfile.bed
     rm -rf $indexingOutputDir/promoter.bg
-    rm -rf $indexingOutputDir/genelines.gff3
-    rm -rf $bedfile
-    rm -rf $indexingOutputDir/promoter_length_deleted.txt
     rm -rf $indexingOutputDir/promoter.fa
+    rm -rf $indexingOutputDir/promoter_lengths.txt
+    rm -rf $indexingOutputDir/promoter_rought.fa
     rm -rf $indexingOutputDir/sorted.gff3
-    rm -rf $indexingOutputDir/pmetindex.log
-    rm -rf $indexingOutputDir/promoter_lengths_all.txt
-    rm -rf $indexingOutputDir/promoters_before_filter.bed
-    rm -rf $indexingOutputDir/duplicate_ids.txt
-    rm -rf $indexingOutputDir/ids.txt
+    rm -rf $indexingOutputDir/three_prime_UTR.bed
+    # rm -rf $indexingOutputDir/universe.txt
+    rm -rf $indexingOutputDir/with_overlapping.bed
 fi
 
 # -------------------------------------------------------------------------------------------
