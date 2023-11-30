@@ -24,7 +24,7 @@ MotifPairPlotHetero <- function(plot.data = NULL,
   } else {
     inch_pre_motif <- 20 / 15 * 1.5
   }
-  font_size <- inch_pre_motif * 22
+  font_size <- inch_pre_motif * 30
 
   p <- plot.data %>%
     ggplot(aes(motif1, motif2, alpha = p_adj, fill = factor(cluster))) +

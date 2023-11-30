@@ -106,7 +106,7 @@ MotifPairPlotHomog <- function( pmet.split       = NULL,
   if (respective.plot) {
     inch_pre_motif <- 20 / length(motifs.top) * 1.5
     inch_pre_motif <- ifelse(inch_pre_motif > 1, 1, inch_pre_motif)
-    font_size <- inch_pre_motif * 22
+    font_size <- inch_pre_motif * 30
 
     for (clu in names(plot_data_list)) {
       p.list[[clu]] <- p.list[[clu]] +
@@ -121,21 +121,21 @@ MotifPairPlotHomog <- function( pmet.split       = NULL,
           axis.text.x  = element_text(angle = 90, size = font_size),
           axis.text.y  = element_text(size = font_size),
           legend.text  = element_text(size = font_size),
-          legend.title = element_text(size = font_size)
+          legend.title = element_text(size = font_size, angle = 90, vjust = 1, hjust = -1)
         )
     }
     return(p.list)
   } else {
     inch_pre_motif <- 10 / length(motifs.top) * 1.3
     inch_pre_motif <- ifelse(inch_pre_motif > 1, 1, inch_pre_motif)
-    font_size <- inch_pre_motif * 22
+    font_size <- inch_pre_motif * 30
 
     # add title
     p.list <- lapply(names(plot_data_list), function(clu) {
       p.list[[clu]] +
         ggtitle(clu) +
         theme(
-          plot.title = element_text(size = 22),
+          plot.title = element_text(size = 30),
           # legend.title = element_blank(),
           # legend.position = "top",
           # axis.line = element_blank(),
@@ -144,7 +144,7 @@ MotifPairPlotHomog <- function( pmet.split       = NULL,
           axis.text.x  = element_text(angle = 90, size = font_size),
           axis.text.y  = element_text(size = font_size),
           legend.text  = element_text(size = font_size),
-          legend.title = element_text(size = font_size)
+          legend.title = element_text(size = 15, angle = 90, vjust = 1, hjust = -1)
         )
     })
 
