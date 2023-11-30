@@ -5,37 +5,31 @@ function error_exit() {
     usage
     exit 1
 }
-
 print_red(){
     RED='\033[0;31m'
     NC='\033[0m' # No Color
     printf "${RED}$1${NC}\n"
 }
-
 print_green(){
     GREEN='\033[0;32m'
     NC='\033[0m' # No Color
     printf "${GREEN}$1${NC}\n"
 }
-
 print_orange(){
     ORANGE='\033[0;33m'
     NC='\033[0m' # No Color
     printf "${ORANGE}$1${NC}\n"
 }
-
 print_fluorescent_yellow(){
     FLUORESCENT_YELLOW='\033[1;33m'
     NC='\033[0m' # No Color
     printf "${FLUORESCENT_YELLOW}$1${NC}\n"
 }
-
 print_white(){
     WHITE='\033[1;37m'
     NC='\033[0m' # No Color
     printf "${WHITE}$1${NC}"
 }
-
 # Give execute permission to all users for the file.
 chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
 chmod a+x scripts/gff3sort/gff3sort.pl
@@ -57,11 +51,10 @@ else
 fi
 cd ..
 
-
 ########################## Parameters #######################################
 # tool
 toolDir=scripts
-HOMOTYPIC=$toolDir/PMETindex_promoters.sh
+HOMOTYPIC=$toolDir/PMETindex_promoters_fimo_integrated.sh
 HETEROTYPIC=$toolDir/pmetParallel
 
 chmod a+x $HOMOTYPIC
@@ -81,67 +74,61 @@ fimothresh=0.05
 distance=1000
 gff3id="gene_id="
 delete_temp=yes
-
 # data
 genome=data/homotypic_promoters/genome.fasta
-anno=data/homotypic_promoters/anno.gff3
+anno=data/TAIR10.gff3
 meme=data/Franco-Zorrilla_et_al_2014.meme
-
 # output
 homotypic_output=$res_dir/01_homotypic
-
-
 # heterotypic
 task=gene
 gene_input_file=data/$task.txt
 heterotypic_output=$res_dir/02_heterotypic
 icthresh=4
 
+# plot output
+plot_output=$res_dir/plot
 mkdir -p $homotypic_output
 mkdir -p $heterotypic_output
+mkdir -p $plot_output
 
+# ################################ Running homotypic ###################################
+# print_green "Searching for homotypic motif hits..."
+# $HOMOTYPIC               \
+#     -r $toolDir          \
+#     -o $homotypic_output \
+#     -i $gff3id           \
+#     -k $maxk             \
+#     -n $topn             \
+#     -p $length           \
+#     -v $noOverlap        \
+#     -u $utr              \
+#     -f $fimothresh       \
+#     -t $threads          \
+#     -d $delete_temp      \
+#     $genome              \
+#     $anno                \
+#     $meme
+# rm -rf $homotypic_output/fimo
 
-################################ Running homotypic ###################################
-print_green "Searching for homotypic motif hits..."
-$HOMOTYPIC               \
-    -r $toolDir          \
-    -o $homotypic_output \
-    -i $gff3id           \
-    -k $maxk             \
-    -n $topn             \
-    -p $length           \
-    -v $noOverlap        \
-    -u $utr              \
-    -f $fimothresh       \
-    -t $threads          \
-    -d $delete_temp      \
-    $genome              \
-    $anno                \
-    $meme
+# ##################################### Heterotypic ##################################
+# print_green "\n\nSearching for heterotypic motif hits..."
+# # remove genes not present in pre-computed pmet index
+# grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
 
-rm -rf $homotypic_output/fimo
-
-##################################### Heterotypic ##################################
-print_green "\n\nSearching for heterotypic motif hits..."
-
-# remove genes not present in pre-computed pmet index
-grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
-
-$HETEROTYPIC                                     \
-    -d .                                         \
-    -g $gene_input_file"temp"                    \
-    -i $icthresh                                 \
-    -p $homotypic_output/promoter_lengths.txt    \
-    -b $homotypic_output/binomial_thresholds.txt \
-    -c $homotypic_output/IC.txt                  \
-    -f $homotypic_output/fimohits                \
-    -o $heterotypic_output                       \
-    -t $threads
-
-cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
-rm $heterotypic_output/temp*.txt
-rm $gene_input_file"temp"
-
+# $HETEROTYPIC                                     \
+#     -d .                                         \
+#     -g $gene_input_file"temp"                    \
+#     -i $icthresh                                 \
+#     -p $homotypic_output/promoter_lengths.txt    \
+#     -b $homotypic_output/binomial_thresholds.txt \
+#     -c $homotypic_output/IC.txt                  \
+#     -f $homotypic_output/fimohits                \
+#     -o $heterotypic_output                       \
+#     -t $threads
+# cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+# rm $heterotypic_output/temp*.txt
+# rm $gene_input_file"temp"
 
 ##################################### Heatmap ##################################
 print_green "\n\nCreating heatmap...\n"
