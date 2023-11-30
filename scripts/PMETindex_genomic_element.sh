@@ -269,6 +269,7 @@ if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
     print_fluorescent_yellow "        (only for mRNA) Makiing fragments of mRNA to be an independent mRNA"
     # mRNA can be divided by removing 3' and 5'
     cut -f4 $bedfile | sort | uniq -d > $indexingOutputDir/id_duplicated.txt
+    # add '__' and '__[number]' to make mRNA fragments unique: AT5g139303 and __AT5g139303__2
     awk '{
         if (seen[$4]++ == 0) {
             # 如果是第一次看到这个基因名称，不做改变
@@ -278,9 +279,8 @@ if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
             print $1 "\t" $2 "\t" $3 "\t" "__" $4 "__" seen[$4] "\t" $5 "\t" $6;
         }
     }' "$bedfile" >  $indexingOutputDir/modified_bedfile.bed
-
+    # filter mRNA with too short sequences
     awk '$3 - $2 >= 30' $indexingOutputDir/modified_bedfile.bed > $indexingOutputDir/filtered_bedfile.bed
-
 
     sort -k4,4 $indexingOutputDir/filtered_bedfile.bed \
         > $indexingOutputDir/sorted_filtered_bedfile.bed
@@ -393,14 +393,14 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 
 if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
-    print_fluorescent_yellow "        (only for mRNA) Merging and filtering fimo hits out of multiple mRNA fragments"
-
+    print_fluorescent_yellow "        (only for mRNA) Adding up lengths of mRNA with multiple fragments"
+    # remove '__' and '__[numbe]' of a gene (mRAN frangments): __AT5g139303__2
     awk '{
         sub(/^__/, "", $1);
         sub(/__[0-9]+$/, "", $1);
         print $1 "\t" $2;
     }' $indexingOutputDir/promoter_lengths.txt > $indexingOutputDir/promoter_lengths_modified.txt
-
+    # add up lengths and keep only one genes for multiple mRAN fragments
     awk '{
     sum[$1] += $2; # 对于每个基因，累加第二列的值
     }
@@ -416,6 +416,7 @@ if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
     rm -rf $indexingOutputDir/promoter_lengths_summed.txt
     rm -rf $indexingOutputDir/promoter_lengths_modified.txt
 
+    print_fluorescent_yellow "        (only for mRNA) Merging and filtering fimo hits out of multiple mRNA fragments"
     Rscript $pmetroot/parse_mRNA_multiple_fragments.r \
         $indexingOutputDir/binomial_thresholds.txt    \
         $indexingOutputDir/fimohits                   \

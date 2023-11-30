@@ -92,43 +92,43 @@ mkdir -p $homotypic_output
 mkdir -p $heterotypic_output
 mkdir -p $plot_output
 
-# ################################ Running homotypic ###################################
-# print_green "Searching for homotypic motif hits..."
-# $HOMOTYPIC               \
-#     -r $toolDir          \
-#     -o $homotypic_output \
-#     -i $gff3id           \
-#     -k $maxk             \
-#     -n $topn             \
-#     -p $length           \
-#     -v $noOverlap        \
-#     -u $utr              \
-#     -f $fimothresh       \
-#     -t $threads          \
-#     -d $delete_temp      \
-#     $genome              \
-#     $anno                \
-#     $meme
-# rm -rf $homotypic_output/fimo
+################################ Running homotypic ###################################
+print_green "Searching for homotypic motif hits..."
+$HOMOTYPIC               \
+    -r $toolDir          \
+    -o $homotypic_output \
+    -i $gff3id           \
+    -k $maxk             \
+    -n $topn             \
+    -p $length           \
+    -v $noOverlap        \
+    -u $utr              \
+    -f $fimothresh       \
+    -t $threads          \
+    -d $delete_temp      \
+    $genome              \
+    $anno                \
+    $meme
+rm -rf $homotypic_output/fimo
 
-# ##################################### Heterotypic ##################################
-# print_green "\n\nSearching for heterotypic motif hits..."
-# # remove genes not present in pre-computed pmet index
-# grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
+##################################### Heterotypic ##################################
+print_green "\n\nSearching for heterotypic motif hits..."
+# remove genes not present in pre-computed pmet index
+grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
 
-# $HETEROTYPIC                                     \
-#     -d .                                         \
-#     -g $gene_input_file"temp"                    \
-#     -i $icthresh                                 \
-#     -p $homotypic_output/promoter_lengths.txt    \
-#     -b $homotypic_output/binomial_thresholds.txt \
-#     -c $homotypic_output/IC.txt                  \
-#     -f $homotypic_output/fimohits                \
-#     -o $heterotypic_output                       \
-#     -t $threads
-# cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
-# rm $heterotypic_output/temp*.txt
-# rm $gene_input_file"temp"
+$HETEROTYPIC                                     \
+    -d .                                         \
+    -g $gene_input_file"temp"                    \
+    -i $icthresh                                 \
+    -p $homotypic_output/promoter_lengths.txt    \
+    -b $homotypic_output/binomial_thresholds.txt \
+    -c $homotypic_output/IC.txt                  \
+    -f $homotypic_output/fimohits                \
+    -o $heterotypic_output                       \
+    -t $threads
+cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+rm $heterotypic_output/temp*.txt
+rm $gene_input_file"temp"
 
 ##################################### Heatmap ##################################
 print_green "\n\nCreating heatmap...\n"
