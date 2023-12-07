@@ -224,3 +224,7 @@ fi
 
 print_green "\nDONE"
 
+
+find $pmetDev -type f \( -name "*.sh" -o -name "*.pl" \) -exec chmod a+x {} \;
+chmod a+x $HOMOTYPIC
+chmod a+x $HETEROTYPIC
