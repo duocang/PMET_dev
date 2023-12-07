@@ -318,11 +318,11 @@ int output(std::vector<motif>::iterator blockstart, std::vector<motif>::iterator
            std::vector<motif>::iterator last, std::map<std::string, std::vector<std::string>> clusters,
            motifComparison mComp, std::map<std::string, std::vector<Output>> *results, double ICthreshold,
            std::unordered_map<std::string, int> promSizes, long numComplete, long totalComparisons,
-           std::string outputDirName) {
+           std::string outputDirName, bool isPoisson) {
   for (std::vector<motif>::iterator motif1 = blockstart; motif1 != blockEnd; ++motif1) {
     for (std::vector<motif>::iterator motif2 = motif1 + 1; motif2 != last; ++motif2) {
       mComp.findIntersectingGenes(*motif1, *motif2, ICthreshold,
-                                  promSizes);  // sets genesInUniverseWithBothMotifs, used in Coloc Test
+                                  promSizes, isPoisson);  // sets genesInUniverseWithBothMotifs, used in Coloc Test
       // got shared genes so do test for each cluster
       for (auto &cl : clusters) {
         // std::cout << "                          Gene cluster: " << cl.first << std::endl;
@@ -358,14 +358,14 @@ int outputParallel(std::vector<int> motifsIndxVector, std::vector<motif> *allMot
                    std::map<std::string, std::vector<std::string>> clusters, motifComparison mComp,
                    std::map<std::string, std::vector<Output>> *results, double ICthreshold,
                    std::unordered_map<std::string, int> promSizes, long numComplete, long totalComparisons,
-                   std::string outputDirName) {
+                   std::string outputDirName, bool isPoisson) {
   for (int i : motifsIndxVector) {
     motif motif1 = (*allMotifs)[i];
     for (int j = i + 1; j < (*allMotifs).size(); j++) {
       motif motif2 = (*allMotifs)[j];
 
       mComp.findIntersectingGenes(motif1, motif2, ICthreshold,
-                                  promSizes);  // sets genesInUniverseWithBothMotifs, used in Coloc Test
+                                  promSizes, isPoisson);  // sets genesInUniverseWithBothMotifs, used in Coloc Test
       // got shared genes so do test for each cluster
       for (auto &cl : clusters) {
         mComp.colocTest(promSizes.size(), ICthreshold, cl.first, cl.second);

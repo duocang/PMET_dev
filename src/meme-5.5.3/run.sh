@@ -34,6 +34,7 @@ mkdir -p fimo_out
 start=$(date +%s)
 
 build/bin/fimo                      \
+    --poisson                       \
     --topn 5                        \
     --topn 5000                     \
     --text                          \

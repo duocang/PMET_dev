@@ -24,7 +24,7 @@ public:
   std::vector<std::string> getSharedGenesInCluster() const { return genesInClusterWithBothMotifs; };
   long getNumSharedGenesInUniverse() const { return genesInUniverseWithBothMotifs.size(); };
 
-  void findIntersectingGenes(motif &m1, motif &m2, double ICthreshold, std::unordered_map<std::string, int> &promSizes);
+  void findIntersectingGenes(motif &m1, motif &m2, double ICthreshold, std::unordered_map<std::string, int> &promSizes, bool isPoisson);
   void colocTest(long universeSize, double ICthreshold, const std::string &clusterName,
                  std::vector<std::string> &genesInCluster);
 
@@ -33,9 +33,10 @@ private:
   bool motifInstancesOverlap(motif &m1, motif &m2, motifInstance &m1Instance, motifInstance &m2Instance,
                              double IDthreshold);
   bool geometricBinomialTest(const std::vector<bool> &motifLocationsToKeep, const std::string &gene, int promoterLength,
-                             motif &mt);
+                             motif &mt, bool isPoisson);
   double geometricMean(std::vector<double>::iterator first, std::vector<double>::iterator last);
   double binomialCDF(long numPVals, long numLocations, double gm);
+  double poissonCDF(double lambda, int k);
 
   double pval;
   long clusterSize;

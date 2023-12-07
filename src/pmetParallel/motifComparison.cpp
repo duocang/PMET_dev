@@ -23,7 +23,7 @@ void motifComparison::reset() {
 }
 
 void motifComparison::findIntersectingGenes(motif &motif1, motif &motif2, double ICthreshold,
-                                            std::unordered_map<std::string, int> &promSizes) {
+                                            std::unordered_map<std::string, int> &promSizes, bool isPoisson) {
   reset();
   // genesInUniverseWithBothMotifs is bm_genes in python code
   // find keys common to both lists
@@ -77,8 +77,8 @@ void motifComparison::findIntersectingGenes(motif &motif1, motif &motif2, double
           genesInUniverseWithBothMotifs.push_back(*gene);
         } else {
           // some locations removed, but some kept, re-calc binomial test. Must be less than threshold for both motifs
-          if (geometricBinomialTest(motif1LocationsToKeep, *gene, promSizes[*gene], motif1) &&
-              geometricBinomialTest(motif2LocationsToKeep, *gene, promSizes[*gene], motif2))
+          if (geometricBinomialTest(motif1LocationsToKeep, *gene, promSizes[*gene], motif1, isPoisson) &&
+              geometricBinomialTest(motif2LocationsToKeep, *gene, promSizes[*gene], motif2, isPoisson))
             genesInUniverseWithBothMotifs.push_back(*gene);  // best score is at or below threshold
         }
       }
@@ -118,7 +118,7 @@ bool motifComparison::motifInstancesOverlap(motif &motif1, motif &motif2, motifI
 }
 
 bool motifComparison::geometricBinomialTest(const std::vector<bool> &motifLocationsToKeep, const std::string &gene,
-                                            int promoterLength, motif &mt) {
+                                            int promoterLength, motif &mt, bool isPoisson) {
   // Test for one motif in one promoter
   // motifLocations contain p-values. Use if motifLocationsToKeep is true
 
@@ -141,11 +141,19 @@ bool motifComparison::geometricBinomialTest(const std::vector<bool> &motifLocati
 
   double lowestScore = std::numeric_limits<double>::max();
 
+  int k = 0;
   for (std::vector<double>::iterator i = pVals.begin(); i < pVals.end(); i++) {
     // calculate geomtric mean of all  p-vals up to this one
     double gm = geometricMean(pVals.begin(), i + 1);
-
-    double binomP = 1 - binomialCDF((i + 1 - pVals.begin()), possibleLocations, gm);
+    double binomP;
+    if (isPoisson)
+    {
+      binomP = 1- poissonCDF(gm * possibleLocations, k++);
+    }
+    else
+    {
+      binomP = 1 - binomialCDF((i + 1 - pVals.begin()), possibleLocations, gm);
+    }
 
     lowestScore = (binomP < lowestScore) ? binomP : lowestScore;
   }
@@ -178,6 +186,24 @@ double motifComparison::binomialCDF(long numPVals, long numLocations, double gm)
   }
   return cdf;
 }
+
+double motifComparison::poissonCDF(double lambda, int k) {
+    double cdf = 0.0;
+    for(int i = 0; i <= k; i++) {
+        double poisson_pmf = 1.0; // Initialize PMF for each i
+        // Calculating lambda^i / i!
+        for(int j = 1; j <= i; j++) {
+            poisson_pmf *= lambda / j;
+        }
+        // Multiplying with e^-lambda
+        poisson_pmf *= exp(-lambda);
+        // Adding to CDF
+        cdf += poisson_pmf;
+    }
+    return cdf;
+}
+
+
 
 void motifComparison::colocTest(long universeSize, double ICthreshold, const std::string &clusterName,
                                 std::vector<std::string> &genesInCluster) {

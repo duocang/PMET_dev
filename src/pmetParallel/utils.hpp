@@ -22,13 +22,13 @@ int output(std::vector<motif>::iterator first, std::vector<motif>::iterator late
            std::map<std::string, std::vector<std::string>> clusters, motifComparison mComp,
            std::map<std::string, std::vector<Output>> *results, double ICthreshold,
            std::unordered_map<std::string, int> promSizes, long numComplete, long totalComparisons,
-           std::string outputDirName);
+           std::string outputDirName, bool isPoisson);
 
 int outputParallel(std::vector<int> motifsIndx, std::vector<motif> *allMotifs,
                    std::map<std::string, std::vector<std::string>> clusters, motifComparison mComp,
                    std::map<std::string, std::vector<Output>> *results, double ICthreshold,
                    std::unordered_map<std::string, int> promSizes, long numComplete, long totalComparisons,
-                   std::string outputDirName);
+                   std::string outputDirName, bool isPoisson);
 void exportResultParallel(std::string cluster, std::vector<Output>::iterator beginIt,
                           std::vector<Output>::iterator endIt, std::string outFile, long globalBonferroniFactor);
 

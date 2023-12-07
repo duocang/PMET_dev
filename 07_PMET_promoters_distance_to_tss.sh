@@ -56,7 +56,7 @@ res_dir=results/07_homotypic_promoters_with_distance_to_tss
 
 # homotypic
 gff3id="gene_id="
-noOverlap="NoOverlap"
+overlap="NoOverlap"
 utr="No"
 topn=5000
 maxk=5
@@ -116,9 +116,9 @@ $HOMOTYPIC                \
     -p $length            \
     -g $gap               \
     -l $promlengthlimit   \
-    -v $noOverlap         \
+    -v $overlap           \
     -u $utr               \
-    -f $fimothresh       \
+    -f $fimothresh        \
     -t $threads           \
     -d $delete_temp       \
     $genome               \

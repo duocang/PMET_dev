@@ -5,43 +5,35 @@ function error_exit() {
     usage
     exit 1
 }
-
 print_red(){
     RED='\033[0;31m'
     NC='\033[0m' # No Color
     printf "${RED}$1${NC}\n"
 }
-
 print_green(){
     GREEN='\033[0;32m'
     NC='\033[0m' # No Color
     printf "${GREEN}$1${NC}\n"
 }
-
 print_orange(){
     ORANGE='\033[0;33m'
     NC='\033[0m' # No Color
     printf "${ORANGE}$1${NC}\n"
 }
-
 print_fluorescent_yellow(){
     FLUORESCENT_YELLOW='\033[1;33m'
     NC='\033[0m' # No Color
     printf "${FLUORESCENT_YELLOW}$1${NC}\n"
 }
-
 print_white(){
     WHITE='\033[1;37m'
     NC='\033[0m' # No Color
     printf "${WHITE}$1${NC}"
 }
-
 # Give execute permission to all users for the file.
 find . -type f \( -name "*.sh" -o -name "*.pl" \) -exec chmod a+x {} \;
 
-
 start_time=$SECONDS
-
 ################################ 1. input parameters ###################################
 # tool
 toolDir=scripts
@@ -56,7 +48,7 @@ res_dir=results/03_PMET_genomic_element
 
 
 # homotypic
-noOverlap="NoOverlap"
+overlap="NoOverlap"
 utr="Yes"
 topn=5000
 maxk=5
@@ -67,7 +59,6 @@ gff3id="gene_id="
 delete_temp=yes
 
 mrnaFull=No
-
 
 # data
 genome=data/homotypic_promoters/genome.fasta
@@ -88,7 +79,6 @@ print_fluorescent_yellow "GFF3 ID format: $gff3id"
 
 # output
 homotypic_output=$res_dir/01_homotypic_$genomic_element
-
 
 # heterotypic
 task=gene
@@ -119,7 +109,6 @@ else
 fi
 cd ..
 
-
 ############################## 3. Running homotypic #################################
 print_green "Running homotypic searching...\n"
 
@@ -132,7 +121,7 @@ $HOMOTYPIC               \
     -k $maxk             \
     -n $topn             \
     -p $length           \
-    -v $noOverlap        \
+    -v $overlap          \
     -u $utr              \
     -f $fimothresh       \
     -t $threads          \

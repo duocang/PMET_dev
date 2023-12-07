@@ -36,52 +36,46 @@ chmod a+x scripts/gff3sort/gff3sort.pl
 
 ########################## Downloading data #######################################
 cd data
-if [ -f "homotypic_promoters/anno.gff3" ]; then
+if [ -f "TAIR10.gff3" ]; then
     echo ""
 else
     print_green "Downloading genome and annotation...\n"
-    mkdir -p data/homotypic_promoters
-
     chmod a+x ./fetch_data.sh
     bash ./fetch_data.sh
-    mv anno.gff3 homotypic_promoters/
-    mv genome.fasta homotypic_promoters/
-    rm anno.gff3
-    rm genome.fasta
 fi
 cd ..
-
 ########################## Parameters #######################################
 # tool
 toolDir=scripts
 HOMOTYPIC=$toolDir/PMETindex_promoters_fimo_integrated.sh
 HETEROTYPIC=$toolDir/pmetParallel
-
 chmod a+x $HOMOTYPIC
 chmod a+x $HETEROTYPIC
 
-threads=24
+threads=8
 res_dir=results/01_PMET_promoter
 
 # homotypic
 gff3id="gene_id="
-noOverlap="NoOverlap"
+# overlap="NoOverlap"
+overlap="Yes"
 utr="No"
 topn=5000
 maxk=5
-length=1000
+length=50
 fimothresh=0.05
 distance=1000
 gff3id="gene_id="
-delete_temp=yes
+delete_temp=no
+isPoisson=false
 # data
-genome=data/homotypic_promoters/genome.fasta
+genome=data/TAIR10.fasta
 anno=data/TAIR10.gff3
 meme=data/Franco-Zorrilla_et_al_2014.meme
 # output
 homotypic_output=$res_dir/01_homotypic
 # heterotypic
-task=gene
+task=gene_cell_identities
 gene_input_file=data/$task.txt
 heterotypic_output=$res_dir/02_heterotypic
 icthresh=4
@@ -101,11 +95,12 @@ $HOMOTYPIC               \
     -k $maxk             \
     -n $topn             \
     -p $length           \
-    -v $noOverlap        \
+    -v $overlap          \
     -u $utr              \
     -f $fimothresh       \
     -t $threads          \
     -d $delete_temp      \
+    -x $isPoisson        \
     $genome              \
     $anno                \
     $meme
@@ -117,6 +112,7 @@ print_green "\n\nSearching for heterotypic motif hits..."
 grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
 
 $HETEROTYPIC                                     \
+    -x $isPoisson                                \
     -d .                                         \
     -g $gene_input_file"temp"                    \
     -i $icthresh                                 \
@@ -125,7 +121,7 @@ $HETEROTYPIC                                     \
     -c $homotypic_output/IC.txt                  \
     -f $homotypic_output/fimohits                \
     -o $heterotypic_output                       \
-    -t $threads
+    -t $threads > $heterotypic_output/pmet.log
 cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
 rm $heterotypic_output/temp*.txt
 rm $gene_input_file"temp"

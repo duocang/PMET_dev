@@ -1,50 +1,6 @@
 #!/bin/bash
 set -e
 
-# called when user selects Promoters on web UI
-# Takes as inputs from web page : fasta file , gff3 file, meme file, gene clusters file
-# gfff3 identifier, N, k, promoter length, overlap included?, utr included?, [fimo threshold]
-
-#This version requires outputdir, the 3 input files will be put there
-
-
-# ICdict.pickle file, binomial_thresholds.txt file
-# a directory called fimohits contaning files called motifname.txt fo reach mtoif in meme file input
-
-# This is all the input needed by pmet tool, along with genes list file (clusters) that user will provide via web UI
-
-
-
-# 22.1.18 Charlotte Rich
-# last edit: 7.2.18 - removed the make 1 big fimohits files
-#Edited by PEB June 2020. Will be called by run_pmet_min.php to create inputs for call to pmet binary
-#Take progress file from 1% to 95%
-
-#PEB DEc 2020. Called by run_pmet.php with params
-# -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile
-
-# fimo threshold is default
-
-function usage () {
-    cat >&2 <<EOF
-USAGE: PMETindexgenome [options] <genome> <gff3> <memefile>
-
-Creates PMET index for Paired Motif Enrichment Test using genome files.
-Required arguments:
--r <PMETindex_path>	: Full path of python scripts called from this file. Required.
--i <gff3_identifier> : gene identifier in gff3 file e.g. gene_id=
-
-Optional arguments:
--o <output_directory> : Output directory for results
--n <topn>	: How many top promoter hits to take per motif. Default=5000
--k <max_k>	: Maximum motif hits allowed within each promoter.  Default: 5
--p <promoter_length>	: Length of promoter in bp used to detect motif hits default: 1000
--v <include_overlaps> :  Remove promoter overlaps with gene sequences. AllowOverlap or NoOverlap, Default : AllowOverlap
--u <include_UTR> : Include 5' UTR sequence? Yes or No, default : No
--f <fimo_threshold> : Specify a minimum quality for hits matched by fimo. Default: 0.05
-
-EOF
-}
 
 function error_exit() {
     echo "ERROR: $1" >&2
@@ -64,6 +20,12 @@ print_green(){
     printf "${GREEN}$1${NC}\n"
 }
 
+print_green_no_linnbreaker(){
+    GREEN='\033[0;32m'
+    NC='\033[0m' # No Color
+    printf "${GREEN}$1${NC}"
+}
+
 print_orange(){
     ORANGE='\033[0;33m'
     NC='\033[0m' # No Color
@@ -81,6 +43,38 @@ print_white(){
     NC='\033[0m' # No Color
     printf "${WHITE}$1${NC}"
 }
+
+function usage () {
+    print_fluorescent_yellow "Usage: PMETindexgenome [options] <genome> <gff3> <memefile>\n"
+    echo ""
+    print_white "Options:\n"
+    print_green_no_linnbreaker "  -r <PMETindex_path>       "
+    print_orange "Full path of python scripts.                  Required."
+    print_green_no_linnbreaker "  -i <gff3_identifier>      "
+    print_orange "Gene identifier in gff3 file.                 Required."
+    print_green_no_linnbreaker "  -o <output_directory>     "
+    print_orange "Output directory for results.                 Default: Current Directory"
+    print_green_no_linnbreaker "  -n <topn>                 "
+    print_orange "Top n promoter hits per motif.                Default: 5000"
+    print_green_no_linnbreaker "  -k <maxk>                 "
+    print_orange "Max motif hits within each promoter.          Default: 5"
+    print_green_no_linnbreaker "  -p <promoter_length>      "
+    print_orange "Length of promoter in bp for motif detection. Default: 1000"
+    print_green_no_linnbreaker "  -v <include_overlaps>     "
+    print_orange "Handle promoter overlaps with sequences.      Default: AllowOverlap"
+    print_green_no_linnbreaker "  -u <include_UTR>          "
+    print_orange "Include 5' UTR sequence?                      Default: No"
+    print_green_no_linnbreaker "  -f <fimo_threshold>       "
+    print_orange "Minimum quality for hits by fimo.             Default: 0.05"
+    print_green_no_linnbreaker "  -t <threads>              "
+    print_orange "Number of threads.                            Default: 1"
+    print_green_no_linnbreaker "  -d <delete>               "
+    print_orange "Delete unnecessary files.                     Default: No\n"
+    echo ""
+    print_white "Use this script to create PMET index for Paired Motif Enrichment Test using genome files.\n"
+}
+
+
 
 
 # set up defaults
@@ -247,7 +241,7 @@ bedtools flank \
 
 # -------------------------------------------------------------------------------------------
 # 9. remove overlapping promoter chunks
-if [ $overlap == 'NoOverlap' ]; then
+if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
 	print_fluorescent_yellow "     9. Removing overlapping promoter chunks (promoters.bed)"
 	sleep 0.1
 	bedtools subtract \

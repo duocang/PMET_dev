@@ -181,7 +181,7 @@ bool readFimoFile(FimoFile *fimoFile)
   return true;
 }
 
-void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
+void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes, bool isPoisson)
 {
   if (!fimoFile || !fimoFile->ht || !promSizes)
   {
@@ -269,7 +269,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
       }
 
       // Calculate the binomial p-value and the corresponding bin value for this gene
-      Pair binom_p = geometricBinTest(current->value, promterLength, fimoFile->motifLength);
+      Pair binom_p = geometricBinTest(current->value, promterLength, fimoFile->motifLength, isPoisson);
 
       // Save the best bin value for this gene in the binThresholds vector
       pushBack(binThresholds, binom_p.score, geneID);
@@ -330,7 +330,7 @@ void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes)
   deleteScoreLabelVector(binThresholds);
 }
 
-Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength)
+Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength, bool isPoisson)
 {
   // Null check for hitsVec
   if (!hitsVec)
@@ -373,7 +373,17 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
   {
     product *= pVals[k];
     double geom = pow(product, 1.0 / (k + 1.0));
-    double binomP = 1 - binomialCDF(k + 1, possibleLocations, geom);
+    // CDF描述的是在给定的一系列独立实验中，成功次数小于或等于某个值的概率。
+    // 而二项累计分布的补数（即 1−CDF）则给出的是成功次数大于某个值的概率
+    double binomP;
+    if (isPoisson)
+    {
+      binomP = 1 - poissonCDF(geom * possibleLocations, k);
+    }
+    else
+    {
+      binomP = 1 - binomialCDF(k + 1, possibleLocations, geom);
+    }
 
     if (lowestScore > binomP)
     {
@@ -407,6 +417,28 @@ bool motifsOverlap(MotifHit *m1, MotifHit *m2)
 
   // Overlapping condition
   return !(m1->stopPos < m2->startPos || m1->startPos > m2->stopPos);
+}
+
+
+double poissonCDF(double lambda, int k) {
+
+    //  printf("lambda: %f\n", lambda);
+    //  printf("k: %f\n", k);
+    //   // printf(k);
+    //   printf("\nThis is Poisson CDF...\n");
+    double cdf = 0.0;
+    for(int i = 0; i <= k; i++) {
+        double poisson_pmf = 1.0; // Initialize PMF for each i
+        // Calculating lambda^i / i!
+        for(int j = 1; j <= i; j++) {
+            poisson_pmf *= lambda / j;
+        }
+        // Multiplying with e^-lambda
+        poisson_pmf *= exp(-lambda);
+        // Adding to CDF
+        cdf += poisson_pmf;
+    }
+    return cdf;
 }
 
 double binomialCDF(size_t numPVals, size_t numLocations, double gm)

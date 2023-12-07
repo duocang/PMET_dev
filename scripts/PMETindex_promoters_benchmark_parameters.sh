@@ -191,6 +191,58 @@ for promlength in ${promlengthRange[@]}; do
     # 起始和终止位置是指定基因上的物理位置，而不是表达或翻译的方向。
     # start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 
+
+
+    # -------------------------------------------------------------------------------------------
+    print_fluorescent_yellow "        Calculate lenght of space to TSS (length_to_tss.txt)"
+    # get length of region before TSS of a gene
+    # 初始化变量
+    prev_end=0
+    prev_chr=""
+    next_start=0
+    current_line=""
+
+    # 读取BED文件
+    while read -r line; do
+        if [[ -n $current_line ]]; then
+            # 分割当前行和下一行
+            read -r chr start end gene score strand <<< "$current_line"
+            read -r next_chr next_start next_end next_gene next_score next_strand <<< "$line"
+            # 检查染色体是否变化
+            if [[ $chr != $prev_chr ]]; then
+                prev_end=0
+                prev_chr=$chr
+            fi
+            # 计算与上一个基因末尾的距离
+            if [[ $strand == "+" ]]; then
+                distance=$((start - prev_end))
+            else
+                if [[ $chr == $next_chr ]]; then
+                    distance=$((next_start - end))
+                else
+                    distance=0
+                fi
+            fi
+            echo "$gene  $distance" >> $indexingOutputDir/length_to_tss.txt
+            # 更新前一个基因的结束位置
+            prev_end=$end
+        fi
+        current_line=$line
+    done < $bedfile
+
+    # 处理文件的最后一行
+    if [[ -n $current_line ]]; then
+        read -r chr start end gene score strand <<< "$current_line"
+        if [[ $strand == "+" ]]; then
+            distance=$((start - prev_end))
+        else
+            distance=0
+        fi
+        echo "$gene  $distance" >> $indexingOutputDir/length_to_tss.txt
+    fi
+    # draw histogram
+    Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/
+
     # -------------------------------------------------------------------------------------------
     # 5. list of all genes found
     print_fluorescent_yellow "     5.  Extracting genes names: complete list of all genes found (universe.txt)"
@@ -259,7 +311,7 @@ for promlength in ${promlengthRange[@]}; do
 
     # -------------------------------------------------------------------------------------------
     # 11. add 5' UTR
-    if [[ $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" ]]; then
+    if [[  $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes"]]; then
         print_fluorescent_yellow "    11.  Adding UTRs...";
         python3 $pmetroot/parse_utrs.py      \
             $indexingOutputDir/promoters.bed \

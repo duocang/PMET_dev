@@ -53,7 +53,7 @@ res_dir=results/02_PMET_intervals
 
 # homotypic
 gff3id="gene_id="
-noOverlap="NoOverlap"
+overlap="NoOverlap"
 utr="No"
 topn=5000
 maxk=5

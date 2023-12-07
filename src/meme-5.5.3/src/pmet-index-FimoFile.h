@@ -125,9 +125,10 @@ bool motifsOverlap(MotifHit *m1, MotifHit *m2);
  * Run geometric bionomial test on a vector of motif hits.
  * @param hitsVec Vector containing motif hits.
  * @param ... Additional parameters used in the test.
+ * @param isPoisson
  * @return Pair result of the test.
  */
-Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength);
+Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t motifLength, bool isPoisson);
 
 /**
  * Calculate the cumulative distribution function for a binomial distribution.
@@ -137,6 +138,14 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
  * @return Double value of the cumulative distribution function.
  */
 double binomialCDF(size_t numPVals, size_t numLocations, double gm);
+
+/**
+ * Calculate the cumulative distribution function for a Poisson distribution.
+ * @param lambda
+ * @param k
+ * @return Double value of the cumulative distribution function.
+ */
+double poissonCDF(double lambda, int k);
 
 /**
  * Frees all memory allocated for a FimoFile' content only.
@@ -157,9 +166,10 @@ void deleteFimoFile(FimoFile *file);
  * @param fimoFile The FimoFile to process.
  * @param k Parameter for processing.
  * @param N Parameter for processing.
+ * @param isPoisson Possion or binomial distribution
  * @param promSizes List containing promoter sizes.
  */
-void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes);
+void processFimoFile(FimoFile *fimoFile, int k, int N, PromoterList *promSizes, bool isPoisson);
 
 /**
  * Create a mock fimo file.

@@ -1,20 +1,23 @@
 #!/bin/bash
 
+index_out=../../results/01_PMET_promoter/01_homotypic/
+
 mkdir -p test_result
 
 # remove genes not present in pre-computed pmet index (universe.txt)
-grep -Ff ../../results/01_homotypic_promoters/universe.txt ../../data/gene.txt > test_result/gene.txttemp
+grep -Ff $index_out/universe.txt ../../data/gene.txt > test_result/gene.txttemp
 
 # Run PMET
-bin/pmetParallel \
-    -d . \
-    -g test_result/gene.txttemp \
-    -i 4 \
-    -p ../../results/01_homotypic_promoters/promoter_lengths.txt  \
-    -b ../../results/01_homotypic_promoters/binomial_thresholds.txt  \
-    -c ../../results/01_homotypic_promoters/IC.txt  \
-    -f ../../results/01_homotypic_promoters/fimohits  \
-    -t 8 \
+bin/pmetParallel                          \
+    -x true                               \
+    -d .                                  \
+    -g test_result/gene.txttemp           \
+    -i 4                                  \
+    -p $index_out/promoter_lengths.txt    \
+    -b $index_out/binomial_thresholds.txt \
+    -c $index_out/IC.txt                  \
+    -f $index_out/fimohits                \
+    -t 8                                  \
     -o test_result
 
 rm test_result/gene.txttemp

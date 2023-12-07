@@ -33,6 +33,7 @@ typedef struct options {
   char* promoter_length;        // Name of promoter and length
   int topk;                     // top k motif hits of each promoter with smallest pval
   int topn;                     // top n promoters with motif hits with highest score
+  bool isPoisson;               // run Poisson not binomial distribution
 
   int max_stored_scores; // Maximum number of matches to store per pattern.
 

@@ -67,6 +67,7 @@ pmetroot="scripts"
 threads=4
 icthreshold=24
 delete=yes
+isPoisson=no
 
 # set up empty variables
 indexingOutputDir=
@@ -83,7 +84,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:f:v:u:t:d:" options; do
+while getopts ":r:i:o:n:k:p:f:v:u:t:d:x:" options; do
     case $options in
         r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -107,6 +108,8 @@ while getopts ":r:i:o:n:k:p:f:v:u:t:d:" options; do
         threads=$OPTARG;;
         d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
         delete=$OPTARG;;
+        x) print_white "Indexing runs on Poisson distribution  : "; print_orange "$OPTARG" >&2
+        isPoisson=$OPTARG;;
         \?) print_red  "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  print_red "Option -$OPTARG requires an argument." >&2
@@ -173,6 +176,57 @@ awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 # start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 
 # -------------------------------------------------------------------------------------------
+print_fluorescent_yellow "        Calculate lenght of space to TSS (length_to_tss.txt)"
+# get length of region before TSS of a gene
+# 初始化变量
+prev_end=0
+prev_chr=""
+next_start=0
+current_line=""
+
+# 读取BED文件
+while read -r line; do
+    if [[ -n $current_line ]]; then
+        # 分割当前行和下一行
+        read -r chr start end gene score strand <<< "$current_line"
+        read -r next_chr next_start next_end next_gene next_score next_strand <<< "$line"
+        # 检查染色体是否变化
+        if [[ $chr != $prev_chr ]]; then
+            prev_end=0
+            prev_chr=$chr
+        fi
+        # 计算与上一个基因末尾的距离
+        if [[ $strand == "+" ]]; then
+            distance=$((start - prev_end))
+        else
+            if [[ $chr == $next_chr ]]; then
+                distance=$((next_start - end))
+            else
+                distance=0
+            fi
+        fi
+        echo "$gene  $distance" >> $indexingOutputDir/length_to_tss.txt
+        # 更新前一个基因的结束位置
+        prev_end=$end
+    fi
+    current_line=$line
+done < $bedfile
+
+# 处理文件的最后一行
+if [[ -n $current_line ]]; then
+    read -r chr start end gene score strand <<< "$current_line"
+    if [[ $strand == "+" ]]; then
+        distance=$((start - prev_end))
+    else
+        distance=0
+    fi
+    echo "$gene  $distance" >> $indexingOutputDir/length_to_tss.txt
+fi
+
+# draw histogram
+Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/length_to_tss.txt
+
+# -------------------------------------------------------------------------------------------
 # 5. list of all genes found
 print_fluorescent_yellow "     5. Extracting genes names: complete list of all genes found (universe.txt)"
 cut -f 4 $bedfile > $universefile
@@ -206,7 +260,7 @@ bedtools flank                             \
 
 # -------------------------------------------------------------------------------------------
 # 9. remove overlapping promoter chunks
-if [ $overlap == 'NoOverlap' ]; then
+if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
 	print_fluorescent_yellow "     9. Removing overlapping promoter chunks (promoters.bed)"
 	sleep 0.1
 	bedtools subtract                       \
@@ -226,7 +280,7 @@ python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 11. add 5' UTR
-if [ $utr == 'Yes' ]; then
+if [[  $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes"]]; then
     print_fluorescent_yellow "    11. Adding UTRs...";
 	python3 $pmetroot/parse_utrs.py      \
         $indexingOutputDir/promoters.bed \
@@ -246,6 +300,7 @@ awk '{print $4 "\t" ($3 - $2)}' $indexingOutputDir/promoters.bed \
     > $indexingOutputDir/promoter_lengths.txt
 
 # -------------------------------------------------------------------------------------------
+# 13. Update genes list
 print_fluorescent_yellow "    13. Update genes list: complete list of all genes found (universe.txt)"
 cut -f 1 $indexingOutputDir/promoter_lengths.txt > $universefile
 
@@ -295,21 +350,37 @@ runFimoIndexing () {
     pmetroot=$4
     maxk=$5
     topn=$6
+    isPoisson=$7
     filename=`basename $memefile .txt`
 
-    $pmetroot/fimo                                \
-        --no-qvalue                               \
-        --text                                    \
-        --thresh $fimothresh                      \
-        --verbosity 1                             \
-        --bgfile $indexingOutputDir/promoters.bg  \
-        --topn $topn                              \
-        --topk $maxk                              \
-        --oc $indexingOutputDir/fimohits          \
-        $memefile                                 \
-        $indexingOutputDir/promoters.fa           \
-        $indexingOutputDir/promoter_lengths.txt
-
+    if [[ $isPoisson == "true" || $isPoisson == "TRUE" || $isPoisson == "T" || $isPoisson == "t" || $isPoisson == "yes" || $isPoisson == "YES" || $isPoisson == "Y" || $isPoisson == "y" ]]; then
+        $pmetroot/fimo                                \
+            --poisson                                 \
+            --no-qvalue                               \
+            --text                                    \
+            --thresh $fimothresh                      \
+            --verbosity 1                             \
+            --bgfile $indexingOutputDir/promoters.bg  \
+            --topn $topn                              \
+            --topk $maxk                              \
+            --oc $indexingOutputDir/fimohits          \
+            $memefile                                 \
+            $indexingOutputDir/promoters.fa           \
+            $indexingOutputDir/promoter_lengths.txt
+    else
+        $pmetroot/fimo                                \
+            --no-qvalue                               \
+            --text                                    \
+            --thresh $fimothresh                      \
+            --verbosity 1                             \
+            --bgfile $indexingOutputDir/promoters.bg  \
+            --topn $topn                              \
+            --topk $maxk                              \
+            --oc $indexingOutputDir/fimohits          \
+            $memefile                                 \
+            $indexingOutputDir/promoters.fa           \
+            $indexingOutputDir/promoter_lengths.txt
+    fi
     # mkdir -p $indexingOutputDir/fimo/$filename
     # fimo \
     #     --no-qvalue \
@@ -335,7 +406,7 @@ print_orange "    $nummotifs motifs found"
 
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
-        "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
+        "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn $isPoisson"
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then

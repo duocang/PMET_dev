@@ -7,7 +7,7 @@ set -e
 
 #This version requires outputdir, the 3 input files will be put there
 
- 
+
 # ICdict.pickle file, binomial_thresholds.txt file
 # a directory called fimohits contaning files called motifname.txt fo reach mtoif in meme file input
 
@@ -21,7 +21,7 @@ set -e
 #Take progress file from 1% to 95%
 
 #PEB DEc 2020. Called by run_pmet.php with params
-# -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile 
+# -r ./scripts -o jobdir/indexoutput/ -i gene_id= -k k -n N -p promlength -u Yes|No -v NoOverlap|AllowOverlap  fastafile gtffile memefile
 
 # fimo threshold is default
 
@@ -182,7 +182,7 @@ bedtools flank -l $promlength -r 0 -s -i $bedfile -g $outputdir/bedgenome.genome
     rm $outputdir/bedgenome.genome
 
 #remove overlapping promoter chunks
-if [ $overlap == 'NoOverlap' ]
+if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
 then
     echo -e "0.03\tRemoving overlaps..." > $progFile
 	echo "Removing overlaps";
@@ -307,15 +307,15 @@ for memefile in $outputdir/memefiles/*.txt; do
 	sleep 0.1
     bfid=`basename $memefile`
     fimofile=$bfid
-    
+
      /usr/local/meme/bin/fimo --text --thresh $fimothresh --verbosity 1 --bgfile $outputdir/promoters.bg $memefile $outputdir/promoters.fa > $outputdir/fimo/$fimofile
 
 done
- 
+
 rm -r $outputdir/memefiles
 rm $outputdir/promoters.bg
 rm $outputdir/promoters.fa
- 
+
 duration=$(( SECONDS - start ))
 echo $duration" secs"
 
@@ -325,7 +325,7 @@ start=$SECONDS
 
 #sorts and filters each fimo/XXX.txt file according to k and N and writes output to fimohits/XXX.txt
 #created binomial thresholds as it does this
-#8 sec per file, takes progress from 70% to 95% 
+#8 sec per file, takes progress from 70% to 95%
 echo -e "0.7\tIndexing..." > $progFile
 echo "Indexing...";
 sleep 0.1
@@ -340,7 +340,7 @@ echo "Done";
 duration=$(( SECONDS - start ))
 echo $duration" secs"
 
-# For final pmet stage, promoter lengths file must have an entry for every gene in gene_input_file. It may not so here is a 
+# For final pmet stage, promoter lengths file must have an entry for every gene in gene_input_file. It may not so here is a
 # convenient place to remove them and also remove from universe file
 
 

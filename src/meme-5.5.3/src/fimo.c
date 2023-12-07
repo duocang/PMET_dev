@@ -135,6 +135,7 @@ static FIMO_OPTIONS_T process_fimo_command_line(
     {"text", NO_VALUE},
     {"topk", REQUIRED_VALUE},
     {"topn", REQUIRED_VALUE},
+    {"poisson", NO_VALUE},
     {"skip-matched-sequence", NO_VALUE},
     {"thresh", REQUIRED_VALUE},
     {"verbosity", REQUIRED_VALUE},
@@ -162,6 +163,7 @@ static FIMO_OPTIONS_T process_fimo_command_line(
     "     --thresh                 <float> (default: 1e-4)\n"
     "     --topk                   <int> (default: 5)\n"
     "     --topn                   <int> (default: 1000)\n"
+    "     --poisson                <bool> (default: false)\n"
     "     --qv-thresh\n"
     "     --no-qvalue\n"
     "     --norc\n"
@@ -208,6 +210,8 @@ static FIMO_OPTIONS_T process_fimo_command_line(
 
   options.topk = 5;
   options.topn = 5000;
+
+  options.isPoisson = false;
 
   options.selected_motifs = new_string_list();
   options.pval_lookup_filename = NULL;
@@ -297,6 +301,9 @@ static FIMO_OPTIONS_T process_fimo_command_line(
     }
     else if (strcmp(option_name, "topn") == 0){
       options.topn = atoi(option_value);
+    }
+    else if (strcmp(option_name, "poisson") == 0){
+      options.isPoisson = true;
     }
     else if (strcmp(option_name, "verbosity") == 0){
       verbosity = atoi(option_value);
@@ -824,7 +831,8 @@ static void fimo_score_each_motif(
   char* outDir,
   int N,
   int k,
-  PromoterList *promoter_len_list
+  PromoterList *promoter_len_list,
+  bool isPoisson
 ) {
 
   // Create p-value sampling reservoir
@@ -1000,7 +1008,7 @@ static void fimo_score_each_motif(
       }
 
       // Calculate the binomial p-value and the corresponding bin value for this gene
-      Pair binom_p = geometricBinTest(vec, promterLength, motif_length);
+      Pair binom_p = geometricBinTest(vec, promterLength, motif_length, isPoisson);
       // Save the best bin value for this gene in the binThresholds vector
       pushBack(binThresholds, binom_p.score, fasta_seq_name);
 
@@ -1160,7 +1168,8 @@ int main(int argc, char* argv[]) {
       options.output_dirname,
       options.topn,
       options.topk,
-      promoterList);
+      promoterList,
+      options.isPoisson);
 
   deletePromoterLenList(promoterList);
 

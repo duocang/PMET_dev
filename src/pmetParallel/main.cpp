@@ -60,13 +60,13 @@ int output(std::vector<motif>::iterator first, std::vector<motif>::iterator late
            std::map<std::string, std::vector<std::string>> clusters, motifComparison mComp,
            std::map<std::string, std::vector<Output>> *results, double ICthreshold,
            std::unordered_map<std::string, int> promSizes, long numComplete, long totalComparisons,
-           std::string outputDirName);
+           std::string outputDirName, bool isPoisson);
 
 int outputParallel(std::vector<int> motifsIndx, std::vector<motif> *allMotifs,
                    std::map<std::string, std::vector<std::string>> clusters, motifComparison mComp,
                    std::map<std::string, std::vector<Output>> *results, double ICthreshold,
                    std::unordered_map<std::string, int> promSizes, long numComplete, long totalComparisons,
-                   std::string outputDirName);
+                   std::string outputDirName, bool isPoisson);
 void exportResultParallel(std::string cluster, std::vector<Output>::iterator beginIt,
                           std::vector<Output>::iterator endIt, std::string outFile, long globalBonferroniFactor);
 int main(int argc, const char *argv[]) {
@@ -94,6 +94,7 @@ int main(int argc, const char *argv[]) {
   float inc = 0.01;
   double ICthreshold = 4.0;
   double numThreads = 16;
+  bool isPoisson = false;
   std::stringstream msgString;
   // parse parameters
   for (int i = 1; i < argc; i += 2) {
@@ -120,7 +121,8 @@ int main(int argc, const char *argv[]) {
       std::cout << "  -o <output_file>               Set output file.              Default is 'motif_found.txt'."         << std::endl;
 
       return 0;
-    } else if (!strcmp(argv[i], "-i"))
+    }
+    else if (!strcmp(argv[i], "-i"))
       ICthreshold = atof(argv[i + 1]);
     else if (!strcmp(argv[i], "-t"))
       numThreads = atof(argv[i + 1]);
@@ -140,6 +142,8 @@ int main(int argc, const char *argv[]) {
       outputDirName = argv[i + 1];
     else if (!strcmp(argv[i], "-s"))
       progressFile = argv[++i];  // must be full path
+    else if (!strcmp(argv[i], "-x"))
+      isPoisson = argv[i + 1];
     else {
       std::cout << "Error: unknown command line switch " << argv[i] << std::endl;
       return 1;
@@ -250,13 +254,13 @@ int main(int argc, const char *argv[]) {
               << std::endl;
 
     threads[i] = std::thread(outputParallel, motifsInThread[i], &allMotifs, clusters, mComp, &results[i], ICthreshold,
-                             promSizes, numComplete, totalComparisons, outputDirName);
+                             promSizes, numComplete, totalComparisons, outputDirName, isPoisson);
   }
   // setup n+1 thread
   std::cout << "----------------------------   Thread " << numThreads << " is running  ----------------------------"
             << std::endl;
   outputParallel(motifsInThread[numThreads - 1], &allMotifs, clusters, mComp, &results[numThreads - 1], ICthreshold,
-                 promSizes, numComplete, totalComparisons, outputDirName);
+                 promSizes, numComplete, totalComparisons, outputDirName, isPoisson);
   // run all threads
   for (auto &entry : threads) entry.join();
 
