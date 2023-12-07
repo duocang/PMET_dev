@@ -241,7 +241,7 @@ for promlength in ${promlengthRange[@]}; do
         echo "$gene  $distance" >> $indexingOutputDir/length_to_tss.txt
     fi
     # draw histogram
-    Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/
+    Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/length_to_tss.txt
 
     # -------------------------------------------------------------------------------------------
     # 5. list of all genes found
@@ -311,14 +311,14 @@ for promlength in ${promlengthRange[@]}; do
 
     # -------------------------------------------------------------------------------------------
     # 11. add 5' UTR
-    if [[  $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes"]]; then
-        print_fluorescent_yellow "    11.  Adding UTRs...";
+    if [[ $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes" ]]; then
+        print_fluorescent_yellow "    11.  Adding UTRs..."
         python3 $pmetroot/parse_utrs.py      \
             $indexingOutputDir/promoters.bed \
             $indexingOutputDir/sorted.gff3   \
             $universefile
     else
-        print_fluorescent_yellow "    11.  (skipped) Adding UTRs...";
+        print_fluorescent_yellow "    11.  (skipped) Adding UTRs..."
     fi
 
     # -------------------------------------------------------------------------------------------
@@ -379,11 +379,11 @@ for promlength in ${promlengthRange[@]}; do
     rm -rf $indexingOutputDir/genome_stripped.fa
     rm -rf $indexingOutputDir/genome_stripped.fa.fai
     # rm -rf $indexingOutputDir/invalid_gff3_lines.txt
-    rm -rf $indexingOutputDir/memefiles
+    # rm -rf $indexingOutputDir/memefiles
     # rm -f $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoters.bed
-    rm -rf $indexingOutputDir/promoters.bg
-    rm -rf $indexingOutputDir/promoters.fa
+    # rm -rf $indexingOutputDir/promoters.bg
+    # rm -rf $indexingOutputDir/promoters.fa
     rm -rf $indexingOutputDir/promoters_rough.fa
     rm -rf $indexingOutputDir/sorted.gff3
     # rm -rf $indexingOutputDir/universe.txt
