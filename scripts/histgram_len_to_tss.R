@@ -23,4 +23,4 @@ p <- ggplot(data, aes(x = Distance)) +
 ggsave(output_file, plot = p, width = 8, height = 5)
 
 # 打印保存图像的路径
-print(paste("Histogram saved to:", output_file))
+cat(paste("          Histogram saved to:", output_file))
