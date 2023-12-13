@@ -228,7 +228,7 @@ Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/length_to_tss.txt
 
 # -------------------------------------------------------------------------------------------
 # 5. list of all genes found
-print_fluorescent_yellow "     5. Extracting genes names: complete list of all genes found (universe.txt)"
+print_fluorescent_yellow "\n     5. Extracting genes names: complete list of all genes found (universe.txt)"
 cut -f 4 $bedfile > $universefile
 
 # -------------------------------------------------------------------------------------------
@@ -280,7 +280,7 @@ python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 11. add 5' UTR
-if [[  $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes"]]; then
+if [[  $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes" ]]; then
     print_fluorescent_yellow "    11. Adding UTRs...";
 	python3 $pmetroot/parse_utrs.py      \
         $indexingOutputDir/promoters.bed \
@@ -341,6 +341,7 @@ python3 $pmetroot/parse_memefile_batches.py $memefile $indexingOutputDir/memefil
 
 # -------------------------------- Run fimo and pmetindex --------------------------
 mkdir -p $indexingOutputDir/fimohits
+mkdir -p $indexingOutputDir/fimo
 
 print_green "Running FIMO and PMET index..."
 runFimoIndexing () {
@@ -407,6 +408,7 @@ print_orange "    $nummotifs motifs found"
 find $indexingOutputDir/memefiles -name \*.txt \
     | parallel --progress --jobs=$threads \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn $isPoisson"
+
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
 if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then

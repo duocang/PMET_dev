@@ -411,6 +411,18 @@ bool motifsOverlap(MotifHit *m1, MotifHit *m2)
   return !(m1->stopPos < m2->startPos || m1->startPos > m2->stopPos);
 }
 
+/**
+ * Calculate the cumulative distribution function for a binomial distribution.
+ * probability of X < numPVals
+ * binomialCDF(1, 22, 0.01) = 0.801631
+ *
+ * Run a bionomialCDF online：
+ * Probability of X = 1 events	0.17814013100868 (17.81%)
+ * Probability of X ≤ 1 events	0.97977072054772 (97.98%)
+ * Probability of X > 1 events	0.02022927945228 (2.02%)
+ * Probability of X < 1 events	0.80163058953905 (80.16%)
+ * Probability of X ≥ 1 events	0.19836941046095 (19.84%)
+ */
 double binomialCDF(size_t numPVals, size_t numLocations, double gm)
 {
   // gm is geometric mean

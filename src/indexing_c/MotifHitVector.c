@@ -117,6 +117,7 @@ int compareMotifHitsByPVal(const void *a, const void *b)
   return 0;
 }
 
+// Sort MotifHitVector in ascending order of pVal.
 void sortMotifHitVectorByPVal(MotifHitVector *vec)
 {
   qsort(vec->hits, vec->size, sizeof(MotifHit), compareMotifHitsByPVal);

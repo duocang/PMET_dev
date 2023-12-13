@@ -69,6 +69,13 @@ void motifComparison::findIntersectingGenes(motif& motif1, motif& motif2, double
             motif1LocationsToKeep[mLoc1] = false;
             motif2LocationsToKeep[mLoc2] = false;
           }
+          // // 是不是应该添加这一句？
+          // // motif1的某个位置的hit x 可能和motif2的某个hit y重叠，但是 x可能和 motif 2的某个hit z不重叠
+          // // 这个不重叠，是不是可以取消掉直接删除 motif1 x的操作？
+          // else {
+          //   motif1LocationsToKeep[mLoc1] = true;
+          //   motif2LocationsToKeep[mLoc2] = true;
+          // }
         }
       }
 

@@ -179,7 +179,7 @@ fi
 
 # -------------------------------------------------------------------------------------------
 # 4. filter invalid genes: start should be smaller than end
-print_fluorescent_yellow "     4. Filter invalid coordinates: start > end"
+print_fluorescent_yellow "     4.  Filter invalid coordinates: start > end"
 touch $indexingOutputDir/invalid_genelines.txt
 awk '$2 >= $3' $bedfile > $indexingOutputDir/invalid_gff3_lines.txt
 awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
@@ -189,7 +189,7 @@ awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 # start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 
 # -------------------------------------------------------------------------------------------
-print_fluorescent_yellow "        Calculate lenght of space to TSS (length_to_tss.txt)"
+print_fluorescent_yellow "         Calculate lenght of space to TSS (length_to_tss.txt)"
 # get length of region before TSS of a gene
 # 初始化变量
 prev_end=0
@@ -242,7 +242,7 @@ Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/length_to_tss.txt
 
 # -------------------------------------------------------------------------------------------
 # 5. list of all genes found
-print_fluorescent_yellow "     5.  Extracting genes names: complete list of all genes found (universe.txt)"
+print_fluorescent_yellow "\n     5.  Extracting genes names: complete list of all genes found (universe.txt)"
 cut -f 4 $bedfile > $universefile
 
 # -------------------------------------------------------------------------------------------
@@ -334,12 +334,12 @@ awk '{print $4 "\t" ($3 - $2)}' $indexingOutputDir/promoters.bed \
 
 # -------------------------------------------------------------------------------------------
 # 13. Update genes list
-print_fluorescent_yellow "    13. Update genes list: complete list of all genes found (universe.txt)"
+print_fluorescent_yellow "    13.  Update genes list: complete list of all genes found (universe.txt)"
 cut -f 1 $indexingOutputDir/promoter_lengths.txt > $universefile
 
 # -------------------------------------------------------------------------------------------
 # 14. create promoters fasta
-print_fluorescent_yellow "    14. Creating promoters file (promoters_rough.fa)";
+print_fluorescent_yellow "    14.  Creating promoters file (promoters_rough.fa)";
 bedtools getfasta -fi \
     $indexingOutputDir/genome_stripped.fa     \
     -bed $indexingOutputDir/promoters.bed     \
@@ -353,12 +353,12 @@ sed 's/::.*//g' $indexingOutputDir/promoters_rough.fa > $indexingOutputDir/promo
 
 # -------------------------------------------------------------------------------------------
 # 16. promoters.bg from promoters.fa
-print_fluorescent_yellow "    16. fasta-get-markov: a Markov model from promoters.fa. (promoters.bg)"
+print_fluorescent_yellow "    16.  fasta-get-markov: a Markov model from promoters.fa. (promoters.bg)"
 fasta-get-markov $indexingOutputDir/promoters.fa > $indexingOutputDir/promoters.bg
 
 # -------------------------------------------------------------------------------------------
 # 17. individual motif files from user's meme file
-print_fluorescent_yellow "    20.  Spliting motifs into individual meme files (folder memefiles)"
+print_fluorescent_yellow "    17.  Spliting motifs into individual meme files (folder memefiles)"
 mkdir -p $indexingOutputDir/memefiles
 python3 $pmetroot/parse_memefile.py $memefile $indexingOutputDir/memefiles/
 

@@ -131,10 +131,18 @@ Pair geometricBinTest(MotifHitVector *hitsVec, size_t promoterLength, size_t mot
 
 /**
  * Calculate the cumulative distribution function for a binomial distribution.
+ * probability of X < numPVals
  * @param numPVals Number of p-values.
  * @param numLocations Number of locations.
  * @param gm Geometric mean.
  * @return Double value of the cumulative distribution function.
+ * @example
+ * binomialCDF(1, 22, 0.01) = 0.801631
+ * Probability of X = 1 events	0.17814013100868 (17.81%)
+ * Probability of X ≤ 1 events	0.97977072054772 (97.98%)
+ * Probability of X > 1 events	0.02022927945228 (2.02%)
+ * Probability of X < 1 events	0.80163058953905 (80.16%)
+ * Probability of X ≥ 1 events	0.19836941046095 (19.84%)
  */
 double binomialCDF(size_t numPVals, size_t numLocations, double gm);
 

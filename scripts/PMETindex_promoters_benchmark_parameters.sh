@@ -182,7 +182,7 @@ for promlength in ${promlengthRange[@]}; do
 
     # -------------------------------------------------------------------------------------------
     # 4. filter invalid genes: start should be smaller than end
-    print_fluorescent_yellow "     4. Filter invalid coordinates: start > end"
+    print_fluorescent_yellow "     4.  Filter invalid coordinates: start > end"
     touch $indexingOutputDir/invalid_genelines.txt
     awk '$2 >= $3' $bedfile > $indexingOutputDir/invalid_gff3_lines.txt
     awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
@@ -194,7 +194,7 @@ for promlength in ${promlengthRange[@]}; do
 
 
     # -------------------------------------------------------------------------------------------
-    print_fluorescent_yellow "        Calculate lenght of space to TSS (length_to_tss.txt)"
+    print_fluorescent_yellow "         Calculate lenght of space to TSS (length_to_tss.txt)"
     # get length of region before TSS of a gene
     # 初始化变量
     prev_end=0
@@ -245,7 +245,7 @@ for promlength in ${promlengthRange[@]}; do
 
     # -------------------------------------------------------------------------------------------
     # 5. list of all genes found
-    print_fluorescent_yellow "     5.  Extracting genes names: complete list of all genes found (universe.txt)"
+    print_fluorescent_yellow "\n     5.  Extracting genes names: complete list of all genes found (universe.txt)"
     cut -f 4 $bedfile > $universefile
 
     # -------------------------------------------------------------------------------------------
@@ -276,12 +276,12 @@ for promlength in ${promlengthRange[@]}; do
         -g $indexingOutputDir/bedgenome.genome \
         > $indexingOutputDir/promoters.bed
 
-    # -------------------------------------------------------------------------------------------
-    print_fluorescent_yellow "     8.1 Remove promoters with less than 20 base pairs"
-    # remove promoter length < 20
-    awk '($3 - $2) >= 10' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
-    mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
-    awk '($3 - $2) <  10' $indexingOutputDir/promoters.bed > $indexingOutputDir/8_promoters_less_20.bed
+    # # -------------------------------------------------------------------------------------------
+    # print_fluorescent_yellow "     8.1 Remove promoters with less than 20 base pairs"
+    # # remove promoter length < 20
+    # awk '($3 - $2) >= 10' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+    # mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
+    # awk '($3 - $2) <  10' $indexingOutputDir/promoters.bed > $indexingOutputDir/8_promoters_less_20.bed
 
     # -------------------------------------------------------------------------------------------
     # 9. remove overlapping promoter chunks
@@ -297,18 +297,19 @@ for promlength in ${promlengthRange[@]}; do
         print_fluorescent_yellow "     9.  (skipped) Removing overlapping promoter chunks (promoters.bed)"
     fi
 
-    # -------------------------------------------------------------------------------------------
-    # remove promoter length < 20
-    print_fluorescent_yellow "     9.1 Remove promoters with less than 20 base pairs"
-    awk '($3 - $2) <  10' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_20.bed
-    awk '($3 - $2) >= 10' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
-    mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
+    # # -------------------------------------------------------------------------------------------
+    # # remove promoter length < 20
+    # print_fluorescent_yellow "     9.1 Remove promoters with less than 20 base pairs"
+    # awk '($3 - $2) <  10' $indexingOutputDir/promoters.bed > $indexingOutputDir/9_promoters_less_20.bed
+    # awk '($3 - $2) >= 10' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_.bed
+    # mv $indexingOutputDir/promoters_.bed $indexingOutputDir/promoters.bed
 
     # -------------------------------------------------------------------------------------------
     # 10. check split promoters. if so, keep the bit closer to the TSS
     print_fluorescent_yellow "    10.  Checking split promoter (if so):  keep the bit closer to the TSS (promoters.bed)"
     python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 
+    # TODO: in some case, annotation file sorted by coordinates can have one gene (several lines) splits by other gene (several lines)
     # -------------------------------------------------------------------------------------------
     # 11. add 5' UTR
     if [[ $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" || $utr == "Yes" ]]; then
@@ -332,9 +333,9 @@ for promlength in ${promlengthRange[@]}; do
         > $indexingOutputDir/promoter_lengths.txt
 
     # -------------------------------------------------------------------------------------------
-    # 13. update gene list (no NEGATIVE genes)
+    # 13. Update genes list
     print_fluorescent_yellow "    13. Update genes list: complete list of all genes found (universe.txt)"
-    cut -d " " -f1  $indexingOutputDir/promoter_lengths.txt > $universefile
+    cut -f 1 $indexingOutputDir/promoter_lengths.txt > $universefile
 
     # -------------------------------------------------------------------------------------------
     # 14. create promoters fasta
@@ -374,15 +375,19 @@ for promlength in ${promlengthRange[@]}; do
 
     # rm -rf $indexingOutputDir/IC.txt
     rm -rf $indexingOutputDir/bedgenome.genome
+    # rm -rf $indexingOutputDir/fimohits
     rm -rf $indexingOutputDir/genelines.bed
     rm -rf $indexingOutputDir/genelines.gff3
     rm -rf $indexingOutputDir/genome_stripped.fa
     rm -rf $indexingOutputDir/genome_stripped.fa.fai
-    # rm -rf $indexingOutputDir/invalid_gff3_lines.txt
+    # rm -rf $indexingOutputDir/histogram_distance_tss.png
+    # rm -rf $indexingOutputDir/invalid_genelines.txt
+    rm -rf $indexingOutputDir/invalid_gff3_lines.txt
+    # rm -rf $indexingOutputDir/length_to_tss.txt
     # rm -rf $indexingOutputDir/memefiles
-    # rm -f $indexingOutputDir/promoter_lengths.txt
+    # rm -rf $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoters.bed
-    # rm -rf $indexingOutputDir/promoters.bg
+    rm -rf $indexingOutputDir/promoters.bg
     # rm -rf $indexingOutputDir/promoters.fa
     rm -rf $indexingOutputDir/promoters_rough.fa
     rm -rf $indexingOutputDir/sorted.gff3

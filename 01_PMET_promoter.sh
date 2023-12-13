@@ -35,15 +35,15 @@ chmod a+x scripts/cpp_debug_needed/homotypic_promoters.sh
 chmod a+x scripts/gff3sort/gff3sort.pl
 
 ########################## Downloading data #######################################
-cd data
-if [ -f "TAIR10.gff3" ]; then
-    echo ""
-else
-    print_green "Downloading genome and annotation...\n"
-    chmod a+x ./fetch_data.sh
-    bash ./fetch_data.sh
-fi
-cd ..
+# cd data
+# if [ -f "TAIR10.gff3" ]; then
+#     echo ""
+# else
+#     print_green "Downloading genome and annotation...\n"
+#     chmod a+x ./fetch_data.sh
+#     bash ./fetch_data.sh
+# fi
+# cd ..
 ########################## Parameters #######################################
 # tool
 toolDir=scripts
@@ -57,12 +57,12 @@ res_dir=results/01_PMET_promoter
 
 # homotypic
 gff3id="gene_id="
-# overlap="NoOverlap"
-overlap="Yes"
-utr="No"
+overlap="NoOverlap"
+# overlap="Yes"
+utr="Yes"
 topn=5000
 maxk=5
-length=50
+length=1000
 fimothresh=0.05
 distance=1000
 gff3id="gene_id="
@@ -75,8 +75,8 @@ meme=data/Franco-Zorrilla_et_al_2014.meme
 # output
 homotypic_output=$res_dir/01_homotypic
 # heterotypic
-task=gene_cell_identities
-gene_input_file=data/$task.txt
+task=genes_cell_type_treatment
+gene_input_file=data/genes/$task.txt
 heterotypic_output=$res_dir/02_heterotypic
 icthresh=4
 
@@ -112,7 +112,6 @@ print_green "\n\nSearching for heterotypic motif hits..."
 grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
 
 $HETEROTYPIC                                     \
-    -x $isPoisson                                \
     -d .                                         \
     -g $gene_input_file"temp"                    \
     -i $icthresh                                 \
@@ -124,6 +123,22 @@ $HETEROTYPIC                                     \
     -t $threads > $heterotypic_output/pmet.log
 cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
 rm $heterotypic_output/temp*.txt
+rm $gene_input_file"temp"
+
+
+print_green "\n\nSearching for heterotypic motif hits..."
+# remove genes not present in pre-computed pmet index
+grep -Ff $homotypic_output/universe.txt $gene_input_file > $gene_input_file"temp"
+
+$toolDir/pmet                                    \
+    -d .                                         \
+    -g $gene_input_file"temp"                    \
+    -i $icthresh                                 \
+    -p $homotypic_output/promoter_lengths.txt    \
+    -b $homotypic_output/binomial_thresholds.txt \
+    -c $homotypic_output/IC.txt                  \
+    -f $homotypic_output/fimohits                \
+    -o $heterotypic_output
 rm $gene_input_file"temp"
 
 ##################################### Heatmap ##################################
