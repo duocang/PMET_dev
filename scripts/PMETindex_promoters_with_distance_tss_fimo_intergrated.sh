@@ -141,7 +141,7 @@ print_white "Motif meme file                        : "; print_orange $memefile
 
 mkdir -p $indexingOutputDir
 
-start=$SECONDS
+start_time=$SECONDS
 print_green "Preparing data for FIMO and PMET index..."
 # -------------------------------------------------------------------------------------------
 # 1. sort annotaion by gene coordinates
@@ -290,7 +290,7 @@ cp $indexingOutputDir/promoters_gap_tss.bed $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 9. remove overlapping promoter chunks
-if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
+if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "No" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
 	print_fluorescent_yellow "     9.  Removing overlapping promoter chunks (promoters.bed)"
 	sleep 0.1
 	bedtools subtract \
@@ -312,7 +312,7 @@ python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 11. add 5' UTR
-if [ $utr == 'Yes' ]; then
+if [ $utr == 'Yes' || $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" ]; then
     print_fluorescent_yellow "    11.  Adding UTRs...";
 
 	python3 $pmetroot/parse_utrs.py      \
@@ -348,7 +348,7 @@ bedtools getfasta -fi \
 
 # -------------------------------------------------------------------------------------------
 # 15. replace the id of each seq with gene names
-print_fluorescent_yellow "    15. Replacing id of each sequences' with gene names (promoters.fa)"
+print_fluorescent_yellow "    15.  Replacing id of each sequences' with gene names (promoters.fa)"
 sed 's/::.*//g' $indexingOutputDir/promoters_rough.fa > $indexingOutputDir/promoters.fa
 
 # -------------------------------------------------------------------------------------------
@@ -439,8 +439,8 @@ file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt
 # 检查文件数量是否等于 meotif的数量 （$nummotifs）
 # Check if the number of files equals the number of meotifs ($nummotifs)
 if [ "$file_count" -eq "$nummotifs" ]; then
-    end=$SECONDS
-    elapsed_time=$((end - start))
+    end_time=$SECONDS
+    elapsed_time=$((end_time - start_time))
     days=$((elapsed_time/86400))
     hours=$(( (elapsed_time%86400)/3600 ))
     minutes=$(( (elapsed_time%3600)/60 ))
