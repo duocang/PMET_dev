@@ -49,7 +49,33 @@ for i in np.arange(prom.shape[0]):
 	#find which of the geneinds is ours
 	j = np.where(univ==prom[i,3])[0][0]
 	#dig out the subannot and filter it to cds
-	subannot = annot[geneinds[j]:geneinds[j+1],:]
+
+	# there are some cases: some part of a genes (several rows) are in other gene's between
+	# 1	araport11	gene	589584	590406	.	+	.	ID=gene:AT1G02705;biotype=protei
+	# 1	araport11	mRNA	589584	590406	.	+	.	ID=transcript:AT1G02705.1;Parent
+	# 1	araport11	exon	589584	590003	.	+	.	Parent=transcript:AT1G02705.1;
+	# 1	araport11	CDS	    589584	590003	.	+	0	ID=CDS:AT1G02705.1;Parent=transcript
+
+	# 1	araport11	gene	589706	589996	.	-	.	ID=gene:AT1G02710;biotype=protei
+	# 1	araport11	mRNA	589706	589996	.	-	.	ID=transcript:AT1G02710.1;Parent
+	# 1	araport11	exon	589706	589996	.	-	.	Parent=transcript:AT1G02710.1;Na
+	# 1	araport11	CDS	    589706	589996	.	-	0	ID=CDS:AT1G02710.1;Parent=transcript
+
+	# 1	araport11	exon	590401	590406	.	+	.	Parent=transcript:AT1G02705.1;Na
+	# 1	araport11	CDS	    590401	590406	.	+	0	ID=CDS:AT1G02705.1;Parent=transcript
+
+	# j is the index for current genes found in annotation by searching 'gene';
+	# j+1 is the index for next gene
+	# j+2 is the index for nexe next gene
+	# geneinds[j]:geneinds[end_index] will give row index of annotion for gene j, j+1 and j+2 (no j+3)
+	end_index = min(j+3, len(geneinds)-1)
+	subannot = annot[geneinds[j]:geneinds[end_index],:]
+
+	# filter annotations (gene j, j+1 and j+2), rows with gene j only
+	filtered_subannot = [row for row in subannot if prom[i,3] in row[-1]]
+	subannot = np.array(filtered_subannot)
+
+
 	noncds = []
 	for j in np.arange(subannot.shape[0]):
 		if 'CDS' not in subannot[j,:]:
@@ -70,4 +96,4 @@ for i in np.arange(prom.shape[0]):
 			#prom[i,2] = newpos + args.promlength
 
 #export the 5' UTR'd promoter file
-np.savetxt(promfile, prom, fmt='%s\t%i\t%i\t%s\t%i\t%s')
+np.savetxt("promfile.bed", prom, fmt='%s\t%i\t%i\t%s\t%i\t%s')
