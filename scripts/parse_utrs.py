@@ -96,4 +96,4 @@ for i in np.arange(prom.shape[0]):
 			#prom[i,2] = newpos + args.promlength
 
 #export the 5' UTR'd promoter file
-np.savetxt("promfile.bed", prom, fmt='%s\t%i\t%i\t%s\t%i\t%s')
+np.savetxt(promfile, prom, fmt='%s\t%i\t%i\t%s\t%i\t%s')
