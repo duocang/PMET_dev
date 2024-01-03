@@ -35,3 +35,6 @@ fimo
 genome.fasta
 src/meme-5.5.3/fimo_out
 test
+TAIR10.fasta
+TAIR10.gff3
+.Rhistory

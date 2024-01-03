@@ -21,7 +21,7 @@ if findstr[-1]!=':':
 
 #import using fancy pandas technology
 #(and then immediately get rid of the fancy pandas technology)
-genelines = pd.read_csv(infile, sep='\t', index_col=None, header=None)
+genelines = pd.read_csv(infile, sep='\t', index_col=None, header=None, low_memory=False)
 genelines = genelines.values
 
 #attempt to pull out the appropriate gene name and clump it into the final field
