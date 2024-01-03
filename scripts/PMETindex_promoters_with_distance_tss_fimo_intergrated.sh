@@ -312,7 +312,7 @@ python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 11. add 5' UTR
-if [ $utr == 'Yes' || $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" ]; then
+if [[ $utr == 'Yes' || $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" ]]; then
     print_fluorescent_yellow "    11.  Adding UTRs...";
 
 	python3 $pmetroot/parse_utrs.py      \
