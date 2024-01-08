@@ -48,7 +48,7 @@ print_middle(){
 echo -e "\n\n"
 print_middle "The purpose of this script is to                                      \n"
 print_middle "  Search motif pairs on the longest isoform of any genomic elemet       "
-print_middle "
+print_middle "                                                                      \n"
 
 
 
@@ -70,7 +70,7 @@ start_time=$SECONDS
 ################################ 2. input parameters ###################################
 # tool
 toolDir=scripts
-HOMOTYPIC=$toolDir/PMETindex_genomic_element.sh
+HOMOTYPIC=$toolDir/PMETindex_genomic_element_megred_isoform.sh
 HETEROTYPIC=$toolDir/pmetParallel
 
 chmod a+x $HOMOTYPIC
@@ -89,7 +89,7 @@ length=1000
 fimothresh=0.05
 distance=1000
 gff3id="gene_id="
-delete_temp=no
+delete_temp=yes
 
 # data
 genome=data/TAIR10.fasta
@@ -150,82 +150,82 @@ $HOMOTYPIC               \
     $anno                \
     $meme
 
-# for task in "salt_top300" "random_genes_300" "genes_cell_type_treatment" "gene_cortex_epidermis_pericycle" "heat_top300"; do
+for task in "salt_top300" "random_genes_300" "genes_cell_type_treatment" "gene_cortex_epidermis_pericycle" "heat_top300"; do
 
-#     heterotypic_output=${heterotypic_output}_${task}
-#     plot_output=${plot_output}_${task}
-#     gene_input_file=data/genes/$task.txt
-#     mkdir -p $heterotypic_output
-#     mkdir -p $plot_output
+    heterotypic_output=${heterotypic_output}_${task}
+    plot_output=${plot_output}_${task}
+    gene_input_file=data/genes/$task.txt
+    mkdir -p $heterotypic_output
+    mkdir -p $plot_output
 
-#     ############################ 4. Running heterotypic ###############################
-#     print_green "\n\nSearching for heterotypic motif hits...\n"
+    ############################ 4. Running heterotypic ###############################
+    print_green "\n\nSearching for heterotypic motif hits...\n"
 
-#     # remove genes not present in pre-computed pmet index
-#     grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
-
-
-#     $HETEROTYPIC                                     \
-#         -d .                                         \
-#         -g $heterotypic_output/new_genes_temp.txt    \
-#         -i $icthresh                                 \
-#         -p $homotypic_output/promoter_lengths.txt    \
-#         -b $homotypic_output/binomial_thresholds.txt \
-#         -c $homotypic_output/IC.txt                  \
-#         -f $homotypic_output/fimohits                \
-#         -o $heterotypic_output                       \
-#         -t $threads > $heterotypic_output/pmet.log
-
-#     rm $heterotypic_output/new_genes_temp.txt
-#     # merge pmet result
-#     cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
-#     rm $heterotypic_output/temp*.txt
-
-#     end_time=$SECONDS
-#     elapsed_time=$((end_time - start_time))
-#     days=$((elapsed_time/86400))
-#     hours=$(( (elapsed_time%86400)/3600 ))
-#     minutes=$(( (elapsed_time%3600)/60 ))
-#     seconds=$((elapsed_time%60))
-#     print_orange "      Time taken: $days day $hours hour $minutes minute $seconds second\n"
+    # remove genes not present in pre-computed pmet index
+    grep -Ff $homotypic_output/universe.txt $gene_input_file > $heterotypic_output/new_genes_temp.txt
 
 
-#     print_green "DONE: heterotypic search"
+    $HETEROTYPIC                                     \
+        -d .                                         \
+        -g $heterotypic_output/new_genes_temp.txt    \
+        -i $icthresh                                 \
+        -p $homotypic_output/promoter_lengths.txt    \
+        -b $homotypic_output/binomial_thresholds.txt \
+        -c $homotypic_output/IC.txt                  \
+        -f $homotypic_output/fimohits                \
+        -o $heterotypic_output                       \
+        -t $threads > $heterotypic_output/pmet.log
 
-#     ##################################### Heatmap ##################################
-#     print_green "\n\nCreating heatmap...\n"
+    rm $heterotypic_output/new_genes_temp.txt
+    # merge pmet result
+    cat $heterotypic_output/*.txt > $heterotypic_output/motif_output.txt
+    rm $heterotypic_output/temp*.txt
 
-#     Rscript 05_heatmap.R                        \
-#         All                                  \
-#         $plot_output/heatmap.png             \
-#         $heterotypic_output/motif_output.txt \
-#         15                                    \
-#         3                                    \
-#         6                                    \
-#         FALSE
+    end_time=$SECONDS
+    elapsed_time=$((end_time - start_time))
+    days=$((elapsed_time/86400))
+    hours=$(( (elapsed_time%86400)/3600 ))
+    minutes=$(( (elapsed_time%3600)/60 ))
+    seconds=$((elapsed_time%60))
+    print_orange "      Time taken: $days day $hours hour $minutes minute $seconds second\n"
 
-#     Rscript 05_heatmap.R                           \
-#         Overlap                                 \
-#         $plot_output/heatmap_overlap_unique.png \
-#         $heterotypic_output/motif_output.txt    \
-#         15                                       \
-#         3                                       \
-#         6                                       \
-#         TRUE
 
-#     Rscript 05_heatmap.R                        \
-#         Overlap                              \
-#         $plot_output/heatmap_overlap.png     \
-#         $heterotypic_output/motif_output.txt \
-#         15                                    \
-#         3                                    \
-#         6                                    \
-#         FALSE
-# done
-# # method
-# # filename
-# # pmet.out
-# # topn
-# # histgram_ncol
-# # histgram_width
-# # unique_cmbination
+    print_green "DONE: heterotypic search"
+
+    ##################################### Heatmap ##################################
+    print_green "\n\nCreating heatmap...\n"
+
+    Rscript 05_heatmap.R                        \
+        All                                  \
+        $plot_output/heatmap.png             \
+        $heterotypic_output/motif_output.txt \
+        15                                    \
+        3                                    \
+        6                                    \
+        FALSE
+
+    Rscript 05_heatmap.R                           \
+        Overlap                                 \
+        $plot_output/heatmap_overlap_unique.png \
+        $heterotypic_output/motif_output.txt    \
+        15                                       \
+        3                                       \
+        6                                       \
+        TRUE
+
+    Rscript 05_heatmap.R                        \
+        Overlap                              \
+        $plot_output/heatmap_overlap.png     \
+        $heterotypic_output/motif_output.txt \
+        15                                    \
+        3                                    \
+        6                                    \
+        FALSE
+done
+# method
+# filename
+# pmet.out
+# topn
+# histgram_ncol
+# histgram_width
+# unique_cmbination

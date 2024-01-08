@@ -204,7 +204,6 @@ END {
 sort -k4,4 $indexingOutputDir/cleaned_longest.bed > $bedfile
 rm -rf $indexingOutputDir/cleaned_longest.bed
 rm -rf $indexingOutputDir/cleaned.bed
-rm -rf $indexingOutputDir/genelines.
 
 
 if [ "$element" = "mRNA" ] && [ "$mrnaFull" = "No" ]; then
