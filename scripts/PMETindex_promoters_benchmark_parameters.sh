@@ -387,7 +387,7 @@ for promlength in ${promlengthRange[@]}; do
     # rm -rf $indexingOutputDir/memefiles
     # rm -rf $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoters.bed
-    rm -rf $indexingOutputDir/promoters.bg
+    # rm -rf $indexingOutputDir/promoters.bg
     # rm -rf $indexingOutputDir/promoters.fa
     rm -rf $indexingOutputDir/promoters_rough.fa
     rm -rf $indexingOutputDir/sorted.gff3
