@@ -153,9 +153,7 @@ fi
 print_fluorescent_yellow "     3. Extracting chromosome, start, end, gene ..."
 
 # 使用grep查找字符串 check if gene_id is present
-grep -q "$gff3id" $indexingOutputDir/genelines.gff3
-# 检查状态码 check presence
-if [ $? -eq 0 ]; then
+if grep -q "$gff3id" "$indexingOutputDir/genelines.gff3"; then
     python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
 else
     gff3id='ID='
@@ -210,7 +208,10 @@ bedtools flank \
     -l $promlength \
     -r 0 -s -i $bedfile \
     -g $indexingOutputDir/bedgenome.genome \
-    > $indexingOutputDir/promoters.bed
+    > $indexingOutputDir/promoters_not_sorted.bed
+
+sortBed -i $indexingOutputDir/promoters_not_sorted.bed > $indexingOutputDir/promoters.bed
+rm -rf $indexingOutputDir/promoters_not_sorted.bed
 cp $indexingOutputDir/promoters.bed $indexingOutputDir/8_promoters.bed
 
 # -------------------------------------------------------------------------------------------

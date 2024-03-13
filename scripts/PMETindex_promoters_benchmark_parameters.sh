@@ -171,9 +171,7 @@ for promlength in ${promlengthRange[@]}; do
     print_fluorescent_yellow "     3.  Extracting chromosome, start, end, gene ..."
 
     # 使用grep查找字符串 check if gene_id is present
-    grep -q "$gff3id" $indexingOutputDir/genelines.gff3
-    # 检查状态码 check presence
-    if [ $? -eq 0 ]; then
+    if grep -q "$gff3id" "$indexingOutputDir/genelines.gff3"; then
         python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
     else
         gff3id='ID='
@@ -274,7 +272,10 @@ for promlength in ${promlengthRange[@]}; do
         -l $promlength                         \
         -r 0 -s -i $bedfile                    \
         -g $indexingOutputDir/bedgenome.genome \
-        > $indexingOutputDir/promoters.bed
+        > $indexingOutputDir/promoters_not_sorted.bed
+
+    sortBed -i $indexingOutputDir/promoters_not_sorted.bed > $indexingOutputDir/promoters.bed
+    rm -rf $indexingOutputDir/promoters_not_sorted.bed
 
     # # -------------------------------------------------------------------------------------------
     # print_fluorescent_yellow "     8.1 Remove promoters with less than 20 base pairs"
@@ -387,11 +388,10 @@ for promlength in ${promlengthRange[@]}; do
     # rm -rf $indexingOutputDir/memefiles
     # rm -rf $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoters.bed
-    # rm -rf $indexingOutputDir/promoters.bg
-    # rm -rf $indexingOutputDir/promoters.fa
+    rm -rf $indexingOutputDir/promoters.bg
+    rm -rf $indexingOutputDir/promoters.fa
     rm -rf $indexingOutputDir/promoters_rough.fa
     rm -rf $indexingOutputDir/sorted.gff3
-    # rm -rf $indexingOutputDir/universe.txt
 
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do
@@ -421,18 +421,17 @@ for promlength in ${promlengthRange[@]}; do
                 indexingOutputDir=$2
                 fimothresh=$3
                 pmetroot=$4
-                promlength=$5
-                maxk=$6
-                topn=$7
+                maxk=$5
+                topn=$6
 
-                $pmetroot/fimo                \
-                    --topk $maxk              \
-                    --topn $topn              \
-                    --text                    \
-                    --no-qvalue               \
-                    --thresh 0.05             \
-                    --verbosity 1             \
-                    --oc $indexingOutputDir/fimohits \
+                $pmetroot/fimo                               \
+                    --topk $maxk                             \
+                    --topn $topn                             \
+                    --text                                   \
+                    --no-qvalue                              \
+                    --thresh 0.05                            \
+                    --verbosity 1                            \
+                    --oc $indexingOutputDir/fimohits         \
                     --bgfile $indexingOutputDir/promoters.bg \
                     $memefile                                \
                     $indexingOutputDir/promoters.fa          \
@@ -445,7 +444,7 @@ for promlength in ${promlengthRange[@]}; do
 
             find $indexingOutputDir/memefiles -name \*.txt \
                 | parallel --progress --jobs=$threads \
-                    "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $promlength $maxk $topn"
+                    "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
 
             mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
         done

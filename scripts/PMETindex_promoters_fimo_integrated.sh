@@ -155,15 +155,12 @@ fi
 print_fluorescent_yellow "     3. Extracting chromosome, start, end, gene ..."
 # parse up the .bed for promoter extraction, 'gene_id'
 # 使用grep查找字符串 check if gene_id is present
-grep -q "$gff3id" $indexingOutputDir/genelines.gff3
-# 检查状态码 check presence
-if [ $? -eq 0 ]; then
+if grep -q "$gff3id" "$indexingOutputDir/genelines.gff3"; then
     python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
 else
     gff3id='ID='
     python3 $pmetroot/parse_genelines.py $gff3id $indexingOutputDir/genelines.gff3 $bedfile
 fi
-
 # -------------------------------------------------------------------------------------------
 # 4. filter invalid genes: start should be smaller than end
 print_fluorescent_yellow "     4. Filter invalid coordinates: start > end"
@@ -256,7 +253,10 @@ bedtools flank                             \
     -l $promlength                         \
     -r 0 -s -i $bedfile                    \
     -g $indexingOutputDir/bedgenome.genome \
-    > $indexingOutputDir/promoters.bed
+    > $indexingOutputDir/promoters_not_sorted.bed
+
+sortBed -i $indexingOutputDir/promoters_not_sorted.bed > $indexingOutputDir/promoters.bed
+rm -rf $indexingOutputDir/promoters_not_sorted.bed
 
 # -------------------------------------------------------------------------------------------
 # 9. remove overlapping promoter chunks
