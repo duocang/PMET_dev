@@ -270,7 +270,7 @@ bedtools flank \
     -r 0 -s -i $bedfile \
     -g $indexingOutputDir/bedgenome.genome \
     > $indexingOutputDir/promoters_not_sorted.bed
-
+# Sort by starting coordinate
 sortBed -i $indexingOutputDir/promoters_not_sorted.bed > $indexingOutputDir/promoters.bed
 rm -rf $indexingOutputDir/promoters_not_sorted.bed
 
