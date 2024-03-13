@@ -96,56 +96,57 @@ if [ true ]; then
                 if [[ "$ID" == "ubuntu" || "$ID_LIKE" == "debian" ]]; then
                     echo "This is a Debian/Ubuntu based distribution. Version: $PRETTY_NAME"
 
-                    # sudo apt update && sudo apt upgrade -y > /dev/null
-                    # sudo apt -y install openjdk-21-jdk     > /dev/null 2>&1 || print_red "    Failed to install openjdk-21-jdk"
+                    sudo apt update && sudo apt upgrade -y > /dev/null
+                    sudo apt -y install openjdk-21-jdk     > /dev/null 2>&1 || print_red "    Failed to install openjdk-21-jdk"
 
-                    # # export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-                    # # export PATH=$PATH:$JAVA_HOME/bin
-                    # # 询问用户是否处于调试模式
+                    # export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+                    # export PATH=$PATH:$JAVA_HOME/bin
+                    # 询问用户是否处于调试模式
 
-                    # sudo add-apt-repository -y ppa:alex-p/tesseract-ocr-devel  > /dev/null 2>&1 || print_red "    Failed to add ppa:alex-p/tesseract-ocr-devel"
-                    # sudo apt -y install zip                 > /dev/null 2>&1 || print_red "    Failed to install zip"
-                    # sudo apt -y install build-essential     > /dev/null 2>&1 || print_red "    Failed to install build-essential"
-                    # sudo apt -y install zlib1g-dev          > /dev/null 2>&1 || print_red "    Failed to install zlib1g-dev"
-                    # sudo apt -y install libgdbm-dev         > /dev/null 2>&1 || print_red "    Failed to install libgdbm-dev"
-                    # sudo apt -y install autotools-dev       > /dev/null 2>&1 || print_red "    Failed to install autotools-dev"
-                    # sudo apt -y install automake            > /dev/null 2>&1 || print_red "    Failed to install automake"
-                    # sudo apt -y install nodejs              > /dev/null 2>&1 || print_red "    Failed to install nodejs"
-                    # sudo apt -y install npm                 > /dev/null 2>&1 || print_red "    Failed to install npm"
-                    # sudo apt -y install libxml2-dev         > /dev/null 2>&1 || print_red "    Failed to install libxml2-dev"
-                    # sudo apt -y install libxml2             > /dev/null 2>&1 || print_red "    Failed to install libxml2"
-                    # sudo apt -y install libxslt-dev         > /dev/null 2>&1 || print_red "    Failed to install libxslt-dev"
-                    # sudo apt -y install cmake               > /dev/null 2>&1 || print_red "    Failed to install cmake"
-                    # sudo apt -y install libjpeg-dev         > /dev/null 2>&1 || print_red "    Failed to install libjpeg-dev "
-                    # sudo apt -y install librsvg2-dev        > /dev/null 2>&1 || print_red "    Failed to install librsvg2-dev"
-                    # sudo apt -y install libpoppler-cpp-dev  > /dev/null 2>&1 || print_red "    Failed to install libpoppler-cpp-dev"
-                    # sudo apt -y install freetype2-demos     > /dev/null 2>&1 || print_red "    Failed to install freetype2-demos"
-                    # sudo apt -y install cargo               > /dev/null 2>&1 || print_red "    Failed to install cargo"
-                    # sudo apt -y install libharfbuzz-dev     > /dev/null 2>&1 || print_red "    Failed to install libharfbuzz-dev"
-                    # sudo apt -y install libfribidi-dev      > /dev/null 2>&1 || print_red "    Failed to install libfribidi-dev"
-                    # sudo apt -y install libtesseract-dev    > /dev/null 2>&1 || print_red "    Failed to install libtesseract-dev"
-                    # sudo apt -y install libleptonica-dev    > /dev/null 2>&1 || print_red "    Failed to install libleptonica-dev"
-                    # sudo apt -y install tesseract-ocr-eng   > /dev/null 2>&1 || print_red "    Failed to install libfribidi-dev"
-                    # sudo apt -y install libmagick++-dev     > /dev/null 2>&1 || print_red "    Failed to install libmagick++-dev"
-                    # sudo apt -y install libavfilter-dev     > /dev/null 2>&1 || print_red "    Failed to install libavfilter-dev"
-                    # sudo apt -y install libncurses5-dev     > /dev/null 2>&1 || print_red "    Failed to install libncurses5-dev"
-                    # sudo apt -y install libncursesw5-dev    > /dev/null 2>&1 || print_red "    Failed to install libncursesw5-dev"
-                    # sudo apt -y install libbz2-dev          > /dev/null 2>&1 || print_red "    Failed to install libbz2-dev"
-                    # sudo apt -y install libpcre2-dev        > /dev/null 2>&1 || print_red "    Failed to install libpcre2-dev"
-                    # sudo apt -y install libreadline-dev     > /dev/null 2>&1 || print_red "    Failed to install libreadline-dev"
-                    # sudo apt -y install libssl-dev          > /dev/null 2>&1 || print_red "    Failed to install libssl-dev"
-                    # sudo apt -y install glibc-source        > /dev/null 2>&1 || print_red "    Failed to install glibc-source"
-                    # sudo apt -y install libssl-dev          > /dev/null 2>&1 || print_red "    Failed to install libssl-dev"
-                    # sudo apt -y install libstdc++6          > /dev/null 2>&1 || print_red "    Failed to install libstdc++6"
+                    sudo add-apt-repository -y ppa:alex-p/tesseract-ocr-devel  > /dev/null 2>&1 || print_red "    Failed to add ppa:alex-p/tesseract-ocr-devel"
+                    sudo apt -y install dpkg                > /dev/null 2>&1 || print_red "    Failed to install dpkg"
+                    sudo apt -y install zip                 > /dev/null 2>&1 || print_red "    Failed to install zip"
+                    sudo apt -y install build-essential     > /dev/null 2>&1 || print_red "    Failed to install build-essential"
+                    sudo apt -y install zlib1g-dev          > /dev/null 2>&1 || print_red "    Failed to install zlib1g-dev"
+                    sudo apt -y install libgdbm-dev         > /dev/null 2>&1 || print_red "    Failed to install libgdbm-dev"
+                    sudo apt -y install autotools-dev       > /dev/null 2>&1 || print_red "    Failed to install autotools-dev"
+                    sudo apt -y install automake            > /dev/null 2>&1 || print_red "    Failed to install automake"
+                    sudo apt -y install nodejs              > /dev/null 2>&1 || print_red "    Failed to install nodejs"
+                    sudo apt -y install npm                 > /dev/null 2>&1 || print_red "    Failed to install npm"
+                    sudo apt -y install libxml2-dev         > /dev/null 2>&1 || print_red "    Failed to install libxml2-dev"
+                    sudo apt -y install libxml2             > /dev/null 2>&1 || print_red "    Failed to install libxml2"
+                    sudo apt -y install libxslt-dev         > /dev/null 2>&1 || print_red "    Failed to install libxslt-dev"
+                    sudo apt -y install cmake               > /dev/null 2>&1 || print_red "    Failed to install cmake"
+                    sudo apt -y install libjpeg-dev         > /dev/null 2>&1 || print_red "    Failed to install libjpeg-dev "
+                    sudo apt -y install librsvg2-dev        > /dev/null 2>&1 || print_red "    Failed to install librsvg2-dev"
+                    sudo apt -y install libpoppler-cpp-dev  > /dev/null 2>&1 || print_red "    Failed to install libpoppler-cpp-dev"
+                    sudo apt -y install freetype2-demos     > /dev/null 2>&1 || print_red "    Failed to install freetype2-demos"
+                    sudo apt -y install cargo               > /dev/null 2>&1 || print_red "    Failed to install cargo"
+                    sudo apt -y install libharfbuzz-dev     > /dev/null 2>&1 || print_red "    Failed to install libharfbuzz-dev"
+                    sudo apt -y install libfribidi-dev      > /dev/null 2>&1 || print_red "    Failed to install libfribidi-dev"
+                    sudo apt -y install libtesseract-dev    > /dev/null 2>&1 || print_red "    Failed to install libtesseract-dev"
+                    sudo apt -y install libleptonica-dev    > /dev/null 2>&1 || print_red "    Failed to install libleptonica-dev"
+                    sudo apt -y install tesseract-ocr-eng   > /dev/null 2>&1 || print_red "    Failed to install libfribidi-dev"
+                    sudo apt -y install libmagick++-dev     > /dev/null 2>&1 || print_red "    Failed to install libmagick++-dev"
+                    sudo apt -y install libavfilter-dev     > /dev/null 2>&1 || print_red "    Failed to install libavfilter-dev"
+                    sudo apt -y install libncurses5-dev     > /dev/null 2>&1 || print_red "    Failed to install libncurses5-dev"
+                    sudo apt -y install libncursesw5-dev    > /dev/null 2>&1 || print_red "    Failed to install libncursesw5-dev"
+                    sudo apt -y install libbz2-dev          > /dev/null 2>&1 || print_red "    Failed to install libbz2-dev"
+                    sudo apt -y install libpcre2-dev        > /dev/null 2>&1 || print_red "    Failed to install libpcre2-dev"
+                    sudo apt -y install libreadline-dev     > /dev/null 2>&1 || print_red "    Failed to install libreadline-dev"
+                    sudo apt -y install libssl-dev          > /dev/null 2>&1 || print_red "    Failed to install libssl-dev"
+                    sudo apt -y install glibc-source        > /dev/null 2>&1 || print_red "    Failed to install glibc-source"
+                    sudo apt -y install libssl-dev          > /dev/null 2>&1 || print_red "    Failed to install libssl-dev"
+                    sudo apt -y install libstdc++6          > /dev/null 2>&1 || print_red "    Failed to install libstdc++6"
 
-                    # echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list
-                    # sudo apt update
-                    # sudo apt -y install libssl1.1             > /dev/null 2>&1 || print_red "    Failed to install libssl1.1"
-                    # sudo apt -y install libcurl4-openssl-dev  > /dev/null 2>&1 || print_red "    Failed to install libcurl4-openssl-dev"
-                    # sudo apt -y install libopenblas-dev       > /dev/null 2>&1 || print_red "    Failed to install libopenblas-dev"
-                    # sudo apt -y install gfortran              > /dev/null 2>&1 || print_red "    Failed to install gfortran"
-                    # sudo update-alternatives --config libblas.so.3-$(arch)-linux-gnu
-                    # sudo apt -y install ufw > /dev/null 2>&1 || print_red "    Failed to install ufw"
+                    echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list
+                    sudo apt update
+                    sudo apt -y install libssl1.1             > /dev/null 2>&1 || print_red "    Failed to install libssl1.1"
+                    sudo apt -y install libcurl4-openssl-dev  > /dev/null 2>&1 || print_red "    Failed to install libcurl4-openssl-dev"
+                    sudo apt -y install libopenblas-dev       > /dev/null 2>&1 || print_red "    Failed to install libopenblas-dev"
+                    sudo apt -y install gfortran              > /dev/null 2>&1 || print_red "    Failed to install gfortran"
+                    sudo update-alternatives --config libblas.so.3-$(arch)-linux-gnu
+                    sudo apt -y install ufw > /dev/null 2>&1 || print_red "    Failed to install ufw"
 
                 elif [[ "$ID" == "fedora" || "$ID_LIKE" == "fedora" || "$ID" == "rhel" || "$ID_LIKE" == "rhel" ]]; then
                     echo "This is a Red Hat based distribution. Version: $PRETTY_NAME"
@@ -191,7 +192,7 @@ if [ true ]; then
 
         print_green_no_br "\n1. Would you like to install R (/opt/R/R-4.3.2/bin/R) as Root? [y/N]: "
         read -p "" answer
-        answer=${answer:-Y} # Default to 'Y' if no input provided
+        answer=${answer:-N} # Default to 'Y' if no input provided
 
         if [ "$answer" == "Y" ] || [ "$answer" == "y" ]; then
             tool_dir=R-4.3.2
@@ -234,7 +235,7 @@ if [ true ]; then
     if ! dpkg -l | grep -q "^ii\s*python3\s"; then
         print_green_no_br "\n4. Would you like to install python as Root? [y/N]: "
         read -p "" answer
-        answer=${answer:-Y} # Default to 'Y' if no input provided
+        answer=${answer:-N} # Default to 'Y' if no input provided
 
         if [ "$answer" == "Y" ] || [ "$answer" == "y" ]; then
             print_green "  Installing python3..."

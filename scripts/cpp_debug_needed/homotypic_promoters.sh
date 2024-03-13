@@ -308,7 +308,7 @@ bedtools getfasta -fi                         \
     $indexingOutputDir/genome_stripped.fa     \
     -bed $indexingOutputDir/promoters.bed     \
     -fo $indexingOutputDir/promoters_rough.fa \
-    -name -s
+    -name
 
 # -------------------------------------------------------------------------------------------
 # 18. replace the id of each seq with gene names

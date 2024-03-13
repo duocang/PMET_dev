@@ -427,10 +427,12 @@ double poissonCDF(double lambda, int k) {
     //   // printf(k);
     //   printf("\nThis is Poisson CDF...\n");
     double cdf = 0.0;
-    for(int i = 0; i <= k; i++) {
+    int i;
+    for(i = 0; i <= k; i++) {
         double poisson_pmf = 1.0; // Initialize PMF for each i
         // Calculating lambda^i / i!
-        for(int j = 1; j <= i; j++) {
+        int j;
+        for(j = 1; j <= i; j++) {
             poisson_pmf *= lambda / j;
         }
         // Multiplying with e^-lambda
