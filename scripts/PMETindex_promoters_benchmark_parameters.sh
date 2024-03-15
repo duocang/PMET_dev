@@ -85,32 +85,23 @@ fi
 
 while getopts ":r:i:o:n:k:p:f:v:u:t:" options; do
     case $options in
-        r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
-        pmetroot=$OPTARG;;
-        i) print_white "GFF3 feature identifier                : "; print_orange "$OPTARG" >&2
-        gff3id=$OPTARG;;
-        o) print_white "Output directory for results           : "; print_orange "$OPTARG" >&2
-        outputDir=$OPTARG;;
-        n) print_white "Top n promoter hits to take per motif  : "; print_orange "$OPTARG" >&2
-        topn=$OPTARG;;
-        k) print_white "Top k motif hits within each promoter  : "; print_orange "$OPTARG" >&2
-        maxk=$OPTARG;;
-        p) print_white "Promoter length                        : "; print_orange "$OPTARG" >&2
-        promlength=$OPTARG;;
-        f) print_white "Fimo threshold                         : "; print_orange "$OPTARG" >&2
-        fimothresh=$OPTARG;;
-        v) print_white "Do promoter overlaps with sequences    : "; print_orange "$OPTARG" >&2
-        overlap=$OPTARG;;
-        u) print_white "Include 5' UTR sequence?               : "; print_orange "$OPTARG" >&2
-        utr=$OPTARG;;
-        t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
-        threads=$OPTARG;;
+        r) pmetroot=$OPTARG;;
+        i) gff3id=$OPTARG;;
+        o) outputDir=$OPTARG;;
+        n) topn=$OPTARG;;
+        k) maxk=$OPTARG;;
+        p) promlength=$OPTARG;;
+        f) fimothresh=$OPTARG;;
+        v) overlap=$OPTARG;;
+        u) utr=$OPTARG;;
+        t) threads=$OPTARG;;
         \?) print_red  "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  print_red "Option -$OPTARG requires an argument." >&2
         exit 1;;
     esac
 done
+
 
 shift $((OPTIND - 1))
 genomefile=$1
@@ -127,13 +118,19 @@ topnRange=($(string_to_array "$topn"))
 maxkRange=($(string_to_array "$maxk"))
 promlengthRange=($(string_to_array "$promlength"))
 
-print_white "Genome file                  : "; print_orange $genomefile
-print_white "Annotation file              : "; print_orange $gff3file
-print_white "Motif meme file              : "; print_orange $memefile
-print_white "Top n promoters              : "; echo ${topnRange[@]}
-print_white "Top k motif hits             : "; echo ${maxkRange[@]}
-print_white "Length of promoter           : "; echo ${promlengthRange[@]}
-
+print_white "Genome file                  : "; print_orange "$genomefile"
+print_white "Annotation file              : "; print_orange "$gff3file"
+print_white "Motif meme file              : "; print_orange "$memefile"
+print_white "PMET index path              : "; print_orange "$pmetroot"
+print_white "GFF3 identifier              : "; print_orange "$gff3id"
+print_white "Output directory             : "; print_orange "$outputDir"
+print_white "Top n promoters              : "; print_orange "${topn:-5000}"  # Default to 5000 if not set
+print_white "Top k motif hits             : "; print_orange "${maxk:-5}"     # Default to 5 if not set
+print_white "Length of promoter           : "; print_orange "${promlength:-1000}"  # Default to 1000 if not set
+print_white "Fimo threshold               : "; print_orange "$fimothresh"
+print_white "Promoter overlap handling    : "; print_orange "$overlap"
+print_white "Include 5' UTR               : "; print_orange "$utr"
+print_white "Number of threads            : "; print_orange "$threads"
 
 start=$SECONDS
 
@@ -143,7 +140,7 @@ for promlength in ${promlengthRange[@]}; do
 
     print_green "Preparing data for FIMO and PMET index, promoter legnth: $promlength..."
 
-    indexingOutputDir=$outputDir/fimoThresh005_promLength${promlength}
+    indexingOutputDir=$outputDir/promLength${promlength}_fimoThresh${fimothresh//./}
     universefile=$indexingOutputDir/universe.txt
     bedfile=$indexingOutputDir/genelines.bed
 
@@ -388,14 +385,12 @@ for promlength in ${promlengthRange[@]}; do
     # rm -rf $indexingOutputDir/memefiles
     # rm -rf $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoters.bed
-    rm -rf $indexingOutputDir/promoters.bg
-    rm -rf $indexingOutputDir/promoters.fa
     rm -rf $indexingOutputDir/promoters_rough.fa
     rm -rf $indexingOutputDir/sorted.gff3
 
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do
-            cp -r $indexingOutputDir $outputDir/fimoThresh005_promLength${promlength}_maxK${maxk}_topN${topn}
+            cp -r $indexingOutputDir $outputDir/TEMP_promLength${promlength}_maxK${maxk}_topN${topn}_fimoThresh${fimothresh//./}
         done
     done
 
@@ -407,10 +402,10 @@ for promlength in ${promlengthRange[@]}; do
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do
 
-            indexingOutputDir=$outputDir/fimoThresh005_promLength${promlength}_maxK${maxk}_topN${topn}
+            indexingOutputDir=$outputDir/TEMP_promLength${promlength}_maxK${maxk}_topN${topn}_fimoThresh${fimothresh//./}
 
             # -------------------------------- Run fimo and pmetindex --------------------------
-            print_green "Running FIMO and PMET index..."
+            print_green "\nRunning FIMO and PMET index..."
             print_green "Promoter legnth: $promlength"
             print_green "MaxK           : $maxk"
             print_green "Topn           : $topn"
@@ -429,7 +424,7 @@ for promlength in ${promlengthRange[@]}; do
                     --topn $topn                             \
                     --text                                   \
                     --no-qvalue                              \
-                    --thresh 0.05                            \
+                    --thresh $fimothresh                     \
                     --verbosity 1                            \
                     --oc $indexingOutputDir/fimohits         \
                     --bgfile $indexingOutputDir/promoters.bg \
@@ -443,10 +438,13 @@ for promlength in ${promlengthRange[@]}; do
             print_orange "    $numfiles motif meme files found"
 
             find $indexingOutputDir/memefiles -name \*.txt \
-                | parallel --progress --jobs=$threads \
+                | parallel --bar --jobs=$threads \
                     "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
 
             mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
+
+            # when indexing completed, remove TEMP flag from folder
+            mv $indexingOutputDir $outputDir/promLength${promlength}_maxK${maxk}_topN${topn}_fimoThresh${fimothresh//./}
         done
     done
 done

@@ -72,10 +72,14 @@ install_package_func <- function(package_name) {
 # bio
 packages_bio <- c("rtracklayer", "DESeq2", "WGCNA", "GEOqueary", "limma", "edgeR",
                   "GSEABase", "clusterProfiler", "ConsensusClusterPlus", "GSVA",
-                  "pheatmap", "scFeatureFilter", "AUCell", "ComplexHeatmap")
+                  "pheatmap", "scFeatureFilter", "AUCell", "ComplexHeatmap",
+                  "org.Mm.eg.db", "org.Dr.eg.db", "org.Hs.eg.db", "pcaMethods", "scde",
+                  "enrichplot")
 
 # normal packages
 packages_normal <- c(
+  "robustbase",
+  "ucminf",
   "ade4",
   "fastmap",
   "htmltools",
@@ -212,7 +216,8 @@ packages_github <- c(
            "exaexa/scattermore",
            "satijalab/sctransform",
            "jlmelville/uwot",
-           "haozhu233/kableExtra")
+           "haozhu233/kableExtra",
+           "YuLab-SMU/enrichplot")
 
 installed_packages <- character(0)
 failed_packages    <- character(0)
