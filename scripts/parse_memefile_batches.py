@@ -61,7 +61,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=argparse.FileType('r'), help="Input file path. 输入文件路径")
     parser.add_argument('outdir', type=str, help="Output directory. 输出目录")
-    parser.add_argument('--batch', type=int, default=8, help="The number of motifs in each batch. 每批次中的motifs数量")
+    parser.add_argument('batch', type=int, default=8, help="The number of motifs in each batch. 每批次中的motifs数量")
     args = parser.parse_args()
 
     bigfile = np.asarray(args.file.readlines())
