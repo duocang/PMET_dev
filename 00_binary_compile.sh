@@ -326,7 +326,7 @@ if [ true ]; then
             rm -rf bin/*
 
             ################################## 2.3 pmetParallel
-            print_orange "2.3 Compiling PMET heterotypic (pair) binary..."
+            print_orange "2.3 Compiling PMET heterotypic parallel (pair) binary..."
             cd ../pmetParallel
 
             bash build.sh > /dev/null 2>&1

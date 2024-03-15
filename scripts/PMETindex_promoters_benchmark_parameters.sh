@@ -370,23 +370,24 @@ for promlength in ${promlengthRange[@]}; do
         $indexingOutputDir/IC.txt
     rm -rf $indexingOutputDir/memefilestemp/
 
-
-    # rm -rf $indexingOutputDir/IC.txt
-    rm -rf $indexingOutputDir/bedgenome.genome
-    # rm -rf $indexingOutputDir/fimohits
-    rm -rf $indexingOutputDir/genelines.bed
-    rm -rf $indexingOutputDir/genelines.gff3
-    rm -rf $indexingOutputDir/genome_stripped.fa
-    rm -rf $indexingOutputDir/genome_stripped.fa.fai
-    # rm -rf $indexingOutputDir/histogram_distance_tss.png
-    # rm -rf $indexingOutputDir/invalid_genelines.txt
-    rm -rf $indexingOutputDir/invalid_gff3_lines.txt
-    # rm -rf $indexingOutputDir/length_to_tss.txt
-    # rm -rf $indexingOutputDir/memefiles
-    # rm -rf $indexingOutputDir/promoter_lengths.txt
-    rm -rf $indexingOutputDir/promoters.bed
-    rm -rf $indexingOutputDir/promoters_rough.fa
-    rm -rf $indexingOutputDir/sorted.gff3
+    if [ true ]; then
+        # rm -rf $indexingOutputDir/IC.txt
+        rm -rf $indexingOutputDir/bedgenome.genome
+        # rm -rf $indexingOutputDir/fimohits
+        rm -rf $indexingOutputDir/genelines.bed
+        rm -rf $indexingOutputDir/genelines.gff3
+        rm -rf $indexingOutputDir/genome_stripped.fa
+        rm -rf $indexingOutputDir/genome_stripped.fa.fai
+        # rm -rf $indexingOutputDir/histogram_distance_tss.png
+        # rm -rf $indexingOutputDir/invalid_genelines.txt
+        rm -rf $indexingOutputDir/invalid_gff3_lines.txt
+        # rm -rf $indexingOutputDir/length_to_tss.txt
+        # rm -rf $indexingOutputDir/memefiles
+        # rm -rf $indexingOutputDir/promoter_lengths.txt
+        rm -rf $indexingOutputDir/promoters.bed
+        rm -rf $indexingOutputDir/promoters_rough.fa
+        rm -rf $indexingOutputDir/sorted.gff3
+    fi
 
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do

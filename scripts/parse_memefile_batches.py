@@ -3,63 +3,69 @@ import numpy as np
 import os
 
 def count_motifs_in_file(file_content):
-    motif_count = 0
-    for line in file_content:
-        if 'MOTIF' in line:
-            motif_count += 1
-    return motif_count
+    """Count the number of occurrences of 'MOTIF' in the file content. 计算文件内容中 'MOTIF' 出现的次数。
+    Args:
+        file_content (list of str): Content of the file as a list of lines. 文件内容，作为行列表。
 
-parser = argparse.ArgumentParser()
-parser.add_argument('file', type=argparse.FileType('r'))
-parser.add_argument('outdir', type=str)
-parser.add_argument('batch', type=int, default=8)
-args = parser.parse_args()
-
-#keeping this here in case the docker turns out to work different
-#bigfile = np.asarray(args.file.read().splitlines())
-bigfile = np.asarray(args.file.readlines())
-
-motif_number = count_motifs_in_file(bigfile)
-
-# print(motif_number)
-
-batches = int(motif_number / args.batch)
-# print(batches)
-
-headind = 0
-while bigfile[headind].find('MOTIF') == -1:
-    headind += 1
-
-ind1 = headind
-motif_counter = 0  # Counter for motifs
-file_counter = 1  # Counter for the output files
-inds_to_write = []
-
-for i in range((ind1 + 1), len(bigfile)):
-    if bigfile[i].find('MOTIF') > -1 or i == len(bigfile) - 1:  # also check if we're at the end of the file
-        if bigfile[i].find('MOTIF') > -1:
-            ind2 = i
-        else:
-            ind2 = i + 1  # to include the last line
-
-        inds_to_write.extend(np.arange(ind1, ind2))
-        bigfile[ind1] = bigfile[ind1].upper()
-        motif_counter += 1
-
-        # When we have collected batches motifs, or we're at the end of the file, write them to a new file
-        if motif_counter == batches or i == len(bigfile) - 1:
-            inds_to_write = np.append(np.arange(headind), inds_to_write)
-            writer = open(os.path.normcase(args.outdir + str(file_counter) + '.txt'), 'w')
-            lines_to_write = bigfile[inds_to_write]
-            writer.writelines(lines_to_write)
-            writer.close()
-
-            # Reset the indices and counters
-            inds_to_write = []
-            motif_counter = 0
-            file_counter += 1
-
-        ind1 = ind2
+    Returns:
+        int: The number of motifs found.
+                找到的motifs数量。
+    """
+    return sum('MOTIF' in line for line in file_content)
 
 
+def distribute_motifs_evenly(bigfile, threads, outdir):
+    """Distribute motifs across multiple files as evenly as possible. 尽可能均匀地将motifs分布到多个文件中。
+    Args:
+        bigfile (np.ndarray): The content of the original file loaded into a NumPy array. 原始文件内容加载到NumPy数组中。
+        threads (int): The number of separate files to distribute the motifs across. 要将motifs分布到的独立文件数量。
+        outdir (str): The directory where the output files will be saved. 输出文件将被保存的目录。
 
+    Returns:
+        None
+    """
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    # Find the location of the first MOTIF.
+    headind = next(i for i, line in enumerate(bigfile) if 'MOTIF' in line)
+    meme_header_lines = bigfile[0:headind]
+
+    # Initially create all the output files and write the header lines.
+    files = [open(os.path.join(outdir, f"{i}.txt"), 'w') for i in range(threads)]
+    for f in files:
+        f.writelines(meme_header_lines)
+        f.close()
+
+    file_counter = 0
+    ind1 = headind
+    for i in range(ind1 + 1, len(bigfile)):
+        if 'MOTIF' in bigfile[i] or i == len(bigfile) - 1:
+            ind2 = i if 'MOTIF' in bigfile[i] else i + 1  # Include the last line.
+
+            # Convert the found MOTIF interval to uppercase.
+            bigfile[ind1] = bigfile[ind1].upper()
+
+            lines_to_write = bigfile[ind1:ind2]
+            with open(os.path.join(outdir, f"{file_counter}.txt"), 'a') as writer:
+                writer.writelines(lines_to_write)
+
+            # Rotate the file_counter within the range [0, threads-1].
+            file_counter = (file_counter + 1) % threads
+
+            ind1 = ind2
+
+
+def main():
+    """The main function to parse arguments and call the distribution function."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file', type=argparse.FileType('r'), help="Input file path. 输入文件路径")
+    parser.add_argument('outdir', type=str, help="Output directory. 输出目录")
+    parser.add_argument('--batch', type=int, default=8, help="The number of motifs in each batch. 每批次中的motifs数量")
+    args = parser.parse_args()
+
+    bigfile = np.asarray(args.file.readlines())
+    distribute_motifs_evenly(bigfile, args.batch, args.outdir)
+
+if __name__ == "__main__":
+    main()
