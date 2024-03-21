@@ -216,7 +216,7 @@ cp $indexingOutputDir/promoters.bed $indexingOutputDir/8_promoters.bed
 
 # -------------------------------------------------------------------------------------------
 # 9. remove overlapping promoter chunks
-if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
+if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "NO" || $overlap == "No" || $overlap == "N" || $overlap == "n" ]]; then
 	print_fluorescent_yellow "     9. Removing overlapping promoter chunks (promoters.bed)"
 	sleep 0.1
 	bedtools subtract \
