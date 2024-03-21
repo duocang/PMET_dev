@@ -108,15 +108,65 @@ genomefile=$1
 gff3file=$2
 memefile=$3
 
-# 定义函数以将逗号分隔的字符串转换为数组
-string_to_array() {
-    local IFS='-' # 设置字段分隔符为逗号
-    read -ra arr <<< "$1" # 读取字符串并分割到数组
-    echo "${arr[@]}" # 返回数组
-}
-topnRange=($(string_to_array "$topn"))
-maxkRange=($(string_to_array "$maxk"))
-promlengthRange=($(string_to_array "$promlength"))
+if [ true ]; then
+    # 定义函数以将逗号分隔的字符串转换为数组 Define function to convert comma separated string to array
+    string_to_array() {
+        local IFS='-' # 设置字段分隔符为逗号
+        read -ra arr <<< "$1" # 读取字符串并分割到数组
+        echo "${arr[@]}" # 返回数组
+    }
+    # 检查数组中的元素是否都是数字 Check if the elements in the array are all numbers
+    check_all_numbers() {
+        local -a array=("$@") # 从所有传入的参数中重建数组
+        unset array[${#array[@]}-1] # 移除最后一个元素（参数名称）
+        local param_name="${!#}" # 获取最后一个参数作为参数名称
+
+        for item in "${array[@]}"; do
+            if ! [[ "$item" =~ ^[0-9]+$ ]]; then
+                print_red "Error: '$item' in $param_name is not a number." >&2
+                exit 1
+            fi
+        done
+    }
+
+    topnRange=($(string_to_array "$topn"))
+    maxkRange=($(string_to_array "$maxk"))
+    promlengthRange=($(string_to_array "$promlength"))
+
+    # 检查每个数组 Check each array
+    check_all_numbers "${topnRange[@]}" "topn"
+    check_all_numbers "${maxkRange[@]}" "maxk"
+    check_all_numbers "${promlengthRange[@]}" "promlength"
+
+
+    # 检查fimothresh是否为小于1的小数 Check if fimothresh is a decimal less than 1
+    if ! [[ "$fimothresh" =~ ^0?\.[0-9]+$ ]] || (( $(echo "$fimothresh >= 1" | bc -l) )); then
+        print_red "Error: fimo threshold must be a decimal number less than 1." >&2
+        exit 1
+    fi
+
+    # 检查输入是否为大于等于1的整数
+    if ! [[ "$threads" =~ ^[0-9]+$ ]] || (( threads < 1 )); then
+        print_red "Error: The number of threads must be an integer greater than or equal to 1." >&2
+        exit 1
+    fi
+
+    overlap_lower=$(echo "$overlap" | tr '[:upper:]' '[:lower:]')
+    # 检查输入是否为指定的选项之一
+    if [[ "$overlap_lower" != "y" && "$overlap_lower" != "n" && "$overlap_lower" != "yes" && "$overlap_lower" != "no" && "$overlap_lower" != "nooverlap" ]]; then
+        print_red "Error: Invalid overlap input. Please enter 'y', 'n', 'yes', 'no', or 'NoOverlap'." >&2
+        exit 1
+    fi
+
+    utr_lower=$(echo "$utr" | tr '[:upper:]' '[:lower:]')
+    # 检查输入是否为指定的选项之一
+    if [[ "$utr_lower" != "y" && "$utr_lower" != "n" && "$utr_lower" != "yes" && "$utr_lower" != "no" ]]; then
+        print_red "Error: Invalid utr input. Please enter 'y', 'n', 'yes', 'no', or 'NoOverlap'." >&2
+        exit 1
+    fi
+
+fi
+
 
 print_white "Genome file                  : "; print_orange "$genomefile"
 print_white "Annotation file              : "; print_orange "$gff3file"
@@ -140,7 +190,7 @@ for promlength in ${promlengthRange[@]}; do
 
     print_green "Preparing data for FIMO and PMET index, promoter legnth: $promlength..."
 
-    indexingOutputDir=$outputDir/promLength${promlength}_fimoThresh${fimothresh//./}
+    indexingOutputDir=$outputDir/LEN${promlength}_FIMO${fimothresh//./}
     universefile=$indexingOutputDir/universe.txt
     bedfile=$indexingOutputDir/genelines.bed
 
@@ -391,7 +441,7 @@ for promlength in ${promlengthRange[@]}; do
 
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do
-            cp -r $indexingOutputDir $outputDir/TEMP_promLength${promlength}_maxK${maxk}_topN${topn}_fimoThresh${fimothresh//./}
+            cp -r $indexingOutputDir $outputDir/TEMP_LEN${promlength}_K${maxk}_N${topn}_FIMO${fimothresh//./}
         done
     done
 
@@ -403,13 +453,14 @@ for promlength in ${promlengthRange[@]}; do
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do
 
-            indexingOutputDir=$outputDir/TEMP_promLength${promlength}_maxK${maxk}_topN${topn}_fimoThresh${fimothresh//./}
+            indexingOutputDir=$outputDir/TEMP_LEN${promlength}_K${maxk}_N${topn}_FIMO${fimothresh//./}
 
             # -------------------------------- Run fimo and pmetindex --------------------------
-            print_green "\nRunning FIMO and PMET index..."
+            print_green "Running FIMO and PMET index..."
             print_green "Promoter legnth: $promlength"
             print_green "MaxK           : $maxk"
             print_green "Topn           : $topn"
+            print_green "Fimo threshold : $fimothresh"
             print_green "Indexing output: $indexingOutputDir"
 
             runFimoIndexing () {
@@ -445,7 +496,7 @@ for promlength in ${promlengthRange[@]}; do
             mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 
             # when indexing completed, remove TEMP flag from folder
-            mv $indexingOutputDir $outputDir/promLength${promlength}_maxK${maxk}_topN${topn}_fimoThresh${fimothresh//./}
+            mv $indexingOutputDir $outputDir/LEN${promlength}_K${maxk}_N${topn}_FIMO${fimothresh//./}
         done
     done
 done
