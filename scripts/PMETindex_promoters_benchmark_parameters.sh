@@ -382,7 +382,7 @@ for promlength in ${promlengthRange[@]}; do
 
     # -------------------------------------------------------------------------------------------
     # 13. Update genes list
-    print_fluorescent_yellow "    13. Update genes list: complete list of all genes found (universe.txt)"
+    print_fluorescent_yellow "    13.  Update genes list: complete list of all genes found (universe.txt)"
     cut -f 1 $indexingOutputDir/promoter_lengths.txt > $universefile
 
     # -------------------------------------------------------------------------------------------
@@ -448,20 +448,27 @@ for promlength in ${promlengthRange[@]}; do
     rm -rf $indexingOutputDir
 done
 
+# 计算总迭代次数 total number of iterations
+totalIterations=$(( ${#promlengthRange[@]} * ${#maxkRange[@]} * ${#topnRange[@]} ))
+# 初始化已完成迭代次数的计数器 Initialization of the iteration counter has been completed.
+completedIterations=0
 
 for promlength in ${promlengthRange[@]}; do
     for maxk in ${maxkRange[@]}; do
         for topn in ${topnRange[@]}; do
-
             indexingOutputDir=$outputDir/TEMP_LEN${promlength}_K${maxk}_N${topn}_FIMO${fimothresh//./}
 
+            # 更新已完成迭代次数 Update the number of completed iterations
+            ((completedIterations++))
             # -------------------------------- Run fimo and pmetindex --------------------------
-            print_green "Running FIMO and PMET index..."
+            print_green "$(date '+%Y-%m-%d %H:%M:%S') - (${completedIterations}/${totalIterations}) Running FIMO and PMET indexing with ${threads} CPUS......"
             print_green "Promoter legnth: $promlength"
             print_green "MaxK           : $maxk"
             print_green "Topn           : $topn"
             print_green "Fimo threshold : $fimothresh"
             print_green "Indexing output: $indexingOutputDir"
+
+            start_time=$SECONDS
 
             runFimoIndexing () {
                 memefile=$1
@@ -497,6 +504,15 @@ for promlength in ${promlengthRange[@]}; do
 
             # when indexing completed, remove TEMP flag from folder
             mv $indexingOutputDir $outputDir/LEN${promlength}_K${maxk}_N${topn}_FIMO${fimothresh//./}
+
+
+            end_time=$SECONDS
+            elapsed_time=$((end_time - start_time))
+            days=$((elapsed_time/86400))
+            hours=$(( (elapsed_time%86400)/3600 ))
+            minutes=$(( (elapsed_time%3600)/60 ))
+            seconds=$((elapsed_time%60))
+            print_orange "(${completedIterations}/${totalIterations}) FIMO and PMET indexing taken: $days day $hours hour $minutes minute $seconds second\n"
         done
     done
 done
