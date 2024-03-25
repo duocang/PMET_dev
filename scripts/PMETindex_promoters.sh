@@ -106,30 +106,20 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:f:g:v:u:t:d:" options; do
+while getopts ":r:i:o:n:k:p:f:v:u:t:d:x:" options; do
     case $options in
-        r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
-        pmetroot=$OPTARG;;
-        i) print_white "GFF3 feature identifier                : "; print_orange "$OPTARG" >&2
-        gff3id=$OPTARG;;
-        o) print_white "Output directory for results           : "; print_orange "$OPTARG" >&2
-        indexingOutputDir=$OPTARG;;
-        n) print_white "Top n promoter hits to take per motif  : "; print_orange "$OPTARG" >&2
-        topn=$OPTARG;;
-        k) print_white "Top k motif hits within each promoter  : "; print_orange "$OPTARG" >&2
-        maxk=$OPTARG;;
-        p) print_white "Promoter length                        : "; print_orange "$OPTARG" >&2
-        promlength=$OPTARG;;
-        f) print_white "Fimo threshold                         : "; print_orange "$OPTARG" >&2
-        fimothresh=$OPTARG;;
-        v) print_white "Remove promoter overlaps with sequences: "; print_orange "$OPTARG" >&2
-        overlap=$OPTARG;;
-        u) print_white "Include 5' UTR sequence?               : "; print_orange "$OPTARG" >&2
-        utr=$OPTARG;;
-        t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
-        threads=$OPTARG;;
-        d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
-        delete=$OPTARG;;
+        r) pmetroot=$OPTARG;;
+        i) gff3id=$OPTARG;;
+        o) outputDir=$OPTARG;;
+        n) topn=$OPTARG;;
+        k) maxk=$OPTARG;;
+        p) promlength=$OPTARG;;
+        f) fimothresh=$OPTARG;;
+        v) overlap=$OPTARG;;
+        u) utr=$OPTARG;;
+        t) threads=$OPTARG;;
+        d) delete=$OPTARG;;
+        x) isPoisson=$OPTARG;;
         \?) print_red  "Invalid option: -$OPTARG" >&2
         exit 1;;
         :)  print_red "Option -$OPTARG requires an argument." >&2
@@ -145,9 +135,20 @@ memefile=$3
 universefile=$indexingOutputDir/universe.txt
 bedfile=$indexingOutputDir/genelines.bed
 
-print_white "Genome file                            : "; print_orange $genomefile
-print_white "Annotation file                        : "; print_orange $gff3file
-print_white "Motif meme file                        : "; print_orange $memefile
+print_white "Genome file                  : "; print_orange $genomefile
+print_white "Annotation file              : "; print_orange $gff3file
+print_white "Motif meme file              : "; print_orange $memefile
+
+print_white "PMET index path              : "; print_orange "$pmetroot"
+print_white "GFF3 identifier              : "; print_orange "$gff3id"
+print_white "Output directory             : "; print_orange "$indexingOutputDir"
+print_white "Top n promoters              : "; print_orange "$topn"  # Default to 5000 if not set
+print_white "Top k motif hits             : "; print_orange "$maxk"     # Default to 5 if not set
+print_white "Length of promoter           : "; print_orange "$promlength"  # Default to 1000 if not set
+print_white "Fimo threshold               : "; print_orange "$fimothresh"
+print_white "Promoter overlap handling    : "; print_orange "$overlap"
+print_white "Include 5' UTR               : "; print_orange "$utr"
+print_white "Number of threads            : "; print_orange "$threads"
 
 mkdir -p $indexingOutputDir
 
