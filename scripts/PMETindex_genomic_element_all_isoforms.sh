@@ -167,7 +167,7 @@ while getopts ":r:i:o:n:k:p:f:v:u:e:m:t:d:" options; do
     case $options in
         r) pmetroot=$OPTARG;;
         i) gff3id=$OPTARG;;
-        o) outputDir=$OPTARG;;
+        o) indexingOutputDir=$OPTARG;;
         n) topn=$OPTARG;;
         k) maxk=$OPTARG;;
         p) promlength=$OPTARG;;
