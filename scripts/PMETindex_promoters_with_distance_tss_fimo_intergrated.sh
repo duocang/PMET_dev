@@ -76,6 +76,7 @@ pmetroot="scripts"
 threads=4
 icthreshold=24
 delete=yes
+promoterLenLimt=20
 
 # set up empty variables
 
@@ -93,7 +94,7 @@ if [ $# -eq 0 ]
         exit 1
 fi
 
-while getopts ":r:i:o:n:k:p:g:l:f:v:u:t:d:" options; do
+while getopts ":r:i:o:n:k:p:g:l:f:v:t:d:" options; do
     case $options in
         r) print_white "Full path of PMET_index                : "; print_orange "$OPTARG" >&2
         pmetroot=$OPTARG;;
@@ -109,14 +110,12 @@ while getopts ":r:i:o:n:k:p:g:l:f:v:u:t:d:" options; do
         promlength=$OPTARG;;
         g) print_white "Gap to TSS                             : "; print_orange "$OPTARG" >&2
         gap=$OPTARG;;
-        l) print_white "Promoter length limit (percentage)     : "; print_orange "$OPTARG" >&2
-        promlengthlimit=$OPTARG;;
+        l) print_white "Limit of promoter length               : "; print_orange "$OPTARG" >&2
+        promoterLenLimt=$OPTARG;;
         f) print_white "Fimo threshold                         : "; print_orange "$OPTARG" >&2
         fimothresh=$OPTARG;;
         v) print_white "Remove promoter overlaps with sequences: "; print_orange "$OPTARG" >&2
         overlap=$OPTARG;;
-        u) print_white "Include 5' UTR sequence?               : "; print_orange "$OPTARG" >&2
-        utr=$OPTARG;;
         t) print_white "Number of threads                      : "; print_orange "$OPTARG" >&2
         threads=$OPTARG;;
         d) print_white "Delete unnecssary files                : "; print_orange "$OPTARG" >&2
@@ -165,7 +164,7 @@ fi
 
 # -------------------------------------------------------------------------------------------
 # 3. extract chromosome , start, end, gene ('gene_id' for input) ...
-print_fluorescent_yellow "     3.  Extracting chromosome, start, end, gene ..."
+print_fluorescent_yellow "     3.  Extracting chromosome, start, end, gene"
 
 # 使用grep查找字符串 check if gene_id is present
 if grep -q "$gff3id" "$indexingOutputDir/genelines.gff3"; then
@@ -187,7 +186,7 @@ awk '$2 <  $3' $bedfile > temp.bed && mv temp.bed $bedfile
 # start and end positions specify the physical location of the gene, rather than the direction of expression or translation.
 
 # -------------------------------------------------------------------------------------------
-print_fluorescent_yellow "         Calculate lenght of space to TSS (length_to_tss.txt)"
+# print_fluorescent_yellow "         Calculate lenght of space to TSS (length_to_tss.txt)"
 # get length of region before TSS of a gene
 # 初始化变量
 prev_end=0
@@ -237,7 +236,6 @@ fi
 # draw histogram
 Rscript $pmetroot/histgram_len_to_tss.R $indexingOutputDir/length_to_tss.txt
 
-
 # -------------------------------------------------------------------------------------------
 # 5. list of all genes found
 print_fluorescent_yellow "\n     5.  Extracting genes names: complete list of all genes found (universe.txt)"
@@ -250,7 +248,6 @@ awk '/^>/ { if (NR!=1) print ""; printf "%s\n",$0; next;} \
     { printf "%s",$0;} \
     END { print ""; }'  $genomefile > $indexingOutputDir/genome_stripped.fa
 # python3 $pmetroot/strip_newlines.py $genomefile $indexingOutputDir/genome_stripped_py.fa
-
 
 # -------------------------------------------------------------------------------------------
 # 7. create the .genome file which contains coordinates for each chromosome start
@@ -276,9 +273,8 @@ rm -rf $indexingOutputDir/promoters_not_sorted.bed
 
 cp $indexingOutputDir/promoters.bed $indexingOutputDir/8_promoters.bed
 
-
 # -------------------------------------------------------------------------------------------
-print_fluorescent_yellow "     8.1 Add gap to TSS"
+print_fluorescent_yellow "     9.  Add gap to TSS"
 python3                                        \
     $pmetroot/promoter_add_gap.py              \
     $gap                                       \
@@ -289,11 +285,17 @@ python3                                        \
 rm $indexingOutputDir/promoters.bed
 cp $indexingOutputDir/promoters_gap_tss.bed $indexingOutputDir/promoters.bed
 
+# -------------------------------------------------------------------------------------------
+# 10. remove promoter with too short lengths
+print_fluorescent_yellow "    10.  Remove promoter with too short lengths (${promoterLenLimt})"
+awk -v limit="$promoterLenLimt" '($3-$2) < limit' $indexingOutputDir/promoters.bed > $indexingOutputDir/promoters_short.bed
+awk -v limit="$promoterLenLimt" '($3-$2) > limit' $indexingOutputDir/promoters.bed > $indexingOutputDir/temp && mv $indexingOutputDir/temp $indexingOutputDir/promoters.bed
+
 
 # -------------------------------------------------------------------------------------------
-# 9. remove overlapping promoter chunks
+# 10. remove overlapping promoter chunks
 if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "No" || $overlap == "NO" || $overlap == "N" || $overlap == "n" ]]; then
-	print_fluorescent_yellow "     9.  Removing overlapping promoter chunks (promoters.bed)"
+	print_fluorescent_yellow "    10.  Removing overlapping promoter chunks (promoters.bed)"
 	sleep 0.1
 	bedtools subtract \
         -a $indexingOutputDir/promoters.bed \
@@ -302,28 +304,15 @@ if [[ $overlap == 'NoOverlap' || $overlap == "no" || $overlap == "No" || $overla
     cp $indexingOutputDir/promoters2.bed $indexingOutputDir/9_promoters.bed
 	mv $indexingOutputDir/promoters2.bed $indexingOutputDir/promoters.bed
 else
-    print_fluorescent_yellow "     9.  (skipped) Removing overlapping promoter chunks (promoters.bed)"
+    print_fluorescent_yellow "    10.  (skipped) Removing overlapping promoter chunks (promoters.bed)"
 fi
 
 # -------------------------------------------------------------------------------------------
 # 10. check split promoters. if so, keep the bit closer to the TSS
 # # check if any duplication
 # cut -f4 $indexingOutputDir/promoters.bed | sort | uniq -d
-print_fluorescent_yellow "    10.  Checking split promoter (if so):  keep the bit closer to the TSS (promoters.bed)"
+print_fluorescent_yellow "    11.  Checking split promoter (if so):  keep the bit closer to the TSS (promoters.bed)"
 python3 $pmetroot/assess_integrity.py $indexingOutputDir/promoters.bed
-
-# -------------------------------------------------------------------------------------------
-# 11. add 5' UTR
-if [[ $utr == 'Yes' || $utr == "yes" || $utr == "YES" || $utr == "Y" || $utr == "y" ]]; then
-    print_fluorescent_yellow "    11.  Adding UTRs...";
-
-	python3 $pmetroot/parse_utrs.py      \
-        $indexingOutputDir/promoters.bed \
-        $indexingOutputDir/sorted.gff3   \
-        $universefile
-else
-    print_fluorescent_yellow "    11.  (skipped) Adding UTRs...";
-fi
 
 # -------------------------------------------------------------------------------------------
 # 12. promoter lenfths from promoters.bed
@@ -404,7 +393,7 @@ nummotifs=$(grep -c '^MOTIF' "$memefile")
 print_orange "    $nummotifs motifs found"
 
 find $indexingOutputDir/memefiles -name \*.txt \
-    | parallel --progress --jobs=$threads \
+    | parallel --bar --jobs=$threads \
         "runFimoIndexing {} $indexingOutputDir $fimothresh $pmetroot $maxk $topn"
 
 mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
@@ -413,15 +402,14 @@ mv $indexingOutputDir/fimohits/binomial_thresholds.txt $indexingOutputDir/
 # Deleting unnecessary files
 if [[ $delete == "yes" || $delete == "YES" || $delete == "Y" || $delete == "y" ]]; then
     print_green "Deleting unnecessary files..."
-    # rm -rf $indexingOutputDir/IC.txt
+    rm -rf $indexingOutputDir/8_promoters.bed
+    rm -rf $indexingOutputDir/9_promoters.bed
     rm -rf $indexingOutputDir/bedgenome.genome
     rm -rf $indexingOutputDir/genelines.bed
     rm -rf $indexingOutputDir/genelines.gff3
     rm -rf $indexingOutputDir/genome_stripped.fa
     rm -rf $indexingOutputDir/genome_stripped.fa.fai
-    # rm -rf $indexingOutputDir/invalid_gff3_lines.txt
     rm -rf $indexingOutputDir/memefiles
-    # rm -f $indexingOutputDir/promoter_lengths.txt
     rm -rf $indexingOutputDir/promoters.bed
     rm -rf $indexingOutputDir/promoters.bg
     rm -rf $indexingOutputDir/promoters.fa
@@ -433,7 +421,7 @@ fi
 
 # -------------------------------------------------------------------------------------------
 # Checking results
-print_green "Checking results...\n\n"
+print_green "Checking results..."
 # 计算 $indexingOutputDir/fimohits 目录下 .txt 文件的数量
 # Count the number of .txt files in the $indexingOutputDir/fimohits directory
 file_count=$(find "$indexingOutputDir/fimohits" -maxdepth 1 -type f -name "*.txt" | wc -l)
