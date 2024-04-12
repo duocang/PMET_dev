@@ -33,6 +33,11 @@ def adjust_promoter_coordinates(promoters_file, chromosome_ranges, distance):
             parts = line.strip().split('\t')
             chromosome_id, start, end, strand = parts[0], int(parts[1]), int(parts[2]), parts[5]
 
+            # Check if the chromosome_id exists in chromosome_ranges
+            if chromosome_id not in chromosome_ranges:
+                # If not, skip this line and continue with the next
+                continue
+
             # Get the chromosome range
             chrom_start, chrom_end = chromosome_ranges[chromosome_id]
 
